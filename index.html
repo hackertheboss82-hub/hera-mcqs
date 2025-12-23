@@ -2,76 +2,168 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hera MCQs Online Test</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hera MCQs</title>
 
 <style>
-body{font-family:Arial;background:#f4f6fb;margin:0}
-.container{max-width:900px;margin:auto;padding:15px}
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 4px 10px rgba(0,0,0,.08)}
-h2{text-align:center;color:#2d5be3}
-input,textarea,select,button{
-width:100%;padding:10px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
-button{background:#2d5be3;color:#fff;border:none;cursor:pointer}
+body{
+  font-family: Arial, sans-serif;
+  background:#f1f5ff;
+  margin:0;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:15px;
+}
+
+.card{
+  background:#ffffff;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:25px;
+  border:2px solid #dbe4ff;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+h2,h3{
+  text-align:center;
+  color:#1e40af;
+}
+
+input, textarea, select, button{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #c7d2fe;
+  font-size:15px;
+}
+
+button{
+  background:#2d5be3;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+button:hover{background:#1e40af}
+
 .hidden{display:none}
+
+.palette{
+  padding:10px;
+  border:1px dashed #c7d2fe;
+  border-radius:10px;
+  margin-bottom:15px;
+  background:#f8faff;
+  text-align:center;
+}
+
 .palette span{
-display:inline-block;width:34px;height:34px;line-height:34px;
-margin:4px;border-radius:50%;background:#ddd;cursor:pointer}
-.palette .done{background:#2d5be3;color:white}
-.options label{display:block;padding:8px;border:1px solid #ccc;margin:5px 0;border-radius:6px;cursor:pointer}
-.nav{display:flex;gap:10px;margin-top:10px}
+  display:inline-block;
+  width:36px;
+  height:36px;
+  line-height:36px;
+  margin:4px;
+  border-radius:50%;
+  background:#e0e7ff;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.palette .done{
+  background:#2d5be3;
+  color:white;
+}
+
+.options label{
+  display:block;
+  padding:12px;
+  border:1px solid #c7d2fe;
+  margin:8px 0;
+  border-radius:10px;
+  cursor:pointer;
+  background:#f8faff;
+}
+
+.options label:hover{
+  background:#eef2ff;
+}
+
+.nav{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+@media(max-width:600px){
+  .nav{flex-direction:column;}
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h2>Hera English School � Online MCQs</h2>
+<h2>📘 Hera MCQs Examination</h2>
 
 <!-- TEACHER PANEL -->
 <div class="card">
-<h3>Teacher Panel</h3>
+<h3>👩‍🏫 Teacher Panel</h3>
 
-<input id="teacherName" placeholder="Teacher Name">
-<input id="testName" placeholder="Test Name">
-<textarea id="questionsBox" rows="6"
-placeholder="Q?|A|B|C|0"></textarea>
+<input id="testTitle" placeholder="Test Title">
 
-<button onclick="saveTest()">Save / Update Test</button>
+<textarea id="qText" placeholder="Question"></textarea>
+<input id="o1" placeholder="Option A">
+<input id="o2" placeholder="Option B">
+<input id="o3" placeholder="Option C">
+<input id="o4" placeholder="Option D">
 
-<h4>Available Tests</h4>
-<div id="testsList"></div>
+<select id="correct">
+  <option value="0">Correct: A</option>
+  <option value="1">Correct: B</option>
+  <option value="2">Correct: C</option>
+  <option value="3">Correct: D</option>
+</select>
 
-<h4>Student Attempts</h4>
-<div id="attempts"></div>
+<button onclick="addQuestion()">Add Question</button>
+<button onclick="saveTest()">Save Test</button>
+
+<div id="teacherList"></div>
 </div>
 
 <!-- STUDENT PANEL -->
 <div class="card">
-<h3>Student Panel</h3>
-<input id="studentName" placeholder="Student Name">
-<input id="studentClass" placeholder="Class">
-<select id="testSelect"></select>
-<button onclick="startTest()">Start Test</button>
-</div>
+<h3>🧑‍🎓 Student Exam Mode</h3>
 
-<!-- EXAM -->
-<div class="card hidden" id="exam">
+<button onclick="startExam()">Start Exam</button>
+
+<div id="exam" class="hidden">
+
 <div class="palette" id="palette"></div>
-<h3 id="qText"></h3>
+
+<h3 id="qNo"></h3>
+<p id="question"></p>
+
 <div class="options" id="options"></div>
 
 <div class="nav">
 <button onclick="prevQ()">Previous</button>
 <button id="nextBtn" onclick="nextQ()">Next</button>
-<button onclick="submitTest()">Submit</button>
+<button onclick="submitExam()">Submit</button>
+</div>
+
 </div>
 </div>
 
 </div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -82,122 +174,91 @@ const firebaseConfig = {
   messagingSenderId: "284002289050",
   appId: "1:284002289050:web:e98f219b72f5c7cc3c6623"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let editId=null, questions=[], answers=[], index=0;
+let questions = [];
+let examQ = [];
+let answers = {};
+let index = 0;
 
 /* TEACHER */
-async function saveTest(){
-  const data={
-    teacher:teacherName.value,
-    name:testName.value,
-    questions:questionsBox.value
-  };
-  editId
-    ? await db.collection("tests").doc(editId).set(data)
-    : await db.collection("tests").add(data);
-
-  editId=null;
-  alert("Test saved");
-  questionsBox.value=""; testName.value="";
-}
-
-db.collection("tests").onSnapshot(s=>{
-  testsList.innerHTML="";
-  testSelect.innerHTML="";
-  s.forEach(d=>{
-    const t=d.data();
-    testsList.innerHTML+=`
-    <div>${t.name}
-    <button onclick="editTest('${d.id}')">Edit</button>
-    <button onclick="delTest('${d.id}')">Delete</button></div>`;
-    testSelect.innerHTML+=`<option value="${d.id}">${t.name}</option>`;
+function addQuestion(){
+  questions.push({
+    q:qText.value,
+    o:[o1.value,o2.value,o3.value,o4.value],
+    c:correct.value
   });
-});
-
-async function editTest(id){
-  const d=await db.collection("tests").doc(id).get();
-  teacherName.value=d.data().teacher;
-  testName.value=d.data().name;
-  questionsBox.value=d.data().questions;
-  editId=id;
+  qText.value=o1.value=o2.value=o3.value=o4.value="";
+  loadTeacherList();
 }
-function delTest(id){
-  if(confirm("Delete test?")) db.collection("tests").doc(id).delete();
+
+function loadTeacherList(){
+  teacherList.innerHTML="";
+  questions.forEach((q,i)=>{
+    teacherList.innerHTML+=`<p>${i+1}. ${q.q}</p>`;
+  });
+}
+
+function saveTest(){
+  db.collection("tests").doc("latest").set({questions});
+  alert("Test Saved");
 }
 
 /* STUDENT */
-async function startTest(){
-  const doc=await db.collection("tests").doc(testSelect.value).get();
-  questions=doc.data().questions.trim().split("\n").map(l=>{
-    const p=l.split("|");
-    return{q:p[0],opts:p.slice(1,4),correct:Number(p[4])};
-  }).sort(()=>Math.random()-0.5).slice(0,30);
-
-  answers=Array(questions.length).fill(null);
-  index=0;
-  exam.classList.remove("hidden");
-  showQ();
+function startExam(){
+  db.collection("tests").doc("latest").get().then(d=>{
+    let all=d.data().questions;
+    examQ = shuffle(all).slice(0,30);
+    index=0;
+    answers={};
+    document.getElementById("exam").classList.remove("hidden");
+    loadQ();
+  });
 }
 
-function showQ(){
-  const q=questions[index];
-  qText.innerText=`Q${index+1}. ${q.q}`;
+function loadQ(){
+  let q=examQ[index];
+  qNo.innerText=`Question ${index+1} of ${examQ.length}`;
+  question.innerText=q.q;
+
   options.innerHTML="";
-  q.opts.forEach((o,i)=>{
+  q.o.forEach((op,i)=>{
     options.innerHTML+=`
     <label>
-    <input type="radio" name="opt"
-    ${answers[index]==i?"checked":""}
-    onclick="answers[${index}]=${i};drawPalette()">${o}
+      <input type="radio" name="opt" ${answers[index]==i?"checked":""}
+      onclick="answers[${index}]=${i}">
+      ${op}
     </label>`;
   });
-  drawPalette();
-  nextBtn.style.display=index==questions.length-1?"none":"block";
+
+  updatePalette();
+
+  nextBtn.style.display = (index==examQ.length-1) ? "none":"block";
 }
 
-function drawPalette(){
+function updatePalette(){
   palette.innerHTML="";
-  answers.forEach((a,i)=>{
-    palette.innerHTML+=`
-    <span class="${a!==null?"done":""}"
-    onclick="index=${i};showQ()">${i+1}</span>`;
+  examQ.forEach((_,i)=>{
+    palette.innerHTML+=`<span class="${answers[i]!=null?"done":""}" onclick="jump(${i})">${i+1}</span>`;
   });
 }
 
-function nextQ(){ if(index<questions.length-1){index++;showQ();}}
-function prevQ(){ if(index>0){index--;showQ();}}
+function jump(i){index=i;loadQ()}
+function nextQ(){if(index<examQ.length-1){index++;loadQ()}}
+function prevQ(){if(index>0){index--;loadQ()}}
 
-async function submitTest(){
-  if(!confirm("Submit test?")) return;
-  let score=0;
-  questions.forEach((q,i)=>{ if(answers[i]===q.correct) score++; });
-
-  await db.collection("attempts").add({
-    name:studentName.value,
-    class:studentClass.value,
-    test:testSelect.options[testSelect.selectedIndex].text,
-    score, total:questions.length,
-    time:firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert(`Submitted\nScore: ${score}/${questions.length}`);
-  exam.classList.add("hidden");
-  window.scrollTo(0,0);
+function submitExam(){
+  alert("Exam Submitted Successfully");
+  document.getElementById("exam").classList.add("hidden");
 }
 
-/* ATTEMPTS */
-db.collection("attempts").orderBy("time","desc")
-.onSnapshot(s=>{
-  attempts.innerHTML="";
-  s.forEach(d=>{
-    const a=d.data();
-    attempts.innerHTML+=`
-    <div>${a.name} (${a.class}) � ${a.test}
-    : ${a.score}/${a.total}</div>`;
-  });
-});
+/* UTILS */
+function shuffle(a){
+  return a.sort(()=>Math.random()-0.5);
+}
 </script>
+
 </body>
 </html>
