@@ -4,218 +4,201 @@
 <meta charset="UTF-8">
 <title>Online Exam System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Libraries for Export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #eef2f7;
-  margin: 0;
-}
-.container {
-  max-width: 900px;
-  background: #fff;
-  margin: 15px auto;
-  padding: 15px;
-  border-radius: 8px;
-}
-h2 { text-align: center; color: #2c3e50; }
-input, textarea, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  font-size: 16px;
-}
-button {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-button:hover { background: #1e40af; }
-.hidden { display: none; }
-.question-box {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 12px;
-  margin-top: 12px;
-}
-.timer {
-  text-align: center;
-  font-size: 18px;
-  color: red;
-  margin-bottom: 10px;
-}
-.option { margin: 6px 0; }
-@media(max-width:600px){
-  h2 { font-size: 20px; }
-}
+body{font-family:Arial;background:#f4f6f8;margin:0}
+.container{max-width:1000px;margin:auto;padding:15px}
+.card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+h2{text-align:center}
+input,textarea,button,select{width:100%;padding:10px;margin:6px 0;border-radius:5px;border:1px solid #ccc}
+button{background:#2563eb;color:#fff;border:none;font-size:16px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+.timer{text-align:right;font-weight:bold}
+.option{border:1px solid #ccc;padding:8px;margin:6px 0;border-radius:5px}
+.option.selected{background:#2563eb;color:#fff}
+.hidden{display:none}
 </style>
 </head>
-
 <body>
 
+<div class="container">
+
 <!-- LOGIN -->
-<div class="container" id="loginPanel">
+<div id="login" class="card">
 <h2>🔐 Login</h2>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+<input id="user" placeholder="Username (admin/teacher OR student)">
+<input id="pass" type="password" placeholder="Password (leave empty for student)">
 <button onclick="login()">Login</button>
-<p><b>Admin:</b> admin / admin123</p>
-<p><b>Teacher:</b> teacher / teacher123</p>
+<p><b>Admin:</b> admin / admin123<br>
+<b>Teacher:</b> teacher / teacher123<br>
+<b>Student:</b> Enter name only</p>
+</div>
+
+<!-- STUDENT INFO -->
+<div id="studentInfo" class="card hidden">
+<h2>👨‍🎓 Student Details</h2>
+<input id="sname" placeholder="Student Name">
+<input id="sroll" placeholder="Roll / ID">
+<button onclick="startStudent()">Start Test</button>
 </div>
 
 <!-- TEACHER PANEL -->
-<div class="container hidden" id="teacherPanel">
+<div id="teacher" class="card hidden">
 <h2>👨‍🏫 Teacher Panel</h2>
 
-<input id="testName" placeholder="Test Name">
-<input id="testDuration" type="number" value="30" min="5">
+<label>Test Name</label>
+<input id="testName">
 
-<textarea id="questionInput" rows="8"
+<label>Duration (minutes)</label>
+<input id="duration" type="number" value="30">
+
+<label>Bulk Questions</label>
+<textarea id="questions" rows="6"
 placeholder="Question | opt1 | opt2 | opt3 | opt4 | correctIndex"></textarea>
 
 <button onclick="saveTest()">Save Test</button>
-<button onclick="startStudent()">Open Student Test</button>
-<button onclick="exportExcel()">Export Result (Excel)</button>
-<button onclick="exportPDF()">Export Result (PDF)</button>
+
+<h3>📊 Student Attempts</h3>
+<table>
+<thead>
+<tr><th>Name</th><th>Roll</th><th>Score</th><th>Total</th><th>Date</th></tr>
+</thead>
+<tbody id="resultTable"></tbody>
+</table>
+
+<button onclick="exportCSV()">Export Excel</button>
+<button onclick="window.print()">Export PDF</button>
+<button onclick="logout()">Logout</button>
 </div>
 
-<!-- STUDENT PANEL -->
-<div class="container hidden" id="studentPanel">
-<h2>👨‍🎓 Student Test</h2>
+<!-- STUDENT EXAM -->
+<div id="studentExam" class="card hidden">
 <div class="timer" id="timer"></div>
-<div id="questionsArea"></div>
-<button onclick="submitTest()">Submit Test</button>
+<h2 id="qText"></h2>
+<div id="opts"></div>
+<button onclick="nextQ()">Next</button>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="card hidden">
+<h2>✅ Test Submitted</h2>
+<p id="finalScore"></p>
+</div>
+
 </div>
 
 <script>
-let role = "";
-let testData = {};
-let studentAnswers = {};
-let studentQuestions = [];
-let results = [];
-let timerInterval;
+let role="",test={},qs=[],i=0,ans=[];
+let student={},timeLeft,timerInt;
 
-// LOGIN
-function login() {
-  const u = username.value;
-  const p = password.value;
-
-  if (u === "admin" && p === "admin123") role = "admin";
-  else if (u === "teacher" && p === "teacher123") role = "teacher";
-  else return alert("Invalid login");
-
-  loginPanel.classList.add("hidden");
-  teacherPanel.classList.remove("hidden");
+function login(){
+  let u=user.value,p=pass.value;
+  if((u==="admin"&&p==="admin123")||(u==="teacher"&&p==="teacher123")){
+    role="teacher";
+    login.classList.add("hidden");
+    teacher.classList.remove("hidden");
+    loadResults();
+  }else{
+    role="student";
+    login.classList.add("hidden");
+    studentInfo.classList.remove("hidden");
+  }
 }
 
-// SAVE TEST
-function saveTest() {
-  const raw = questionInput.value.trim();
-  if (!raw) return alert("Add questions");
+function logout(){location.reload()}
 
-  testData = {
-    name: testName.value,
-    duration: parseInt(testDuration.value),
-    questions: raw.split("\n").filter(q => q.trim())
-  };
+function saveTest(){
+  let qLines=questions.value.trim().split("\n");
+  let qArr=qLines.map(l=>{
+    let p=l.split("|").map(x=>x.trim());
+    return {q:p[0],o:p.slice(1,5),c:+p[5]}
+  });
+  localStorage.setItem("test",JSON.stringify({
+    name:testName.value,
+    duration:+duration.value,
+    questions:qArr
+  }));
   alert("Test saved");
 }
 
-// START STUDENT
-function startStudent() {
-  if (!testData.questions) return alert("Save test first");
-
-  teacherPanel.classList.add("hidden");
-  studentPanel.classList.remove("hidden");
-
-  studentAnswers = {};
-  studentQuestions = shuffle([...testData.questions]).slice(0, 30);
-  renderStudent();
-  startTimer(testData.duration);
+function startStudent(){
+  student={name:sname.value,roll:sroll.value};
+  test=JSON.parse(localStorage.getItem("test"));
+  qs=shuffle([...test.questions]);
+  studentInfo.classList.add("hidden");
+  studentExam.classList.remove("hidden");
+  timeLeft=test.duration*60;
+  timerInt=setInterval(runTimer,1000);
+  showQ();
 }
 
-// PARSE
-function parseQ(raw) {
-  const p = raw.split("|").map(x => x.trim());
-  return { q: p[0], opts: p.slice(1,5), ans: parseInt(p[5]) };
+function runTimer(){
+  let m=Math.floor(timeLeft/60),s=timeLeft%60;
+  timer.innerText=`⏱ ${m}:${s.toString().padStart(2,"0")}`;
+  if(timeLeft--<=0) finish();
 }
 
-// RENDER STUDENT
-function renderStudent() {
-  questionsArea.innerHTML = "";
-  studentQuestions.forEach((raw, i) => {
-    const q = parseQ(raw);
-    const div = document.createElement("div");
-    div.className = "question-box";
-    div.innerHTML = `<b>Q${i+1}. ${q.q}</b>`;
-    q.opts = shuffle(q.opts);
-    q.opts.forEach((o, idx) => {
-      div.innerHTML += `
-      <div class="option">
-        <label>
-          <input type="radio" name="q${i}" value="${o}"
-           onchange="studentAnswers[${i}]='${o}'"> ${o}
-        </label>
-      </div>`;
-    });
-    questionsArea.appendChild(div);
+function showQ(){
+  let q=qs[i];
+  qText.innerText=(i+1)+". "+q.q;
+  opts.innerHTML="";
+  q.o.forEach((o,idx)=>{
+    let d=document.createElement("div");
+    d.className="option";
+    d.innerText=o;
+    d.onclick=()=>{
+      ans[i]=idx;
+      document.querySelectorAll(".option").forEach(x=>x.classList.remove("selected"));
+      d.classList.add("selected");
+    }
+    opts.appendChild(d);
   });
 }
 
-// TIMER
-function startTimer(min) {
-  let t = min * 60;
-  timerInterval = setInterval(() => {
-    timer.innerText = `Time Left: ${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
-    if (t-- <= 0) submitTest();
-  },1000);
-}
+function nextQ(){ if(++i<qs.length) showQ(); else finish(); }
 
-// SUBMIT
-function submitTest() {
-  clearInterval(timerInterval);
-  let score = 0;
+function finish(){
+  clearInterval(timerInt);
+  studentExam.classList.add("hidden");
+  let score=0;
+  qs.forEach((q,idx)=>{ if(ans[idx]===q.c) score++; });
 
-  studentQuestions.forEach((raw,i)=>{
-    const q = parseQ(raw);
-    if (studentAnswers[i] === q.opts[q.ans]) score++;
+  let results=JSON.parse(localStorage.getItem("examResults")||"[]");
+  results.push({
+    ...student,
+    score,
+    total:qs.length,
+    date:new Date().toLocaleString()
   });
+  localStorage.setItem("examResults",JSON.stringify(results));
 
-  results.push({ Test: testData.name, Score: score });
-  alert("Test Submitted! Score: " + score);
-  location.reload();
+  finalScore.innerText=`${student.name}, your score: ${score}/${qs.length}`;
+  result.classList.remove("hidden");
 }
 
-// SHUFFLE
-function shuffle(arr) {
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-// EXPORT EXCEL
-function exportExcel() {
-  const ws = XLSX.utils.json_to_sheet(results);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Results");
-  XLSX.writeFile(wb, "results.xlsx");
-}
-
-// EXPORT PDF
-function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y = 10;
-  results.forEach((r,i)=>{
-    doc.text(`${i+1}. ${r.Test} - Score: ${r.Score}`, 10, y);
-    y += 10;
+function loadResults(){
+  let results=JSON.parse(localStorage.getItem("examResults")||"[]");
+  resultTable.innerHTML="";
+  results.forEach(r=>{
+    resultTable.innerHTML+=`<tr>
+      <td>${r.name}</td><td>${r.roll}</td>
+      <td>${r.score}</td><td>${r.total}</td>
+      <td>${r.date}</td>
+    </tr>`;
   });
-  doc.save("results.pdf");
 }
+
+function exportCSV(){
+  let rows=JSON.parse(localStorage.getItem("examResults")||"[]");
+  let csv="Name,Roll,Score,Total,Date\n";
+  rows.forEach(r=>csv+=`${r.name},${r.roll},${r.score},${r.total},${r.date}\n`);
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv]));
+  a.download="results.csv";
+  a.click();
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-.5)}
 </script>
-
 </body>
 </html>
