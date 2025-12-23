@@ -2,240 +2,278 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hera English School – Online MCQs</title>
+<title>Hera English School – Online Exam</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2ff;margin:0}
-.container{max-width:900px;margin:auto;padding:15px}
-.card{
-background:#fff;padding:15px;border-radius:12px;margin-bottom:15px;
-box-shadow:0 6px 20px rgba(0,0,0,.1)
-}
-h2{text-align:center;color:#1e40af}
+body{margin:0;font-family:Segoe UI,Arial;background:#f4f6fb}
+.container{max-width:1000px;margin:auto;padding:15px}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+h2,h3{text-align:center;margin:8px 0;color:#1e40af}
 input,textarea,select,button{
 width:100%;padding:10px;margin:6px 0;
-border-radius:8px;border:1px solid #ccc;font-size:15px
-}
+border-radius:8px;border:1px solid #ccc;font-size:14px}
 button{background:#2563eb;color:#fff;border:none;cursor:pointer}
 button.secondary{background:#f59e0b;color:#000}
+button.flat{background:#e5edff;color:#000}
 .hidden{display:none}
+.flex{display:flex;gap:10px;flex-wrap:wrap}
+
+.option{
+border:2px solid #e5e7eb;
+padding:10px;border-radius:10px;margin-bottom:8px;
+cursor:pointer}
+.option.selected{
+border-color:#2563eb;
+background:#eef4ff}
+
 .palette span{
-display:inline-block;width:32px;height:32px;line-height:32px;
-border-radius:50%;margin:4px;text-align:center;
-background:#dbeafe;cursor:pointer
-}
+display:inline-block;
+width:34px;height:34px;
+line-height:34px;
+text-align:center;
+margin:4px;border-radius:50%;
+background:#e5e7eb;cursor:pointer}
 .palette .done{background:#2563eb;color:#fff}
-.options label{
-display:block;padding:8px;border:1px solid #c7d2fe;
-margin:6px 0;border-radius:8px;cursor:pointer
-}
-.nav{display:flex;gap:10px;margin-top:10px}
+
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
 </style>
 </head>
 
 <body>
 <div class="container">
-<h2>Hera English School – Online MCQs</h2>
+
+<h2>Hera English School – Online Examination</h2>
 
 <!-- TEACHER LOGIN -->
-<div class="card" id="loginCard">
-<h3>Teacher Login</h3>
-<input type="password" id="teacherPass" placeholder="Teacher Password">
-<button onclick="teacherLogin()">Login</button>
+<div class="card">
+<button class="flat" onclick="teacherLogin()">Teacher Panel</button>
 </div>
 
 <!-- TEACHER PANEL -->
 <div class="card hidden" id="teacherPanel">
 <h3>Teacher Panel</h3>
 
+<input id="teacherName" placeholder="Teacher Name">
 <input id="testName" placeholder="Test Name">
 
-<textarea id="bulkBox" rows="12" placeholder=
+<textarea id="bulkQuestions" rows="10" placeholder=
 "Question |
-Option 1 |
-Option 2 |
-Option 3 |
-Option 4 |
-CorrectIndex"></textarea>
+Option1 |
+Option2 |
+Option3 |
+Option4 |
+CorrectIndex (0-based)
+"></textarea>
 
 <button onclick="saveTest()">Save / Update Test</button>
 
-<h4>Available Tests</h4>
+<hr>
+<h3>All Tests</h3>
 <div id="testList"></div>
 
-<h4>Student Attempts</h4>
+<hr>
+<h3>Student Attempts</h3>
 <div id="attempts"></div>
 </div>
 
 <!-- STUDENT PANEL -->
 <div class="card">
 <h3>Student Panel</h3>
-<input id="sname" placeholder="Student Name">
-<input id="sclass" placeholder="Class">
+<input id="studentName" placeholder="Student Name">
+<input id="studentClass" placeholder="Class / Section">
 <select id="testSelect"></select>
 <button onclick="startTest()">Start Test</button>
 </div>
 
 <!-- EXAM -->
-<div class="card hidden" id="exam">
+<div class="card hidden" id="examArea">
 <div class="palette" id="palette"></div>
+
 <h3 id="qText"></h3>
-<div class="options" id="options"></div>
+<div id="options"></div>
 
 <div class="nav">
-<button onclick="prevQ()">Previous</button>
+<button class="flat" onclick="prevQ()">Previous</button>
 <button id="nextBtn" onclick="nextQ()">Next</button>
 <button class="secondary" onclick="submitTest()">Submit</button>
 </div>
 </div>
+
 </div>
 
 <script>
-/* ---------- FIREBASE ---------- */
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
-apiKey: "AIzaSyChhkiu5e6fKVowh2RRvkegVdTwn7yV8Zc",
-authDomain: "hera-mcqs.firebaseapp.com",
-projectId: "hera-mcqs",
-storageBucket: "hera-mcqs.firebasestorage.app",
-messagingSenderId: "284002289050",
-appId: "1:284002289050:web:e98f219b72f5c7cc3c6623"
+  apiKey: "AIzaSyChhkiu5e6fKVowh2RRvkegVdTwn7yV8Zc",
+  authDomain: "hera-mcqs.firebaseapp.com",
+  projectId: "hera-mcqs",
+  storageBucket: "hera-mcqs.firebasestorage.app",
+  messagingSenderId: "284002289050",
+  appId: "1:284002289050:web:e98f219b72f5c7cc3c6623"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* ---------- STATE ---------- */
-let editId=null, allQ=[], examQ=[], ans=[], idx=0;
+/* ================= GLOBAL ================= */
+const TEACHER_PASS="Hera@123";
+let editId=null;
+let questions=[], answers=[], index=0;
 
-/* ---------- TEACHER ---------- */
+/* ================= TEACHER ================= */
 function teacherLogin(){
-if(teacherPass.value!=="hera@123"){
-alert("Wrong password"); return;
-}
-loginCard.classList.add("hidden");
-teacherPanel.classList.remove("hidden");
-loadTeacherData();
+  if(prompt("Enter Teacher Password")===TEACHER_PASS){
+    teacherPanel.classList.remove("hidden");
+    loadTeacherData();
+  }
 }
 
 function parseBulk(text){
-let l=text.split("\n").map(x=>x.trim()).filter(x=>x);
-let q=[];
-for(let i=0;i<l.length;i+=6){
-q.push({
-q:l[i].replace("|","").trim(),
-o:[
-l[i+1].replace("|","").trim(),
-l[i+2].replace("|","").trim(),
-l[i+3].replace("|","").trim(),
-l[i+4].replace("|","").trim()
-],
-c:+l[i+5]
-});
-}
-return q;
+  let lines=text.split("\n").map(l=>l.trim()).filter(l=>l!=="");
+  let arr=[];
+  for(let i=0;i<lines.length;i+=6){
+    arr.push({
+      q:lines[i].replace("|",""),
+      o:[
+        lines[i+1].replace("|",""),
+        lines[i+2].replace("|",""),
+        lines[i+3].replace("|",""),
+        lines[i+4].replace("|","")
+      ],
+      c:Number(lines[i+5])
+    });
+  }
+  return arr;
 }
 
 async function saveTest(){
-let qs=parseBulk(bulkBox.value);
-if(qs.length<1){alert("Invalid bulk format");return;}
+  const qs=parseBulk(bulkQuestions.value);
+  if(qs.length<1)return alert("No questions");
 
-if(editId)
-await db.collection("tests").doc(editId).set({name:testName.value,questions:qs});
-else
-await db.collection("tests").add({name:testName.value,questions:qs});
+  const data={
+    name:testName.value,
+    teacher:teacherName.value,
+    questions:qs
+  };
 
-alert("Test saved");
-editId=null; testName.value=""; bulkBox.value="";
+  if(editId){
+    await db.collection("tests").doc(editId).set(data);
+    editId=null;
+  }else{
+    await db.collection("tests").add(data);
+  }
+  alert("Test Saved");
+  bulkQuestions.value="";
+  testName.value="";
 }
 
-function loadTeacherData(){
-db.collection("tests").onSnapshot(s=>{
-testList.innerHTML=""; testSelect.innerHTML="";
-s.forEach(d=>{
-let t=d.data();
-testList.innerHTML+=`
-<div>
-<b>${t.name}</b>
-<button onclick="editTest('${d.id}')">Edit</button>
-<button onclick="deleteTest('${d.id}')">Delete</button>
-</div>`;
-testSelect.innerHTML+=`<option value="${d.id}">${t.name}</option>`;
-});
-});
+async function loadTeacherData(){
+  const snap=await db.collection("tests").get();
+  testList.innerHTML="";
+  testSelect.innerHTML="<option value=''>Select Test</option>";
 
-db.collection("attempts").onSnapshot(s=>{
-attempts.innerHTML="";
-s.forEach(d=>{
-let a=d.data();
-attempts.innerHTML+=`${a.name} (${a.class}) – ${a.test} : ${a.score}/${a.total}<br>`;
-});
+  snap.forEach(d=>{
+    const t=d.data();
+    testList.innerHTML+=`
+      <div>
+        <b>${t.name}</b>
+        <button onclick="editTest('${d.id}')">Edit</button>
+        <button onclick="deleteTest('${d.id}')">Delete</button>
+      </div>`;
+    testSelect.innerHTML+=`<option value="${d.id}">${t.name}</option>`;
+  });
+
+  const at=await db.collection("attempts").get();
+  attempts.innerHTML="";
+  at.forEach(d=>{
+    const a=d.data();
+    attempts.innerHTML+=`<div>${a.name} | ${a.test} | ${a.score}/${a.total}</div>`;
+  });
 }
 
 async function editTest(id){
-let d=await db.collection("tests").doc(id).get();
-let t=d.data();
-testName.value=t.name;
-bulkBox.value=t.questions.map(x=>
-`${x.q} |\n${x.o.join(" |\n")} |\n${x.c}\n`).join("\n");
-editId=id;
+  const d=await db.collection("tests").doc(id).get();
+  const t=d.data();
+  teacherName.value=t.teacher;
+  testName.value=t.name;
+  bulkQuestions.value=t.questions.map(q=>
+`${q.q} |
+${q.o[0]} |
+${q.o[1]} |
+${q.o[2]} |
+${q.o[3]} |
+${q.c}`).join("\n\n");
+  editId=id;
 }
 
 function deleteTest(id){
-if(confirm("Delete test?"))
-db.collection("tests").doc(id).delete();
+  if(confirm("Delete test?"))
+    db.collection("tests").doc(id).delete().then(loadTeacherData);
 }
 
-/* ---------- STUDENT ---------- */
+/* ================= STUDENT ================= */
 async function startTest(){
-let d=await db.collection("tests").doc(testSelect.value).get();
-allQ=d.data().questions;
-examQ=[...allQ].sort(()=>Math.random()-0.5).slice(0,30);
-ans=Array(examQ.length).fill(null);
-idx=0;
-exam.classList.remove("hidden");
-showQ();
+  if(!studentName.value||!studentClass.value||!testSelect.value)
+    return alert("Fill all fields");
+
+  const d=await db.collection("tests").doc(testSelect.value).get();
+  questions=[...d.data().questions]
+    .sort(()=>Math.random()-0.5)
+    .slice(0,30);
+
+  answers=Array(questions.length).fill(null);
+  index=0;
+  examArea.classList.remove("hidden");
+  showQ();
 }
 
 function showQ(){
-let q=examQ[idx];
-qText.innerText=`Q${idx+1}. ${q.q}`;
-options.innerHTML="";
-q.o.forEach((o,i)=>{
-options.innerHTML+=`
-<label><input type="radio" name="opt"
-${ans[idx]==i?"checked":""}
-onclick="ans[${idx}]=${i};drawPalette()"> ${o}</label>`;
-});
-drawPalette();
-nextBtn.style.display=idx==examQ.length-1?"none":"inline-block";
+  const q=questions[index];
+  qText.innerText=`Q${index+1}. ${q.q}`;
+  options.innerHTML="";
+  q.o.forEach((o,i)=>{
+    const div=document.createElement("div");
+    div.className="option"+(answers[index]===i?" selected":"");
+    div.innerText=o;
+    div.onclick=()=>{answers[index]=i;showQ();};
+    options.appendChild(div);
+  });
+  drawPalette();
+  nextBtn.style.display=index===questions.length-1?"none":"inline-block";
 }
 
 function drawPalette(){
-palette.innerHTML="";
-ans.forEach((a,i)=>{
-palette.innerHTML+=`<span class="${a!==null?"done":""}"
-onclick="idx=${i};showQ()">${i+1}</span>`;
-});
+  palette.innerHTML="";
+  answers.forEach((a,i)=>{
+    palette.innerHTML+=
+    `<span class="${a!==null?"done":""}"
+     onclick="index=${i};showQ()">${i+1}</span>`;
+  });
 }
 
-function nextQ(){ if(idx<examQ.length-1){idx++;showQ();} }
-function prevQ(){ if(idx>0){idx--;showQ();} }
+function nextQ(){ if(index<questions.length-1){index++;showQ();} }
+function prevQ(){ if(index>0){index--;showQ();} }
 
 async function submitTest(){
-if(!confirm("Submit test?"))return;
-let score=0;
-examQ.forEach((q,i)=>{if(ans[i]==q.c)score++;});
-await db.collection("attempts").add({
-name:sname.value,class:sclass.value,
-test:testSelect.options[testSelect.selectedIndex].text,
-score,total:examQ.length,
-time:new Date().toLocaleString()
-});
-alert(`Submitted\nScore: ${score}/${examQ.length}`);
-exam.classList.add("hidden");
+  if(!confirm("Submit test?"))return;
+  let score=0;
+  questions.forEach((q,i)=>{if(answers[i]===q.c)score++;});
+
+  await db.collection("attempts").add({
+    name:studentName.value,
+    class:studentClass.value,
+    test:testSelect.options[testSelect.selectedIndex].text,
+    score:score,
+    total:questions.length,
+    time:new Date().toLocaleString()
+  });
+  alert(`Submitted Successfully\nScore: ${score}/${questions.length}`);
+  location.reload();
 }
 </script>
 </body>
