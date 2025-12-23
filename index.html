@@ -11,28 +11,21 @@ body{
   background:#f1f5ff;
   margin:0;
 }
-
 .container{
   max-width:900px;
   margin:auto;
   padding:15px;
 }
-
 .card{
-  background:#ffffff;
+  background:#fff;
   padding:20px;
   border-radius:14px;
   margin-bottom:25px;
   border:2px solid #dbe4ff;
-  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
-
-h2,h3{
-  text-align:center;
-  color:#1e40af;
-}
-
-input, textarea, select, button{
+h2,h3{text-align:center;color:#1e40af}
+input,textarea,select,button{
   width:100%;
   padding:12px;
   margin:8px 0;
@@ -40,44 +33,15 @@ input, textarea, select, button{
   border:1px solid #c7d2fe;
   font-size:15px;
 }
-
 button{
   background:#2d5be3;
-  color:white;
+  color:#fff;
   border:none;
   cursor:pointer;
   font-weight:600;
 }
-
 button:hover{background:#1e40af}
-
 .hidden{display:none}
-
-.palette{
-  padding:10px;
-  border:1px dashed #c7d2fe;
-  border-radius:10px;
-  margin-bottom:15px;
-  background:#f8faff;
-  text-align:center;
-}
-
-.palette span{
-  display:inline-block;
-  width:36px;
-  height:36px;
-  line-height:36px;
-  margin:4px;
-  border-radius:50%;
-  background:#e0e7ff;
-  cursor:pointer;
-  font-weight:600;
-}
-
-.palette .done{
-  background:#2d5be3;
-  color:white;
-}
 
 .options label{
   display:block;
@@ -89,29 +53,40 @@ button:hover{background:#1e40af}
   background:#f8faff;
 }
 
-.options label:hover{
-  background:#eef2ff;
+.palette span{
+  display:inline-block;
+  width:34px;
+  height:34px;
+  line-height:34px;
+  margin:4px;
+  border-radius:50%;
+  background:#e0e7ff;
+  cursor:pointer;
+  font-weight:600;
 }
-
-.nav{
-  display:flex;
-  gap:10px;
-  margin-top:15px;
+.palette .done{
+  background:#2d5be3;
+  color:white;
 }
-
-@media(max-width:600px){
-  .nav{flex-direction:column;}
-}
+.nav{display:flex;gap:10px}
+@media(max-width:600px){.nav{flex-direction:column}}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h2>📘 Hera MCQs Examination</h2>
+<h2>📘 Hera English School – Online MCQs</h2>
+
+<!-- TEACHER LOGIN -->
+<div class="card" id="teacherLogin">
+<h3>🔐 Teacher Login</h3>
+<input type="password" id="teacherPass" placeholder="Enter Teacher Password">
+<button onclick="teacherLogin()">Login</button>
+</div>
 
 <!-- TEACHER PANEL -->
-<div class="card">
+<div class="card hidden" id="teacherPanel">
 <h3>👩‍🏫 Teacher Panel</h3>
 
 <input id="testTitle" placeholder="Test Title">
@@ -137,17 +112,13 @@ button:hover{background:#1e40af}
 
 <!-- STUDENT PANEL -->
 <div class="card">
-<h3>🧑‍🎓 Student Exam Mode</h3>
-
-<button onclick="startExam()">Start Exam</button>
+<h3>🧑‍🎓 Student Panel</h3>
+<button onclick="startExam()">Start Test</button>
 
 <div id="exam" class="hidden">
-
 <div class="palette" id="palette"></div>
-
 <h3 id="qNo"></h3>
 <p id="question"></p>
-
 <div class="options" id="options"></div>
 
 <div class="nav">
@@ -155,7 +126,6 @@ button:hover{background:#1e40af}
 <button id="nextBtn" onclick="nextQ()">Next</button>
 <button onclick="submitExam()">Submit</button>
 </div>
-
 </div>
 </div>
 
@@ -174,16 +144,26 @@ const firebaseConfig = {
   messagingSenderId: "284002289050",
   appId: "1:284002289050:web:e98f219b72f5c7cc3c6623"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let questions = [];
-let examQ = [];
-let answers = {};
-let index = 0;
+/* PASSWORD */
+const TEACHER_PASSWORD = "hera@123";
+
+function teacherLogin(){
+  if(teacherPass.value === TEACHER_PASSWORD){
+    teacherLoginDiv.style.display="none";
+    teacherPanel.classList.remove("hidden");
+  }else{
+    alert("Wrong Password");
+  }
+}
+
+const teacherLoginDiv=document.getElementById("teacherLogin");
+const teacherPanel=document.getElementById("teacherPanel");
 
 /* TEACHER */
+let questions=[];
 function addQuestion(){
   questions.push({
     q:qText.value,
@@ -193,27 +173,25 @@ function addQuestion(){
   qText.value=o1.value=o2.value=o3.value=o4.value="";
   loadTeacherList();
 }
-
 function loadTeacherList(){
   teacherList.innerHTML="";
   questions.forEach((q,i)=>{
     teacherList.innerHTML+=`<p>${i+1}. ${q.q}</p>`;
   });
 }
-
 function saveTest(){
   db.collection("tests").doc("latest").set({questions});
   alert("Test Saved");
 }
 
 /* STUDENT */
+let examQ=[],answers={},index=0;
+
 function startExam(){
   db.collection("tests").doc("latest").get().then(d=>{
-    let all=d.data().questions;
-    examQ = shuffle(all).slice(0,30);
-    index=0;
-    answers={};
-    document.getElementById("exam").classList.remove("hidden");
+    examQ=shuffle(d.data().questions).slice(0,30);
+    index=0;answers={};
+    exam.classList.remove("hidden");
     loadQ();
   });
 }
@@ -222,7 +200,6 @@ function loadQ(){
   let q=examQ[index];
   qNo.innerText=`Question ${index+1} of ${examQ.length}`;
   question.innerText=q.q;
-
   options.innerHTML="";
   q.o.forEach((op,i)=>{
     options.innerHTML+=`
@@ -232,33 +209,20 @@ function loadQ(){
       ${op}
     </label>`;
   });
-
-  updatePalette();
-
-  nextBtn.style.display = (index==examQ.length-1) ? "none":"block";
-}
-
-function updatePalette(){
   palette.innerHTML="";
   examQ.forEach((_,i)=>{
-    palette.innerHTML+=`<span class="${answers[i]!=null?"done":""}" onclick="jump(${i})">${i+1}</span>`;
+    palette.innerHTML+=`<span class="${answers[i]!=null?'done':''}" onclick="jump(${i})">${i+1}</span>`;
   });
+  nextBtn.style.display = index===examQ.length-1 ? "none":"block";
 }
-
-function jump(i){index=i;loadQ()}
 function nextQ(){if(index<examQ.length-1){index++;loadQ()}}
 function prevQ(){if(index>0){index--;loadQ()}}
-
+function jump(i){index=i;loadQ()}
 function submitExam(){
-  alert("Exam Submitted Successfully");
-  document.getElementById("exam").classList.add("hidden");
+  alert("Test Submitted");
+  exam.classList.add("hidden");
 }
-
-/* UTILS */
-function shuffle(a){
-  return a.sort(()=>Math.random()-0.5);
-}
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
 </script>
-
 </body>
 </html>
