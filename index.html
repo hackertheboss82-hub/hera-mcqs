@@ -1,135 +1,217 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MCQ Test System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: Arial; background:#f4f6f8; padding:20px; }
-    h2,h3 { margin-top:0 }
-    button { padding:10px 15px; margin:5px; cursor:pointer }
-    input, textarea { width:100%; padding:8px; margin:5px 0 }
-    .card { background:#fff; padding:15px; margin-top:15px; border-radius:6px }
-    .hidden { display:none }
-    .q { margin-bottom:10px }
-  </style>
+<meta charset="UTF-8">
+<title>MCQ Test System</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; margin:20px }
+.card { background:#fff; padding:20px; margin-bottom:20px; border-radius:6px }
+button { padding:10px 15px; margin:5px }
+input, textarea { width:100%; padding:8px; margin:5px 0 }
+.hidden { display:none }
+.option { margin:8px 0 }
+.timer { font-weight:bold; color:red }
+</style>
 </head>
+
 <body>
 
 <h2>Login As</h2>
-<button onclick="show('student')">Student</button>
-<button onclick="show('teacher')">Teacher</button>
+<button onclick="showStudent()">Student</button>
+<button onclick="showTeacher()">Teacher</button>
 
-<!-- TEACHER -->
-<div id="teacher" class="card hidden">
-  <h3>Teacher Login</h3>
-  <input id="tPin" type="password" placeholder="Enter Teacher PIN">
-  <button onclick="teacherLogin()">Login</button>
-
-  <div id="teacherPanel" class="hidden">
-    <h3>Create Test</h3>
-    <input id="testTitle" placeholder="Test Title">
-
-    <h4>Paste Questions (Bulk)</h4>
-    <textarea id="bulkQ" rows="12"
-      placeholder="Question&#10;Option1&#10;Option2&#10;Option3&#10;Option4&#10;CorrectIndex&#10;&#10;Next Question..."></textarea>
-
-    <button onclick="saveTest()">Save Test</button>
-    <p id="tMsg"></p>
-  </div>
+<!-- STUDENT PANEL -->
+<div id="studentPanel" class="card hidden">
+<h3>Student Panel</h3>
+<input id="studentName" placeholder="Enter your name">
+<button onclick="loadTests()">Load Tests</button>
+<div id="testList"></div>
+<div id="examArea"></div>
 </div>
 
-<!-- STUDENT -->
-<div id="student" class="card hidden">
-  <h3>Student Panel</h3>
-  <input id="sName" placeholder="Your Name">
-  <button onclick="loadTests()">Load Tests</button>
-  <div id="tests"></div>
-  <div id="exam"></div>
+<!-- TEACHER PANEL -->
+<div id="teacherLogin" class="card hidden">
+<h3>Teacher Login</h3>
+<input type="password" id="teacherPin" placeholder="Enter PIN">
+<button onclick="teacherLogin()">Login</button>
 </div>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<div id="teacherPanel" class="card hidden">
+<h3>Teacher Panel</h3>
+
+<input id="testTitle" placeholder="Test Title">
+<input id="testTime" placeholder="Time (minutes)">
+<textarea id="questionInput" rows="8"
+placeholder="Question | A | B | C | D | correctIndex"></textarea>
+<button onclick="createTest()">Create Test</button>
+
+<h4>All Tests</h4>
+<div id="teacherTests"></div>
+
+<h4>Student Attempts</h4>
+<div id="attempts"></div>
+</div>
 
 <script>
+// 🔥 FIREBASE CONFIG (YOURS)
 const firebaseConfig = {
   apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
   authDomain: "hera-mcqs-55022.firebaseapp.com",
   databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
-  projectId: "hera-mcqs-55022"
+  projectId: "hera-mcqs-55022",
+  storageBucket: "hera-mcqs-55022.firebasestorage.app",
+  messagingSenderId: "878791404574",
+  appId: "1:878791404574:web:a0ec3ab2819423aa09120f"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* UI */
-function show(id){
-  document.getElementById('teacher').classList.add('hidden');
-  document.getElementById('student').classList.add('hidden');
-  document.getElementById(id).classList.remove('hidden');
+// UI SWITCH
+function showStudent(){
+  studentPanel.classList.remove("hidden");
+  teacherLogin.classList.add("hidden");
+  teacherPanel.classList.add("hidden");
+}
+function showTeacher(){
+  teacherLogin.classList.remove("hidden");
+  studentPanel.classList.add("hidden");
 }
 
-/* TEACHER */
+// TEACHER LOGIN
 function teacherLogin(){
-  if(document.getElementById('tPin').value === "1234"){
-    document.getElementById('teacherPanel').classList.remove('hidden');
+  if(teacherPin.value==="12345"){
+    teacherPanel.classList.remove("hidden");
+    teacherLogin.classList.add("hidden");
+    loadTeacherTests();
+    loadAttempts();
   } else alert("Wrong PIN");
 }
 
-function saveTest(){
-  const title = testTitle.value.trim();
-  const raw = bulkQ.value.trim();
-  if(!title || !raw) return alert("Missing data");
-
-  const blocks = raw.split("\n\n");
-  const questions = [];
-
-  blocks.forEach(b=>{
-    const l = b.split("\n");
-    if(l.length>=6){
-      questions.push({
-        q:l[0],
-        options:[l[1],l[2],l[3],l[4]],
-        correct:Number(l[5])
-      });
+// CREATE TEST
+function createTest(){
+  let qs=[];
+  questionInput.value.trim().split("\n").forEach(l=>{
+    let p=l.split("|").map(x=>x.trim());
+    if(p.length===6){
+      qs.push({q:p[0],o:p.slice(1,5),c:Number(p[5])});
     }
   });
-
-  const id = Date.now();
-  db.ref("tests/"+id).set({
-    title,
-    questions
+  db.ref("tests").push({
+    title:testTitle.value,
+    time:Number(testTime.value),
+    questions:qs
   });
-
-  tMsg.innerText = "Test saved with "+questions.length+" questions";
-  bulkQ.value = ""; testTitle.value="";
+  alert("Test Created");
+  loadTeacherTests();
 }
 
-/* STUDENT */
-function loadTests(){
-  tests.innerHTML="Loading...";
+// LOAD TEACHER TESTS
+function loadTeacherTests(){
+  teacherTests.innerHTML="";
   db.ref("tests").once("value",s=>{
-    tests.innerHTML="";
     s.forEach(t=>{
-      const b=document.createElement("button");
-      b.innerText=t.val().title;
-      b.onclick=()=>startTest(t.key,t.val());
-      tests.appendChild(b);
+      teacherTests.innerHTML+=`
+      <div>
+        ${t.val().title}
+        <button onclick="deleteTest('${t.key}')">Delete</button>
+      </div>`;
+    });
+  });
+}
+function deleteTest(id){
+  if(confirm("Delete test?")){
+    db.ref("tests/"+id).remove();
+    loadTeacherTests();
+  }
+}
+
+// STUDENT LOAD TESTS
+function loadTests(){
+  testList.innerHTML="";
+  db.ref("tests").once("value",s=>{
+    s.forEach(t=>{
+      testList.innerHTML+=`
+      <button onclick="startTest('${t.key}')">${t.val().title}</button>`;
     });
   });
 }
 
-function startTest(id,data){
-  exam.innerHTML="<h3>"+data.title+"</h3>";
-  const qs=[...data.questions].sort(()=>0.5-Math.random()).slice(0,30);
+// EXAM LOGIC
+let exam=[], idx=0, answers=[], timerInt, timeLeft, currentTestId;
 
-  qs.forEach((q,i)=>{
-    const d=document.createElement("div");
-    d.className="q";
-    d.innerHTML="<b>"+(i+1)+". "+q.q+"</b><br>";
-    q.options.forEach(o=>{
-      d.innerHTML+=`<label><input type="radio" name="q${i}"> ${o}</label><br>`;
+function startTest(id){
+  currentTestId=id;
+  db.ref("tests/"+id).once("value",s=>{
+    let q=s.val().questions;
+    exam=q.sort(()=>0.5-Math.random()).slice(0,30);
+    answers=[];
+    idx=0;
+    timeLeft=s.val().time*60;
+    runTimer();
+    showQuestion();
+  });
+}
+
+function runTimer(){
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer")?.remove();
+    examArea.insertAdjacentHTML("afterbegin",
+      `<div id="timer" class="timer">Time: ${timeLeft}s</div>`);
+    if(timeLeft<=0) submitTest();
+  },1000);
+}
+
+function showQuestion(){
+  let q=exam[idx];
+  examArea.innerHTML=`
+  <div class="timer" id="timer"></div>
+  <h4>Q ${idx+1}/30</h4>
+  <p>${q.q}</p>
+  ${q.o.map((o,i)=>`
+    <div class="option">
+    <input type="radio" name="opt" value="${i}"
+    ${answers[idx]==i?"checked":""}
+    onclick="answers[${idx}]=${i}">
+    ${o}
+    </div>`).join("")}
+  <button onclick="prevQ()">Previous</button>
+  <button onclick="nextQ()">Next</button>
+  <button onclick="submitTest()">Submit</button>`;
+}
+
+function nextQ(){ if(idx<29){ idx++; showQuestion(); } }
+function prevQ(){ if(idx>0){ idx--; showQuestion(); } }
+
+function submitTest(){
+  clearInterval(timerInt);
+  let score=0;
+  exam.forEach((q,i)=>{ if(answers[i]==q.c) score++; });
+
+  db.ref("attempts").push({
+    student:studentName.value,
+    test:currentTestId,
+    score:score,
+    time:new Date().toLocaleString()
+  });
+
+  examArea.innerHTML=`<h3>Score: ${score}/30</h3>`;
+}
+
+// LOAD ATTEMPTS
+function loadAttempts(){
+  attempts.innerHTML="";
+  db.ref("attempts").on("value",s=>{
+    attempts.innerHTML="";
+    s.forEach(a=>{
+      let v=a.val();
+      attempts.innerHTML+=`${v.student} : ${v.score} <br>`;
     });
-    exam.appendChild(d);
   });
 }
 </script>
