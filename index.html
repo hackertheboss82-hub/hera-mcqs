@@ -1,203 +1,349 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>School MCQ Test System</title>
+<title>MCQ Online Test</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body{
+body {
     font-family: Arial, sans-serif;
-    background:#f4f6f8;
-    margin:0;
+    background: #f4f6f8;
+    margin: 0;
 }
-header{
-    background:#2563eb;
-    color:white;
-    padding:15px;
-    font-size:22px;
+
+header {
+    background: #2563eb;
+    color: white;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: bold;
 }
-button{
-    padding:10px 18px;
-    margin:5px;
-    font-size:16px;
-    cursor:pointer;
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 15px;
 }
-.panel{
-    background:white;
-    margin:15px;
-    padding:15px;
-    border-radius:6px;
+
+button {
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
 }
-.option{
-    display:block;
-    padding:12px;
-    border:1px solid #ccc;
-    margin:8px 0;
-    border-radius:5px;
-    cursor:pointer;
+
+.hidden { display: none; }
+
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-.option input{
-    transform:scale(1.4);
-    margin-right:10px;
+
+.option {
+    border: 2px solid #ccc;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
 }
-.palette button{
-    width:40px;
-    height:40px;
-    margin:4px;
+
+.option input {
+    transform: scale(1.4);
+    margin-right: 10px;
 }
-.activeQ{
-    background:#2563eb;
-    color:white;
+
+.option:hover {
+    border-color: #2563eb;
 }
-.hidden{display:none;}
+
+.palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 40px);
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.palette button {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    font-weight: bold;
+}
+
+.notVisited { background: #d1d5db; }
+.visited { background: #93c5fd; }
+.answered { background: #22c55e; color: white; }
+
+.timer {
+    color: red;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background: #2563eb;
+    color: white;
+}
 </style>
 </head>
 
 <body>
-
 <header>MCQ Online Test</header>
 
-<div class="panel">
+<div class="container">
+
+<!-- LOGIN -->
+<div class="card">
     <button onclick="showStudent()">Student</button>
     <button onclick="showTeacher()">Teacher</button>
 </div>
 
 <!-- STUDENT PANEL -->
-<div id="studentPanel" class="panel hidden">
-    <input id="studentName" placeholder="Student Name"><br><br>
+<div id="studentPanel" class="card hidden">
+    <h3>Student Panel</h3>
+    Name: <input id="studentName"><br><br>
+    Class:
+    <select id="studentClass">
+        <option>JR</option><option>1</option><option>2</option><option>3</option>
+        <option>4</option><option>5</option><option>6</option>
+        <option>7</option><option>8</option><option>9</option><option>10</option>
+    </select>
+    <br><br>
     <button onclick="loadTests()">Load Tests</button>
     <div id="testList"></div>
-    <div id="examArea"></div>
+</div>
+
+<!-- TEST SCREEN -->
+<div id="testScreen" class="card hidden">
+    <div class="timer" id="timer"></div>
+    <div class="palette" id="palette"></div>
+    <div id="questionBox"></div>
+    <br>
+    <button onclick="prevQ()">Previous</button>
+    <button onclick="nextQ()">Next</button>
+    <button onclick="submitTest()">Submit</button>
 </div>
 
 <!-- TEACHER PANEL -->
-<div id="teacherPanel" class="panel hidden">
-    <input type="password" id="teacherPin" placeholder="Teacher PIN">
-    <button onclick="teacherLogin()">Login</button>
+<div id="teacherLogin" class="card hidden">
+    <h3>Teacher Login</h3>
+    PIN: <input type="password" id="teacherPin">
+    <button onclick="loginTeacher()">Login</button>
+</div>
 
-    <div id="teacherArea" class="hidden">
-        <input id="testName" placeholder="Test Name"><br><br>
+<div id="teacherPanel" class="card hidden">
+    <h3>Create / Update Test</h3>
+    Test Name: <input id="tName"><br><br>
+    Class:
+    <select id="tClass">
+        <option>JR</option><option>1</option><option>2</option><option>3</option>
+        <option>4</option><option>5</option><option>6</option>
+        <option>7</option><option>8</option><option>9</option><option>10</option>
+    </select><br><br>
+    Time (minutes): <input id="tTime" value="30"><br><br>
 
-        Class:
-        <select id="className">
-            <option>JR</option><option>1</option><option>2</option>
-            <option>3</option><option>4</option><option>5</option>
-            <option>6</option><option>7</option><option>8</option>
-            <option>9</option><option>10</option>
-        </select><br><br>
+<textarea id="tQuestions" rows="10" style="width:100%;">
+Question |
+option1 |
+option2 |
+option3 |
+option4 |
+correctIndex (0-3)
+</textarea><br><br>
 
-        Time (minutes): <input id="testTime" value="30"><br><br>
+<button onclick="createTest()">Create / Update Test</button>
 
-        <textarea id="questions" rows="10" style="width:100%"
-        placeholder="Question | Option1 | Option2 | Option3 | Option4 | correctIndex(0-3)"></textarea><br><br>
+<h3>Existing Tests</h3>
+<div id="teacherTests"></div>
 
-        <button onclick="createTest()">Create / Update Test</button>
-        <hr>
-        <div id="teacherTests"></div>
-    </div>
+<h3>Student Attempts</h3>
+<table>
+<thead>
+<tr><th>Name</th><th>Class</th><th>Test</th><th>Score</th><th>Time</th></tr>
+</thead>
+<tbody id="attemptTable"></tbody>
+</table>
+</div>
+
 </div>
 
 <script>
-// 🔥 Firebase Config (YOURS)
-firebase.initializeApp({
- apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
- authDomain: "hera-mcqs-55022.firebaseapp.com",
- databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
- projectId: "hera-mcqs-55022"
-});
-const db=firebase.database();
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+  authDomain: "hera-mcqs-55022.firebaseapp.com",
+  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
+  projectId: "hera-mcqs-55022",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-let questions=[],current=0,answers={};
+let questions=[], answers=[], current=0, timeLeft=0, timerInt, testId="", student="";
 
-// PANEL SWITCH
-function showStudent(){studentPanel.classList.remove("hidden");teacherPanel.classList.add("hidden");}
-function showTeacher(){teacherPanel.classList.remove("hidden");studentPanel.classList.add("hidden");}
-
-// TEACHER LOGIN
-function teacherLogin(){
- if(teacherPin.value==="1914"){
-   teacherArea.classList.remove("hidden");
-   loadTeacherTests();
- }else alert("Wrong PIN");
+function showStudent(){ hideAll(); studentPanel.classList.remove("hidden"); }
+function showTeacher(){ hideAll(); teacherLogin.classList.remove("hidden"); }
+function hideAll(){
+document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
 }
 
-// CREATE TEST
+function loginTeacher(){
+if(teacherPin.value==="1914"){
+hideAll(); teacherPanel.classList.remove("hidden");
+loadTeacherTests(); loadAttempts();
+}else alert("Wrong PIN");
+}
+
 function createTest(){
- let qArr=questionsInput();
- db.ref("tests/"+testName.value).set({
-   class:className.value,
-   time:testTime.value,
-   questions:qArr
- });
- alert("Saved");
- loadTeacherTests();
+const id=Date.now();
+const raw=tQuestions.value.trim().split("\n");
+let q=[];
+for(let i=0;i<raw.length;i+=6){
+q.push({
+q:raw[i],
+o:[raw[i+1],raw[i+2],raw[i+3],raw[i+4]],
+c:parseInt(raw[i+5])
+});
+}
+db.ref("tests/"+id).set({
+name:tName.value,
+class:tClass.value,
+time:parseInt(tTime.value),
+questions:q
+});
+alert("Test saved");
+loadTeacherTests();
 }
 
-// LOAD TESTS (TEACHER)
 function loadTeacherTests(){
- teacherTests.innerHTML="";
- db.ref("tests").once("value",s=>{
-  s.forEach(t=>{
-   teacherTests.innerHTML+=`${t.key} 
-   <button onclick="deleteTest('${t.key}')">Delete</button><br>`;
-  });
- });
+teacherTests.innerHTML="";
+db.ref("tests").on("value",s=>{
+teacherTests.innerHTML="";
+s.forEach(c=>{
+teacherTests.innerHTML+=`${c.val().name} (${c.val().class})
+<button onclick="delTest('${c.key}')">Delete</button><br>`;
+});
+});
 }
 
-function deleteTest(t){
- if(confirm("Delete test?")) db.ref("tests/"+t).remove(),loadTeacherTests();
+function delTest(id){
+if(confirm("Delete test?")){
+db.ref("tests/"+id).remove();
+}
 }
 
-// STUDENT SIDE
 function loadTests(){
- testList.innerHTML="";
- db.ref("tests").once("value",s=>{
-  s.forEach(t=>{
-   testList.innerHTML+=`<button onclick="startTest('${t.key}')">${t.key}</button>`;
-  });
- });
+testList.innerHTML="";
+db.ref("tests").once("value",s=>{
+s.forEach(c=>{
+if(c.val().class===studentClass.value){
+testList.innerHTML+=`<button onclick="startTest('${c.key}')">${c.val().name}</button> `;
+}
+});
+});
 }
 
-function startTest(name){
- db.ref("tests/"+name).once("value",s=>{
-  questions=s.val().questions;
-  current=0;answers={};
-  renderQuestion();
- });
+function startTest(id){
+student=studentName.value;
+if(!student){alert("Enter name");return;}
+testId=id;
+db.ref("tests/"+id).once("value",s=>{
+let t=s.val();
+questions=shuffle(t.questions).slice(0,30);
+answers=new Array(questions.length).fill(null);
+current=0;
+timeLeft=t.time*60;
+hideAll(); testScreen.classList.remove("hidden");
+buildPalette(); showQ(); startTimer();
+});
 }
 
-function renderQuestion(){
- let q=questions[current];
- examArea.innerHTML=`<h3>Q${current+1}. ${q.q}</h3>`;
- ["A","B","C","D"].forEach((l,i)=>{
-  examArea.innerHTML+=`
-  <label class="option">
-  <input type="radio" name="opt" ${answers[current]==i?"checked":""}
-  onclick="answers[${current}]=${i}">
-  ${l}. ${q.o[i]}
-  </label>`;
- });
- examArea.innerHTML+=`
- <button onclick="prev()">Previous</button>
- <button onclick="next()">Next</button>
- <button onclick="submitTest()">Submit</button>`;
+function buildPalette(){
+palette.innerHTML="";
+questions.forEach((_,i)=>{
+let b=document.createElement("button");
+b.textContent=i+1;
+b.className="notVisited";
+b.onclick=()=>{current=i; showQ();}
+palette.appendChild(b);
+});
 }
 
-function next(){if(current<questions.length-1){current++;renderQuestion();}}
-function prev(){if(current>0){current--;renderQuestion();}}
-function submitTest(){alert("Test Submitted");}
+function showQ(){
+document.querySelectorAll(".palette button")[current].className=
+answers[current]==null?"visited":"answered";
 
-// HELPERS
-function questionsInput(){
- return questions.value.trim().split("\n\n").map(q=>{
-  let p=q.split("|").map(x=>x.trim());
-  return {q:p[0],o:[p[1],p[2],p[3],p[4]],a:+p[5]};
- });
+let q=questions[current];
+questionBox.innerHTML=`<h3>Q${current+1}. ${q.q}</h3>`;
+q.o.forEach((o,i)=>{
+questionBox.innerHTML+=`
+<label class="option">
+<input type="radio" name="opt" ${answers[current]==i?"checked":""}
+onclick="answers[${current}]=${i}">
+<b>${String.fromCharCode(65+i)}.</b> ${o}
+</label>`;
+});
 }
+
+function prevQ(){ if(current>0){current--; showQ();}}
+function nextQ(){ if(current<questions.length-1){current++; showQ();}}
+
+function startTimer(){
+timerInt=setInterval(()=>{
+timer.textContent="Time Left: "+timeLeft+"s";
+timeLeft--;
+if(timeLeft<0){submitTest();}
+},1000);
+}
+
+function submitTest(){
+if(!confirm("Submit test?"))return;
+clearInterval(timerInt);
+let score=0;
+questions.forEach((q,i)=>{if(answers[i]==q.c)score++;});
+db.ref("attempts").push({
+name:student,
+class:studentClass.value,
+test:testId,
+score:score+"/"+questions.length,
+time:new Date().toLocaleString()
+});
+alert("Test submitted");
+location.reload();
+}
+
+function loadAttempts(){
+attemptTable.innerHTML="";
+db.ref("attempts").on("value",s=>{
+attemptTable.innerHTML="";
+s.forEach(c=>{
+let a=c.val();
+attemptTable.innerHTML+=`<tr>
+<td>${a.name}</td><td>${a.class}</td>
+<td>${a.test}</td><td>${a.score}</td><td>${a.time}</td>
+</tr>`;
+});
+});
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 </script>
-
 </body>
 </html>
