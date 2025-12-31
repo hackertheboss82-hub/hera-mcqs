@@ -3,15 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <title>MCQ Online Test</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
-body{font-family:Arial;background:#f4f6f8;margin:0}
-header{background:#2563eb;color:#fff;padding:15px;font-size:20px}
-.container{max-width:900px;margin:20px auto;background:#fff;padding:20px;border-radius:8px}
-button{padding:8px 15px;margin:5px;cursor:pointer}
-input,select,textarea{width:100%;padding:8px;margin:5px 0}
-textarea{height:180px}
+*{box-sizing:border-box}
+body{
+    font-family:Arial, sans-serif;
+    margin:0;
+    background:#f4f6f8;
+}
+header{
+    background:#2563eb;
+    color:#fff;
+    padding:15px;
+    font-size:22px;
+    font-weight:bold;
+}
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:15px;
+}
+.card{
+    background:#fff;
+    padding:15px;
+    border-radius:6px;
+    margin-bottom:15px;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+button{
+    padding:10px 16px;
+    font-size:14px;
+    cursor:pointer;
+}
 .hidden{display:none}
-.question{margin:15px 0}
+
+.option{
+    border:2px solid #d1d5db;
+    padding:14px;
+    margin:10px 0;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    font-size:16px;
+}
+.option input{
+    transform:scale(1.6);
+    margin-right:12px;
+}
+.option:hover{border-color:#2563eb}
+
+.palette{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,45px);
+    gap:6px;
+    margin-bottom:15px;
+}
+.palette button{
+    border:none;
+    padding:10px;
+    border-radius:6px;
+    font-weight:bold;
+}
+.notVisited{background:#d1d5db}
+.visited{background:#93c5fd}
+.answered{background:#22c55e;color:#fff}
+
+.timer{
+    color:red;
+    font-weight:bold;
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:center;
+}
+th{
+    background:#2563eb;
+    color:#fff;
+}
+textarea{width:100%}
 </style>
 </head>
 
@@ -19,147 +101,222 @@ textarea{height:180px}
 <header>MCQ Online Test</header>
 
 <div class="container">
-<button onclick="showStudent()">Student</button>
-<button onclick="showTeacher()">Teacher</button>
+
+<!-- SWITCH -->
+<div class="card">
+    <button onclick="showStudent()">Student</button>
+    <button onclick="showTeacher()">Teacher</button>
+</div>
+
+<!-- STUDENT -->
+<div id="studentPanel" class="card hidden">
+    <h3>Student Panel</h3>
+    Name: <input id="studentName"><br><br>
+    Class:
+    <select id="studentClass">
+        <option>JR</option><option>1</option><option>2</option><option>3</option>
+        <option>4</option><option>5</option><option>6</option>
+        <option>7</option><option>8</option><option>9</option><option>10</option>
+    </select><br><br>
+    <button onclick="loadTests()">Load Tests</button>
+    <div id="testList"></div>
+</div>
+
+<!-- TEST -->
+<div id="testScreen" class="card hidden">
+    <div class="timer" id="timer"></div>
+    <div class="palette" id="palette"></div>
+    <div id="questionBox"></div>
+    <br>
+    <button onclick="prevQ()">Previous</button>
+    <button onclick="nextQ()">Next</button>
+    <button onclick="submitTest()">Submit</button>
 </div>
 
 <!-- TEACHER LOGIN -->
-<div class="container hidden" id="teacherLogin">
-<h3>Teacher Login</h3>
-<input type="password" id="teacherPin" placeholder="Enter PIN">
-<button onclick="teacherLogin()">Login</button>
+<div id="teacherLogin" class="card hidden">
+    <h3>Teacher Login</h3>
+    PIN: <input type="password" id="teacherPin">
+    <button onclick="loginTeacher()">Login</button>
 </div>
 
 <!-- TEACHER PANEL -->
-<div class="container hidden" id="teacherPanel">
-<h3>Create / Update Test</h3>
+<div id="teacherPanel" class="card hidden">
+    <h3>Create / Update Test</h3>
+    Test Name: <input id="tName"><br><br>
+    Class:
+    <select id="tClass">
+        <option>JR</option><option>1</option><option>2</option><option>3</option>
+        <option>4</option><option>5</option><option>6</option>
+        <option>7</option><option>8</option><option>9</option><option>10</option>
+    </select><br><br>
+    Time (minutes): <input id="tTime" value="30"><br><br>
 
-<input id="testName" placeholder="Test Name">
-<select id="testClass">
-<option>JR</option><option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option><option>10</option>
-</select>
-<input id="testTime" value="30" placeholder="Time (minutes)">
+<textarea id="tQuestions" rows="12">
+Question
+Option1
+Option2
+Option3
+Option4
+CorrectIndex(0-3)
+</textarea><br><br>
 
-<p><b>Format:</b><br>
-Question | Option1 | Option2 | Option3 | Option4 | correctIndex(0-3)
-</p>
-
-<textarea id="questionData"></textarea>
-<button onclick="saveTest()">Create / Update Test</button>
+<button onclick="createTest()">Create / Update Test</button>
 
 <h3>Existing Tests</h3>
-<ul id="testList"></ul>
+<div id="teacherTests"></div>
+
+<h3>Student Attempts</h3>
+<table>
+<thead>
+<tr><th>Name</th><th>Class</th><th>Test</th><th>Score</th><th>Time</th></tr>
+</thead>
+<tbody id="attemptTable"></tbody>
+</table>
 </div>
 
-<!-- STUDENT PANEL -->
-<div class="container hidden" id="studentPanel">
-<h3>Student Test</h3>
-<input id="studentName" placeholder="Student Name">
-<select id="studentClass">
-<option>JR</option><option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option><option>10</option>
-</select>
-<button onclick="loadTests()">Load Tests</button>
-
-<div id="testSelect"></div>
-<div id="examArea"></div>
 </div>
 
 <script>
-const PIN = "1914";
+const firebaseConfig={
+apiKey:"AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+databaseURL:"https://hera-mcqs-55022-default-rtdb.firebaseio.com",
+projectId:"hera-mcqs-55022"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-/* VIEW SWITCH */
-function showTeacher(){
-hideAll(); document.getElementById("teacherLogin").classList.remove("hidden");
-}
-function showStudent(){
-hideAll(); document.getElementById("studentPanel").classList.remove("hidden");
-}
-function hideAll(){
-document.querySelectorAll(".container").forEach(d=>d.classList.add("hidden"));
-}
+let questions=[],answers=[],current=0,timeLeft=0,timerInt,testId="",student="";
 
-/* TEACHER LOGIN */
-function teacherLogin(){
-if(document.getElementById("teacherPin").value===PIN){
-hideAll();
-document.getElementById("teacherPanel").classList.remove("hidden");
-loadTestList();
+function hideAll(){document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"))}
+function showStudent(){hideAll();studentPanel.classList.remove("hidden")}
+function showTeacher(){hideAll();teacherLogin.classList.remove("hidden")}
+
+function loginTeacher(){
+if(teacherPin.value==="1914"){
+hideAll();teacherPanel.classList.remove("hidden");
+loadTeacherTests();loadAttempts();
 }else alert("Wrong PIN");
 }
 
-/* SAVE TEST */
-function saveTest(){
-const name=testName.value.trim();
-if(!name){alert("Test name required");return;}
-
-const raw=questionData.value.trim().split("\n");
-let questions=[];
-for(let i=0;i<raw.length;i++){
-let p=raw[i].split("|").map(x=>x.trim());
-if(p.length===6){
-questions.push({
-q:p[0],o:p.slice(1,5),c:parseInt(p[5])
+function createTest(){
+let lines=tQuestions.value.trim().split("\n");
+let q=[];
+for(let i=0;i<lines.length;i+=6){
+q.push({q:lines[i],o:[lines[i+1],lines[i+2],lines[i+3],lines[i+4]],c:+lines[i+5]});
+}
+db.ref("tests/"+Date.now()).set({
+name:tName.value,
+class:tClass.value,
+time:+tTime.value,
+questions:q
 });
-}
-}
-if(questions.length<1){alert("No valid questions");return;}
-
-let tests=JSON.parse(localStorage.getItem("tests")||"{}");
-tests[name]={class:testClass.value,time:testTime.value,questions};
-localStorage.setItem("tests",JSON.stringify(tests));
-
-alert("Test Saved Successfully");
-questionData.value="";
-loadTestList();
+alert("Test Saved");
+loadTeacherTests();
 }
 
-/* LOAD TEST LIST */
-function loadTestList(){
-let tests=JSON.parse(localStorage.getItem("tests")||"{}");
-let ul=document.getElementById("testList");
-ul.innerHTML="";
-Object.keys(tests).forEach(t=>{
-let li=document.createElement("li");
-li.innerText=t+" (Class "+tests[t].class+")";
-ul.appendChild(li);
+function loadTeacherTests(){
+teacherTests.innerHTML="";
+db.ref("tests").on("value",s=>{
+teacherTests.innerHTML="";
+s.forEach(c=>{
+teacherTests.innerHTML+=`${c.val().name} (${c.val().class})
+<button onclick="db.ref('tests/${c.key}').remove()">Delete</button><br>`;
+});
 });
 }
 
-/* STUDENT */
 function loadTests(){
-let cls=studentClass.value;
-let tests=JSON.parse(localStorage.getItem("tests")||"{}");
-let div=document.getElementById("testSelect");
-div.innerHTML="";
-Object.keys(tests).forEach(t=>{
-if(tests[t].class===cls){
-let b=document.createElement("button");
-b.innerText="Start "+t;
-b.onclick=()=>startTest(t);
-div.appendChild(b);
+testList.innerHTML="";
+db.ref("tests").once("value",s=>{
+s.forEach(c=>{
+if(c.val().class===studentClass.value){
+testList.innerHTML+=`<button onclick="startTest('${c.key}')">${c.val().name}</button> `;
 }
+});
 });
 }
 
-function startTest(name){
-let test=JSON.parse(localStorage.getItem("tests"))[name];
-let qs=[...test.questions].sort(()=>0.5-Math.random()).slice(0,30);
-let area=document.getElementById("examArea");
-area.innerHTML="<h3>"+name+"</h3>";
-qs.forEach((q,i)=>{
-let d=document.createElement("div");
-d.className="question";
-d.innerHTML="<b>Q"+(i+1)+". "+q.q+"</b><br>";
-q.o.forEach(o=>{
-d.innerHTML+=`<label><input type="radio" name="q${i}"> ${o}</label><br>`;
-});
-area.appendChild(d);
+function startTest(id){
+student=studentName.value;
+if(!student){alert("Enter name");return;}
+testId=id;
+db.ref("tests/"+id).once("value",s=>{
+let t=s.val();
+questions=shuffle(t.questions).slice(0,30);
+answers=new Array(questions.length).fill(null);
+current=0;timeLeft=t.time*60;
+hideAll();testScreen.classList.remove("hidden");
+buildPalette();showQ();startTimer();
 });
 }
+
+function buildPalette(){
+palette.innerHTML="";
+questions.forEach((_,i)=>{
+let b=document.createElement("button");
+b.textContent=i+1;
+b.className="notVisited";
+b.onclick=()=>{current=i;showQ()};
+palette.appendChild(b);
+});
+}
+
+function showQ(){
+document.querySelectorAll(".palette button")[current].className=
+answers[current]==null?"visited":"answered";
+let q=questions[current];
+questionBox.innerHTML=`<h3>Q${current+1}. ${q.q}</h3>`;
+q.o.forEach((o,i)=>{
+questionBox.innerHTML+=`
+<label class="option">
+<input type="radio" name="opt" ${answers[current]==i?"checked":""}
+onclick="answers[${current}]=${i}">
+<b>${String.fromCharCode(65+i)}.</b> ${o}
+</label>`;
+});
+}
+
+function prevQ(){if(current>0){current--;showQ()}}
+function nextQ(){if(current<questions.length-1){current++;showQ()}}
+
+function startTimer(){
+timerInt=setInterval(()=>{
+timer.textContent="Time Left: "+timeLeft+"s";
+if(--timeLeft<0)submitTest();
+},1000);
+}
+
+function submitTest(){
+clearInterval(timerInt);
+let score=0;
+questions.forEach((q,i)=>{if(answers[i]==q.c)score++});
+db.ref("attempts").push({
+name:student,
+class:studentClass.value,
+test:testId,
+score:score+"/"+questions.length,
+time:new Date().toLocaleString()
+});
+alert("Test Submitted");
+location.reload();
+}
+
+function loadAttempts(){
+attemptTable.innerHTML="";
+db.ref("attempts").on("value",s=>{
+attemptTable.innerHTML="";
+s.forEach(c=>{
+let a=c.val();
+attemptTable.innerHTML+=`<tr>
+<td>${a.name}</td><td>${a.class}</td>
+<td>${a.test}</td><td>${a.score}</td><td>${a.time}</td>
+</tr>`;
+});
+});
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
 </script>
 </body>
 </html>
