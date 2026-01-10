@@ -90,7 +90,7 @@ CorrectIndex (0-3)
             <select id="classFilter" class="form-select mb-2" onchange="loadAttempts()">
                 <option value="">All Classes</option>
                 <option>JR</option><option>SR</option><option>1</option><option>2</option>
-                <option>4</option><option>5</option>
+                <option>3</option><option>4</option><option>5</option>
                 <option>6</option><option>7</option><option>8</option>
                 <option>9</option><option>10</option>
             </select>
@@ -292,4 +292,7 @@ CorrectIndex (0-3)
                 let attempted = false;
                 s.forEach(a => { if (a.val().test === currentTest.title) attempted = true; });
                 if (attempted) return showError("Already attempted.");
-                loginBox.classList.add
+                loginBox.classList.add("hidden");
+                studentPanel.classList.remove("hidden");
+                currentTest.questions = shuffle(currentTest.questions).slice(0, 30);
+                timeLeft =
