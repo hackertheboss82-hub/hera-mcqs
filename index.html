@@ -90,7 +90,7 @@ CorrectIndex (0-3)
             <select id="classFilter" class="form-select mb-2" onchange="loadAttempts()">
                 <option value="">All Classes</option>
                 <option>JR</option><option>SR</option><option>1</option><option>2</option>
-                <option>3</option><option>4</option><option>5</option>
+                <option>4</option><option>5</option>
                 <option>6</option><option>7</option><option>8</option>
                 <option>9</option><option>10</option>
             </select>
@@ -191,6 +191,15 @@ CorrectIndex (0-3)
 
         function logout() { location.reload(); }
 
+        function addStudent() {
+            let name = newSName.value.trim(), pass = newSPass.value.trim(), cls = newSClass.value;
+            if (!name || !pass) return showError("Enter name and password.");
+            db.ref("students").push({ name, password: pass, class: cls, createdBy: userName }).then(() => {
+                alert("Student added!");
+                newSName.value = ""; newSPass.value = "";
+            }).catch(e => showError("Failed: " + e.message));
+        }
+
         function parseQuestions(text) {
             let blocks = text.trim().split(/\n\s*\n/);
             let qs = [];
@@ -258,4 +267,29 @@ CorrectIndex (0-3)
                 testTitle.value = d.title;
                 testClass.value = d.class;
                 testTime.value = d.time;
-                questions.value = d.questions.map(q => [q.q, ...q.opts, q.ans].join("\n")).join("\n\n
+                questions.value = d.questions.map(q => [q.q, ...q.opts, q.ans].join("\n")).join("\n\n");
+            }).catch(e => showError("Failed to load test: " + e.message));
+        }
+
+        function deleteTest(cls, title) {
+            showConfirm("Delete test?", () => {
+                db.ref(`tests/${cls}/${title}`).remove().then(loadTeacherTests).catch(e => showError("Delete failed: " + e.message));
+            });
+        }
+
+        function loadStudentTest() {
+            db.ref("tests/" + userClass).limitToFirst(1).once("value", s => {
+                if (!s.exists()) return showError("No test available.");
+                let key = Object.keys(s.val())[0];
+                currentTest = s.val()[key];
+                startTest();
+            }).catch(e => showError("Failed to load test: " + e.message));
+        }
+
+        function startTest() {
+            // Check attempt
+            db.ref("attempts").orderByChild("student").equalTo(userName).once("value", s => {
+                let attempted = false;
+                s.forEach(a => { if (a.val().test === currentTest.title) attempted = true; });
+                if (attempted) return showError("Already attempted.");
+                loginBox.classList.add
