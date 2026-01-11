@@ -299,4 +299,10 @@ CorrectIndex (0-3)
                 startTimer();
                 showQ();
                 updateProgress();
-                start
+                startAutoSave();
+            });
+        }
+
+        function showQ() {
+            let q = currentTest.questions[qIndex];
+            questionBox.innerHTML = `<h3>${qIndex + 1}.
