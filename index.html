@@ -154,7 +154,7 @@ CorrectIndex (0-3)
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const firebaseConfig = {
+                const firebaseConfig = {
             apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
             authDomain: "hera-mcqs-55022.firebaseapp.com",
             databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
@@ -305,4 +305,152 @@ CorrectIndex (0-3)
 
         function showQ() {
             let q = currentTest.questions[qIndex];
-            questionBox.innerHTML = `<h3>${qIndex + 1}.
+            questionBox.innerHTML = `<h3>${qIndex + 1}. ${q.q}</h3>`;
+            q.opts.forEach((o, i) => {
+                questionBox.innerHTML += `
+                <div class="option">
+                    <input type="radio" name="opt" ${answers[qIndex] == i ? "checked" : ""} onclick="answers[${qIndex}] = ${i}">
+                    ${o}
+                </div>`;
+            });
+            drawPalette();
+        }
+
+        function nextQ() { if (qIndex < currentTest.questions.length - 1) { qIndex++; showQ(); } }
+        function prevQ() { if (qIndex > 0) { qIndex--; showQ(); } }
+
+        function reviewTest() {
+            let unanswered = [];
+            currentTest.questions.forEach((q, i) => { if (answers[i] == null) unanswered.push
+                                                     (i + 1); });
+            if (unanswered.length) showError("Unanswered: " + unanswered.join(", "));
+            else showError("All answered!");
+        }
+
+        function confirmSubmit() { showConfirm("Submit test?", submitTest); }
+
+        function submitTest() {
+            clearInterval(timerInt);
+            clearInterval(autoSaveInterval);
+            let score = 0;
+            currentTest.questions.forEach((q, i) => { if (answers[i] == q.ans) score++; });
+            resultData = { score: score + "/" + currentTest.questions.length, time: new Date().toLocaleString(), questions: currentTest.questions, answers };
+            db.ref("attempts").push({ student: userName, class: userClass, test: currentTest.title, score: score + "/" + currentTest.questions.length, time: new Date().toLocaleString(), teacher: userName });
+            showResult();
+        }
+
+        function showResult() {
+            let content = `<p>Score: ${resultData.score}</p><p>Time: ${resultData.time}</p>`;
+            resultData.questions.forEach((q, i) => {
+                let correct = q.opts[q.ans];
+                let selected = resultData.answers[i] !== null ? q.opts[resultData.answers[i]] : "Not answered";
+                content += `<p><strong>Q${i+1}:</strong> ${q.q}<br>Correct: ${correct}<br>Your Answer: ${selected}</p>`;
+            });
+            document.getElementById('resultContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('resultModal')).show();
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Test Results", 10, 10);
+            doc.text(`Score: ${resultData.score}`, 10, 20);
+            doc.text(`Time: ${resultData.time}`, 10, 30);
+            let y = 40;
+            resultData.questions.forEach((q, i) => {
+                doc.text(`Q${i+1}: ${q.q}`, 10, y);
+                y += 10;
+                doc.text(`Correct: ${q.opts[q.ans]}`, 10, y);
+                y += 10;
+                doc.text(`Your Answer: ${resultData.answers[i] !== null ? q.opts[resultData.answers[i]] : 'Not answered'}`, 10, y);
+                y += 10;
+                if (y > 280) { doc.addPage(); y = 10; }
+            });
+            doc.save("results.pdf");
+        }
+
+        function loadAttempts() {
+            attempts.innerHTML = "";
+            let filter = classFilter.value;
+            db.ref("attempts").once("value", s => {
+                s.forEach(a => {
+                    let d = a.val();
+                    if (!filter || d.class === filter) {
+                        attempts.innerHTML += `${d.student} - ${d.test} - ${d.score} - ${d.time}<br>`;
+                    }
+                });
+            }).catch(e => showError("Failed to load attempts: " + e.message));
+        }
+
+        function exportAttempts() {
+            let csv = "Student,Class,Test,Score,Time\n";
+            db.ref("attempts").once("value", s => {
+                s.forEach(a => {
+                    let d = a.val();
+                    csv += `${d.student},${d.class},${d.test},${d.score},${d.time}\n`;
+                });
+                let blob = new Blob([csv], { type: "text/csv" });
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "attempts.csv";
+                a.click();
+            }).catch(e => showError("Export failed: " + e.message));
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function pauseTimer() {
+            if (timerInt) {
+                clearInterval(timerInt);
+                pausedTime = timeLeft;
+            }
+        }
+
+        function resumeTimer() {
+            if (pausedTime > 0) {
+                timeLeft = pausedTime;
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            timerInt = setInterval(() => {
+                timeLeft--;
+                timer.innerText = "Time: " + Math.floor(timeLeft / 60) + ":" + (timeLeft % 60).toString().padStart(2, '0');
+                if (timeLeft <= 0) submitTest();
+            }, 1000);
+        }
+
+        function updateProgress() {
+            let answered = answers.filter(a => a != null).length;
+            progressBar.style.width = (answered / currentTest.questions.length) * 100 + "%";
+        }
+
+        function startAutoSave() {
+            autoSaveInterval = setInterval(() => {
+                localStorage.setItem("answers", JSON.stringify(answers));
+                localStorage.setItem("qIndex", qIndex);
+            }, 5000);
+        }
+
+        function drawPalette() {
+            palette.innerHTML = "";
+            currentTest.questions.forEach((_, i) => {
+                let b = document.createElement("button");
+                b.innerText = i + 1;
+                b.className = answers[i] != null ? "done" : "pending";
+                if (i === qIndex) b.className = "current";
+                b.onclick = () => { qIndex = i; showQ(); };
+                palette.appendChild(b);
+            });
+        }
+    </script>
+</body>
+</html>
