@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Hera MCQ System</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+    }
+    .box {
+      width: 360px;
+      margin: 80px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    button {
+      cursor: pointer;
+    }
+    #teacherPanel {
+      display: none;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔐 TEACHER LOGIN -->
+<div class="box" id="loginBox">
+  <h2>Teacher Login</h2>
+
+  <input type="email" id="tEmail" placeholder="Email">
+  <input type="password" id="tPassword" placeholder="Password">
+
+  <button onclick="teacherLogin()">Login</button>
+
+  <p id="loginMsg" class="error"></p>
+</div>
+
+<!-- 👨‍🏫 TEACHER PANEL -->
+<div class="box" id="teacherPanel">
+  <h2>Welcome Teacher 👨‍🏫</h2>
+
+  <p class="success">Login successful ✔</p>
+
+  <p>
+    ✔ Phase 0: Firebase connected<br>
+    ✔ Phase 1: Teacher authentication working
+  </p>
+
+  <hr>
+
+  <p><b>Next:</b> Test creation UI will appear here</p>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+/* 🔥 FIREBASE INIT */
+firebase.initializeApp({
+  apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+  authDomain: "hera-mcqs-55022.firebaseapp.com",
+  projectId: "hera-mcqs-55022",
+  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
+});
+
+const auth = firebase.auth();
+
+/* 🔐 TEACHER LOGIN */
+function teacherLogin() {
+  const email = document.getElementById("tEmail").value.trim();
+  const pass  = document.getElementById("tPassword").value.trim();
+  const msg   = document.getElementById("loginMsg");
+
+  msg.innerText = "";
+
+  if (!email || !pass) {
+    msg.innerText = "Enter email and password";
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => {
+      loginBox.style.display = "none";
+      teacherPanel.style.display = "block";
+    })
+    .catch(err => {
+      msg.innerText = err.message;
+    });
+}
+
+/* 🔄 SESSION CHECK */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginBox.style.display = "none";
+    teacherPanel.style.display = "block";
+  } else {
+    loginBox.style.display = "block";
+    teacherPanel.style.display = "none";
+  }
+});
+
+/* 🚪 LOGOUT */
+function logout() {
+  auth.signOut();
+}
+</script>
+
+</body>
+</html>
