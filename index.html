@@ -110,6 +110,22 @@ Water formula? | H2O | CO2 | NaCl | O2 | 0
 
   <button onclick="logout()">Logout</button>
 </div>
+<!-- 👨‍🎓 STUDENT PANEL -->
+<div class="box" id="studentPanel">
+  <h2>Student Test Portal</h2>
+
+  <input id="sName" placeholder="Student Name">
+  <input id="sRoll" placeholder="Roll Number">
+  <input id="sClass" placeholder="Class">
+
+  <select id="studentTestSelect">
+    <option value="">Select Test</option>
+  </select>
+
+  <button onclick="loadStudentTests()">Load Tests</button>
+
+  <div id="studentMsg" class="error"></div>
+</div>
 
 <script>
 /* 🔥 FIREBASE INIT */
@@ -229,6 +245,37 @@ function teacherLogin() {
       msg.innerText = err.message;
     });
 }
+  
+function loadStudentTests() {
+  const cls = document.getElementById("sClass").value.trim();
+  const select = document.getElementById("studentTestSelect");
+  const msg = document.getElementById("studentMsg");
+
+  msg.innerText = "";
+  select.innerHTML = `<option value="">Select Test</option>`;
+
+  if (!cls) {
+    msg.innerText = "Enter class first";
+    return;
+  }
+
+  firebase.database()
+    .ref(`tests/class_${cls}`)
+    .once("value")
+    .then(snap => {
+      if (!snap.exists()) {
+        msg.innerText = "No tests available for this class";
+        return;
+      }
+
+      Object.keys(snap.val()).forEach(testName => {
+        const opt = document.createElement("option");
+        opt.value = testName;
+        opt.innerText = testName;
+        select.appendChild(opt);
+      });
+    });
+}
 
 /* 🔄 SESSION CHECK */
 auth.onAuthStateChanged(user => {
@@ -319,6 +366,7 @@ document.getElementById("testName").disabled = false;
 
 </body>
 </html>
+
 
 
 
