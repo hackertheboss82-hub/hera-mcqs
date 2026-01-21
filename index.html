@@ -314,16 +314,32 @@ function renderQuestions() {
       html += `
         <label>
           <input type="radio"
-                 name="q${index}"
-                 value="${i}"
-                 ${checked}
-                 onchange="saveAnswer(${index}, ${i})">
+       name="q${i}"
+       value="${j}"
+       onchange="autoSaveAnswer(${i}, ${j})">
           ${opt}
         </label><br>`;
     });
 
     div.innerHTML = html;
     box.appendChild(div);
+  });
+}
+function autoSaveAnswer(qIndex, value) {
+  if (!currentStudent || !currentTest) return;
+
+  firebase.database().ref(
+    `attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`
+  ).update({
+    name: currentStudent.name,
+    roll: currentStudent.roll,
+    class: currentStudent.class,
+    answers: {
+      [qIndex]: value
+    },
+    inProgress: true,
+    submitted: false,
+    lastUpdated: Date.now()
   });
 }
 
@@ -453,6 +469,7 @@ document.getElementById("testName").disabled = false;
 
 </body>
 </html>
+
 
 
 
