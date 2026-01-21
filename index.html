@@ -144,9 +144,12 @@ firebase.initializeApp({
   projectId: "hera-mcqs-55022",
   databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
 });
-  let editMode = false;
+let editMode = false;
 let editingClass = "";
 let editingTest = "";
+let currentStudent = null;
+let currentTest = null;
+
 let currentTestId = "";
 let currentQuestions = [];
 let studentKey = "";
@@ -300,10 +303,17 @@ function startStudentTest() {
           }
 
           // 3️⃣ Render test with saved answers
-          renderStudentTest(questions, savedAnswers);
-        });
-    });
+  
+  function renderStudentTest(questions, savedAnswers) {
+  document.getElementById("studentPanel").style.display = "none";
+  document.getElementById("testArea").style.display = "block";
+
+  currentQuestions = Object.values(questions);
+  studentAnswers = savedAnswers || {};
+
+  renderQuestions();
 }
+
 
 function renderQuestions() {
   const box = document.getElementById("questionBox");
@@ -463,6 +473,7 @@ document.getElementById("testName").disabled = false;
 
 </body>
 </html>
+
 
 
 
