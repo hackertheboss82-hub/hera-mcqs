@@ -119,6 +119,10 @@ firebase.initializeApp({
   projectId: "hera-mcqs-55022",
   databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
 });
+  let editMode = false;
+let editingClass = "";
+let editingTest = "";
+
 /* 📚 LOAD TESTS FOR TEACHER */
 function loadTestsForTeacher() {
   const cls = document.getElementById("manageClass").value;
@@ -144,16 +148,47 @@ function loadTestsForTeacher() {
         div.style.marginBottom = "6px";
 
         div.innerHTML = `
-          <b>${testName}</b><br>
-          <button onclick="deleteTest('${cls}','${testName}')">
-            Delete
-          </button>
-        `;
+  <b>${testName}</b><br>
+  <button onclick="editTest('${cls}','${testName}')">
+    Edit
+  </button>
+  <button onclick="deleteTest('${cls}','${testName}')">
+    Delete
+  </button>
+`;
 
         list.appendChild(div);
       });
     });
 }
+  function editTest(cls, testName) {
+  editMode = true;
+  editingClass = cls;
+  editingTest = testName;
+
+  document.getElementById("testClass").value = cls;
+  document.getElementById("testClass").disabled = true;
+
+  document.getElementById("testName").value = testName;
+  document.getElementById("testName").disabled = true;
+
+  document.getElementById("saveMsg").innerText = "Edit mode enabled";
+
+  firebase.database()
+    .ref(`tests/class_${cls}/${testName}/questions`)
+    .once("value")
+    .then(snap => {
+      let bulk = "";
+
+      snap.forEach(q => {
+        const d = q.val();
+        bulk += `${d.q} | ${d.options.join(" | ")} | ${d.answer}\n`;
+      });
+
+      document.getElementById("bulkQuestions").value = bulk;
+    });
+}
+
 /* ❌ DELETE TEST */
 function deleteTest(cls, testName) {
   if (!confirm("Delete this test permanently?")) return;
@@ -244,8 +279,13 @@ function saveTest() {
     });
   }
 
-  firebase.database()
-    .ref(`tests/class_${cls}/${name}`)
+  const path = editMode
+  ? `tests/class_${editingClass}/${editingTest}`
+  : `tests/class_${cls}/${name}`;
+
+firebase.database()
+  .ref(path)
+
     .set({
       meta: {
         class: cls,
@@ -261,6 +301,13 @@ function saveTest() {
 
       document.getElementById("testName").value = "";
       document.getElementById("bulkQuestions").value = "";
+      editMode = false;
+editingClass = "";
+editingTest = "";
+
+document.getElementById("testClass").disabled = false;
+document.getElementById("testName").disabled = false;
+
     })
     .catch(err => {
       msg.innerText = err.message;
@@ -272,5 +319,6 @@ function saveTest() {
 
 </body>
 </html>
+
 
 
