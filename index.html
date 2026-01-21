@@ -257,47 +257,54 @@ function loadStudentTests() {
       });
     });
 }
-function startTest() {
-  const name = sName.value.trim();
-  const roll = sRoll.value.trim();
-  const cls  = sClass.value.trim();
-  const test = studentTestSelect.value;
-
-  const msg = document.getElementById("studentMsg");
+function startStudentTest() {
+  const name = document.getElementById("sName").value.trim();
+  const roll = document.getElementById("sRoll").value.trim();
+  const cls  = document.getElementById("sClass").value;
+  const test = document.getElementById("studentTestSelect").value;
 
   if (!name || !roll || !cls || !test) {
-    msg.innerText = "Fill all details and select test";
+    alert("Fill all details");
     return;
   }
 
-  studentKey = `${cls}_${test}_${roll}`;
-  currentTestId = `tests/class_${cls}/${test}`;
-
-  document.getElementById("testArea").style.display = "block";
-  document.getElementById("testTitle").innerText = test;
+  currentStudent = { name, roll, class: cls };
+  currentTest = test;
 
   // 1️⃣ Load questions
   firebase.database()
-    .ref(currentTestId + "/questions")
+    .ref(`tests/class_${cls}/${test}/questions`)
     .once("value")
     .then(qSnap => {
-      currentQuestions = qSnap.val();
-      loadSavedAttempt();
-    });
-}
-function loadSavedAttempt() {
-  firebase.database()
-    .ref("attempts/" + studentKey)
-    .once("value")
-    .then(snap => {
-      if (snap.exists()) {
-        studentAnswers = snap.val().answers || {};
-      } else {
-        studentAnswers = {};
+      const questions = qSnap.val();
+
+      if (!questions) {
+        alert("No questions found");
+        return;
       }
-      renderQuestions();
+
+      // 2️⃣ Load saved attempt (VERY IMPORTANT)
+      firebase.database()
+        .ref(`attempts/class_${cls}/${test}/${roll}`)
+        .once("value")
+        .then(aSnap => {
+
+          let savedAnswers = {};
+
+          if (aSnap.exists()) {
+            if (aSnap.val().submitted === true) {
+              alert("You already submitted this test");
+              return;
+            }
+            savedAnswers = aSnap.val().answers || {};
+          }
+
+          // 3️⃣ Render test with saved answers
+          renderStudentTest(questions, savedAnswers);
+        });
     });
 }
+
 
 function renderQuestions() {
   const box = document.getElementById("questionBox");
@@ -469,6 +476,7 @@ document.getElementById("testName").disabled = false;
 
 </body>
 </html>
+
 
 
 
