@@ -1,522 +1,200 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Hera MCQ System</title>
+<meta charset="UTF-8">
+<title>Hera MCQ System</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f8;
-    }
-    .box {
-      width: 360px;
-      margin: 80px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #ccc;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-     {
-      cursor: pointer;
-    }
-    #teacherPanel {
-      display: none;
-    }
-    .success {
-      color: green;
-    }
-    .error {
-      color: red;
-    }
-  </style>
+<style>
+body { font-family: Arial; background:#f4f6f8; }
+.box {
+  width:360px; margin:40px auto; padding:20px;
+  background:#fff; border-radius:8px; box-shadow:0 0 10px #ccc;
+}
+input, select, button {
+  width:100%; padding:10px; margin-top:10px;
+}
+button { cursor:pointer; }
+#teacherPanel, #testArea { display:none; }
+.error { color:red; }
+.success { color:green; }
+</style>
 </head>
 
 <body>
 
-<!-- 🔐 TEACHER LOGIN -->
+<!-- TEACHER LOGIN -->
 <div class="box" id="loginBox">
-  <h2>Teacher Login</h2>
-
-  <input type="email" id="tEmail" placeholder="Email">
-  <input type="password" id="tPassword" placeholder="Password">
-
-  < onclick="teacherLogin()">Login</>
-
-  <p id="loginMsg" class="error"></p>
+<h2>Teacher Login</h2>
+<input id="tEmail" placeholder="Email">
+<input id="tPassword" type="password" placeholder="Password">
+<button onclick="teacherLogin()">Login</button>
+<p id="loginMsg" class="error"></p>
 </div>
 
-<!-- 👨‍🏫 TEACHER PANEL -->
+<!-- TEACHER PANEL -->
 <div class="box" id="teacherPanel">
-  <h2>Welcome Teacher 👨‍🏫</h2>
-
-  <p class="success">Login successful ✔</p>
-
-  <p>
-    ✔ Phase 0: Firebase connected<br>
-    ✔ Phase 1: Teacher authentication working
-  </p>
-
-  <hr>
-<hr>
-
-<h3>Create New Test</h3>
+<h3>Create Test</h3>
 
 <select id="testClass">
-  <option value="">Select Class</option>
-  <option value="10">Class 10</option>
-  <option value="9">Class 9</option>
-  <option value="8">Class 8</option>
+<option value="">Select Class</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
 </select>
 
-<input type="text" id="testName" placeholder="Test Name (e.g. Science Chapter 1)">
+<input id="testName" placeholder="Test Name">
 
-<textarea id="bulkQuestions" rows="8" placeholder="
-FORMAT (one question per line):
+<textarea id="bulkQuestions" rows="6"
+placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
-Question | Option A | Option B | Option C | Option D | CorrectIndex
-
-Example:
-Water formula? | H2O | CO2 | NaCl | O2 | 0
-"></textarea>
-
-< onclick="saveTest()">Save Test</>
-
+<button onclick="saveTest()">Save Test</button>
 <p id="saveMsg"></p>
 
-  <p><b>Next:</b> Test creation UI will appear here</p>
 <hr>
 
 <h3>Manage Tests</h3>
-
 <select id="manageClass" onchange="loadTestsForTeacher()">
-  <option value="">Select Class</option>
-  <option value="10">Class 10</option>
-  <option value="9">Class 9</option>
-  <option value="8">Class 8</option>
+<option value="">Select Class</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
 </select>
 
-<div id="testList" style="margin-top:10px;"></div>
-
-  < onclick="logout()">Logout</>
+<div id="testList"></div>
+<button onclick="logout()">Logout</button>
 </div>
-<!-- 👨‍🎓 STUDENT PANEL -->
-<div class="box" id="studentPanel">
-  <h2>Student Test Portal</h2>
 
-  <input id="sName" placeholder="Student Name">
-  <input id="sRoll" placeholder="Roll Number">
-  <select id="sClass" onchange="loadStudentTests()">
-  <option value="">Select Class</option>
-  <option value="8">Class 8</option>
-  <option value="9">Class 9</option>
-  <option value="10">Class 10</option>
+<!-- STUDENT PANEL -->
+<div class="box" id="studentPanel">
+<h3>Student Test Portal</h3>
+
+<input id="sName" placeholder="Student Name">
+<input id="sRoll" placeholder="Roll Number">
+
+<select id="sClass" onchange="loadStudentTests()">
+<option value="">Select Class</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
 </select>
 
-  <select id="studentTestSelect">
-    <option value="">Select Test</option>
-  </select>
+<select id="studentTestSelect">
+<option value="">Select Test</option>
+</select>
 
 <button onclick="startStudentTest()">Start / Resume Test</button>
-  <div id="studentMsg" class="error"></div>
 </div>
-<div id="testArea" style="display:none">
-  <h3 id="testTitle"></h3>
-  <div id="questionBox"></div>
+
+<!-- TEST AREA -->
+<div class="box" id="testArea">
+<h3 id="testTitle"></h3>
+<div id="questionBox"></div>
 </div>
 
 <script>
-/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
-  apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
-  authDomain: "hera-mcqs-55022.firebaseapp.com",
-  projectId: "hera-mcqs-55022",
-  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
+ apiKey:"AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+ authDomain:"hera-mcqs-55022.firebaseapp.com",
+ databaseURL:"https://hera-mcqs-55022-default-rtdb.firebaseio.com"
 });
-let editMode = false;
-let editingClass = "";
-let editingTest = "";
-let currentStudent = null;
-let currentTest = null;
-
-let currentTestId = "";
-let currentQuestions = [];
-let studentKey = "";
-let studentAnswers = {};
-
-/* 📚 LOAD TESTS FOR TEACHER */
-function loadTestsForTeacher() {
-  const cls = document.getElementById("manageClass").value;
-  const list = document.getElementById("testList");
-
-  list.innerHTML = "";
-
-  if (!cls) return;
-
-  firebase.database()
-    .ref(`tests/class_${cls}`)
-    .once("value")
-    .then(snapshot => {
-      if (!snapshot.exists()) {
-        list.innerHTML = "<p>No tests found</p>";
-        return;
-      }
-
-      Object.keys(snapshot.val()).forEach(testName => {
-        const div = document.createElement("div");
-        div.style.border = "1px solid #ccc";
-        div.style.padding = "8px";
-        div.style.marginBottom = "6px";
-
-        div.innerHTML = `
-  <b>${testName}</b><br>
-  <button onclick="editTest('${cls}','${testName}')">
-    Edit
-  </button>
-  <button onclick="deleteTest('${cls}','${testName}')">
-    Delete
-  </button>
-`;
-
-        list.appendChild(div);
-      });
-    });
-}
-  function editTest(cls, testName) {
-  editMode = true;
-  editingClass = cls;
-  editingTest = testName;
-
-  document.getElementById("testClass").value = cls;
-  document.getElementById("testClass").disabled = true;
-
-  document.getElementById("testName").value = testName;
-  document.getElementById("testName").disabled = true;
-
-  document.getElementById("saveMsg").innerText = "Edit mode enabled";
-
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}/questions`)
-    .once("value")
-    .then(snap => {
-      let bulk = "";
-
-      snap.forEach(q => {
-        const d = q.val();
-        bulk += `${d.q} | ${d.options.join(" | ")} | ${d.answer}\n`;
-      });
-
-      document.getElementById("bulkQuestions").value = bulk;
-    });
-}
-
-/* ❌ DELETE TEST */
-function deleteTest(cls, testName) {
-  if (!confirm("Delete this test permanently?")) return;
-
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}`)
-    .remove()
-    .then(() => {
-      alert("Test deleted");
-      loadTestsForTeacher();
-    })
-    .catch(err => {
-      alert(err.message);
-    });
-}
 
 const auth = firebase.auth();
-function loadStudentTests() {
-  const cls = document.getElementById("sClass").value;
-  const testSelect = document.getElementById("studentTestSelect");
+let currentStudent={}, currentTest="", currentQuestions=[], studentAnswers={};
 
-  testSelect.innerHTML = `<option value="">Select Test</option>`;
-
-  if (!cls) return;
-
-  firebase.database()
-    .ref(`tests/class_${cls}`)
-    .once("value")
-    .then(snap => {
-      if (!snap.exists()) return;
-
-      Object.keys(snap.val()).forEach(testName => {
-        const opt = document.createElement("option");
-        opt.value = testName;
-        opt.innerText = testName;
-        testSelect.appendChild(opt);
-      });
-    });
-}
-function startStudentTest() {
-  console.log("Start Test Clicked");
-  const sName = document.getElementById("studentName").value.trim();
-  const sRoll = document.getElementById("studentRoll").value.trim();
-  const sClass = document.getElementById("studentClass").value;
-  const testName = document.getElementById("testSelect").value;
-
-  if (!sName || !sRoll || !sClass || !testName) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  currentStudent = {
-    name: sName,
-    roll: sRoll,
-    class: sClass,
-    test: testName
-  };
-
-  // Load test questions
-  firebase.database()
-    .ref(`tests/${sClass}/${testName}`)
-    .once("value")
-    .then(testSnap => {
-
-      if (!testSnap.exists()) {
-        alert("Test not found");
-        return;
-      }
-
-      const questions = testSnap.val().questions;
-
-      // Load saved attempt
-      firebase.database()
-        .ref(`attempts/${sClass}/${testName}/${sRoll}`)
-        .once("value")
-        .then(aSnap => {
-
-          let savedAnswers = {};
-
-          if (aSnap.exists()) {
-            if (aSnap.val().submitted === true) {
-              alert("You already submitted this test");
-              return;
-            }
-            savedAnswers = aSnap.val().answers || {};
-          }
-
-          // ✅ THIS WAS MISSING (VERY IMPORTANT)
-          renderStudentTest(questions, savedAnswers);
-
-        });
-    });
+/* LOGIN */
+function teacherLogin(){
+ auth.signInWithEmailAndPassword(
+  tEmail.value, tPassword.value
+ ).catch(e=>loginMsg.innerText=e.message);
 }
 
-          // 3️⃣ Render test with saved answers
-  
-function renderStudentTest(questions, savedAnswers) {
-
-  document.getElementById("studentPanel").style.display = "none";
-  document.getElementById("studentTestPanel").style.display = "block";
-
-  document.getElementById("testTitle").innerText =
-    `${currentStudent.test} (Class ${currentStudent.class})`;
-
-  window.currentQuestions = questions;
-  window.currentAnswers = savedAnswers || {};
-
-  renderQuestions();
-}
-
-
-function renderQuestions() {
-
-  const box = document.getElementById("questionsBox");
-  box.innerHTML = "";
-
-  currentQuestions.forEach((q, i) => {
-
-    const selected = currentAnswers[i] || "";
-
-    box.innerHTML += `
-      <div class="question">
-        <p><b>Q${i + 1}.</b> ${q.question}</p>
-
-        <label>
-          <input type="radio" name="q${i}" value="0"
-            ${selected == 0 ? "checked" : ""}
-            onchange="autoSaveAnswer(${i},0)">
-          ${q.options[0]}
-        </label><br>
-
-        <label>
-          <input type="radio" name="q${i}" value="1"
-            ${selected == 1 ? "checked" : ""}
-            onchange="autoSaveAnswer(${i},1)">
-          ${q.options[1]}
-        </label><br>
-
-        <label>
-          <input type="radio" name="q${i}" value="2"
-            ${selected == 2 ? "checked" : ""}
-            onchange="autoSaveAnswer(${i},2)">
-          ${q.options[2]}
-        </label><br>
-
-        <label>
-          <input type="radio" name="q${i}" value="3"
-            ${selected == 3 ? "checked" : ""}
-            onchange="autoSaveAnswer(${i},3)">
-          ${q.options[3]}
-        </label>
-      </div>
-      <hr>
-    `;
-  });
-}
-
-  
-function autoSaveAnswer(qIndex, value) {
-
-  currentAnswers[qIndex] = value;
-
-  firebase.database()
-    .ref(`attempts/${currentStudent.class}/${currentStudent.test}/${currentStudent.roll}`)
-    .update({
-      name: currentStudent.name,
-      answers: currentAnswers,
-      lastUpdated: Date.now(),
-      submitted: false
-    });
-}
-
-
-/* 🔄 SESSION CHECK */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loginBox.style.display = "none";
-    teacherPanel.style.display = "block";
-  } else {
-    loginBox.style.display = "block";
-    teacherPanel.style.display = "none";
-  }
+auth.onAuthStateChanged(u=>{
+ loginBox.style.display = u ? "none":"block";
+ teacherPanel.style.display = u ? "block":"none";
 });
 
-/* 🚪 LOGOUT */
-function logout() {
-  auth.signOut();
-}
-/* 🔐 TEACHER LOGIN */
-function teacherLogin() {
-  const email = document.getElementById("tEmail").value.trim();
-  const pass  = document.getElementById("tPassword").value.trim();
-  const msg   = document.getElementById("loginMsg");
+/* SAVE TEST */
+function saveTest(){
+ const cls=testClass.value, name=testName.value.trim();
+ const lines=bulkQuestions.value.trim().split("\n");
+ let q=[];
 
-  msg.innerText = "";
+ for(let l of lines){
+  let p=l.split("|").map(x=>x.trim());
+  q.push({ q:p[0], options:p.slice(1,5), answer:+p[5] });
+ }
 
-  if (!email || !pass) {
-    msg.innerText = "Enter email and password";
-    return;
-  }
-
-  auth.signInWithEmailAndPassword(email, pass)
-    .then(() => {
-      loginBox.style.display = "none";
-      teacherPanel.style.display = "block";
-    })
-    .catch(err => {
-      msg.innerText = err.message;
-    });
-}
-  
-
-  
-/* 📝 SAVE TEST */
-function saveTest() {
-  const cls = document.getElementById("testClass").value;
-  const name = document.getElementById("testName").value.trim();
-  const raw = document.getElementById("bulkQuestions").value.trim();
-  const msg = document.getElementById("saveMsg");
-
-  msg.innerText = "";
-
-  if (!cls || !name || !raw) {
-    msg.innerText = "All fields are required";
-    msg.style.color = "red";
-    return;
-  }
-
-  const lines = raw.split("\n");
-  let questions = [];
-
-  for (let line of lines) {
-    const parts = line.split("|").map(p => p.trim());
-
-    if (parts.length !== 6) {
-      msg.innerText = "Invalid question format";
-      msg.style.color = "red";
-      return;
-    }
-
-    questions.push({
-      q: parts[0],
-      options: [parts[1], parts[2], parts[3], parts[4]],
-      answer: Number(parts[5])
-    });
-  }
-
-  const path = editMode
-  ? `tests/class_${editingClass}/${editingTest}`
-  : `tests/class_${cls}/${name}`;
-
-firebase.database()
-  .ref(path)
-
-    .set({
-      meta: {
-        class: cls,
-        name: name,
-        createdBy: auth.currentUser.email,
-        createdAt: Date.now()
-      },
-      questions: questions
-    })
-    .then(() => {
-      msg.innerText = "Test saved successfully ✅";
-      msg.style.color = "green";
-
-      document.getElementById("testName").value = "";
-      document.getElementById("bulkQuestions").value = "";
-      editMode = false;
-editingClass = "";
-editingTest = "";
-
-document.getElementById("testClass").disabled = false;
-document.getElementById("testName").disabled = false;
-
-    })
-    .catch(err => {
-      msg.innerText = err.message;
-      msg.style.color = "red";
-    });
+ firebase.database().ref(`tests/class_${cls}/${name}`).set({questions:q});
+ saveMsg.innerText="Saved ✅";
 }
 
+/* LOAD STUDENT TESTS */
+function loadStudentTests(){
+ studentTestSelect.innerHTML="<option>Select Test</option>";
+ firebase.database().ref(`tests/class_${sClass.value}`)
+ .once("value").then(s=>{
+  if(!s.exists())return;
+  Object.keys(s.val()).forEach(t=>{
+   let o=document.createElement("option");
+   o.value=o.text=t;
+   studentTestSelect.appendChild(o);
+  });
+ });
+}
+
+/* START / RESUME */
+function startStudentTest(){
+ currentStudent={
+  name:sName.value, roll:sRoll.value, class:sClass.value
+ };
+ currentTest=studentTestSelect.value;
+
+ firebase.database()
+ .ref(`tests/class_${currentStudent.class}/${currentTest}/questions`)
+ .once("value").then(qs=>{
+  currentQuestions=qs.val();
+
+ firebase.database()
+ .ref(`attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+ .once("value").then(a=>{
+  studentAnswers = a.exists()?a.val().answers||{}:{};
+  renderTest();
+ });
+ });
+}
+
+/* RENDER */
+function renderTest(){
+ studentPanel.style.display="none";
+ testArea.style.display="block";
+ testTitle.innerText=currentTest;
+ questionBox.innerHTML="";
+
+ currentQuestions.forEach((q,i)=>{
+  let html=`<b>${i+1}. ${q.q}</b><br>`;
+  q.options.forEach((o,j)=>{
+   html+=`<label>
+   <input type="radio" name="q${i}"
+   ${studentAnswers[i]==j?"checked":""}
+   onchange="saveAns(${i},${j})">${o}
+   </label><br>`;
+  });
+  questionBox.innerHTML+=html+"<hr>";
+ });
+}
+
+function saveAns(i,v){
+ studentAnswers[i]=v;
+ firebase.database().ref(
+  `attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`
+ ).update({ answers:studentAnswers });
+}
+
+function logout(){ auth.signOut(); }
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
