@@ -305,17 +305,7 @@ function startStudentTest() {
     });
 }
 
-
-function renderStudentTest(questions, savedAnswers) {
-  currentQuestions = Object.values(questions);
-  studentAnswers = savedAnswers || {};
-
-  document.getElementById("testArea").style.display = "block";
-  document.getElementById("questionBox").innerHTML = "";
-
-  renderQuestions();
-}
-
+function renderQuestions() {
   const box = document.getElementById("questionBox");
   box.innerHTML = "";
 
@@ -325,18 +315,18 @@ function renderStudentTest(questions, savedAnswers) {
 
     let html = `<b>${index + 1}. ${q.q}</b><br>`;
 
-   q.options.forEach((opt, j) => {
-  const checked = studentAnswers[index] == j ? "checked" : "";
-  html += `
-    <label>
-      <input type="radio"
-        name="q${index}"
-        value="${j}"
-        ${checked}
-        onchange="autoSaveAnswer(${index}, ${j})">
-      ${opt}
-    </label><br>`;
-});
+    q.options.forEach((opt, j) => {
+      const checked = studentAnswers[index] == j ? "checked" : "";
+      html += `
+        <label>
+          <input type="radio"
+            name="q${index}"
+            value="${j}"
+            ${checked}
+            onchange="autoSaveAnswer(${index}, ${j})">
+          ${opt}
+        </label><br>`;
+    });
 
     div.innerHTML = html;
     box.appendChild(div);
@@ -473,6 +463,7 @@ document.getElementById("testName").disabled = false;
 
 </body>
 </html>
+
 
 
 
