@@ -25,6 +25,10 @@ button { cursor:pointer; }
 </head>
 
 <body>
+let score = 0;
+let totalQuestions = 0;
+let correctCount = 0;
+let wrongCount = 0;
 
 <!-- TEACHER LOGIN -->
 <div class="box" id="loginBox">
@@ -94,6 +98,7 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
   <h3 id="testTitle"></h3>
   <div id="questionBox"></div>
 
+  <button onclick="submitTest()">Submit Test</button>
   <button onclick="submitTest()" style="margin-top:20px;background:#2e7d32;color:white">
     Submit Test
   </button>
@@ -171,7 +176,16 @@ function startStudentTest(){
 
   currentTest = testSelect.value;
 
-  // ✅ FIXED PATH
+  // ✅firebase.database()
+  .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+  .once("value")
+  .then(rSnap => {
+    if(rSnap.exists()){
+      alert("Test already submitted. Contact teacher to re-attempt.");
+      return;
+    }
+  });
+ FIXED PATH
   firebase.database()
     .ref(`tests/class_${currentStudent.class}/${currentTest}/questions`)
     .once("value")
@@ -229,44 +243,55 @@ function renderTest(){
 }
 
   
-function submitTest() {
+function submitTest(){
 
-  if (!confirm("Are you sure you want to submit the test?")) return;
+  score = 0;
+  correctCount = 0;
+  wrongCount = 0;
 
-  let correct = 0;
-  let wrong = 0;
-  let total = currentQuestions.length;
+  totalQuestions = currentQuestions.length;
 
-  currentQuestions.forEach((q, index) => {
-    if (currentAnswers[index] !== undefined) {
-      if (currentAnswers[index] === q.answer) {
-        correct++;
+  currentQuestions.forEach((q, i) => {
+    if(studentAnswers[i] != null){
+      if(studentAnswers[i] == q.answer){
+        score++;
+        correctCount++;
       } else {
-        wrong++;
+        wrongCount++;
       }
     }
   });
 
+  const resultData = {
+    student: currentStudent,
+    test: currentTest,
+    total: totalQuestions,
+    score: score,
+    correct: correctCount,
+    wrong: wrongCount,
+    answers: studentAnswers,
+    submittedAt: new Date().toISOString(),
+    status: "submitted"
+  };
+
+  // ✅ SAVE RESULT FOR TEACHER
+  firebase.database()
+    .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+    .set(resultData);
+
+  // ✅ LOCK ATTEMPT
   firebase.database()
     .ref(`attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-    .update({
-      submitted: true,
-      submittedAt: Date.now(),
-      result: {
-        total: total,
-        correct: correct,
-        wrong: wrong,
-        marks: correct
-      }
-    })
-    .then(() => {
-      alert(
-        `Test Submitted ✅\n\nTotal: ${total}\nCorrect: ${correct}\nWrong: ${wrong}`
-      );
+    .set(resultData);
 
-      document.getElementById("testArea").style.display = "none";
-      document.getElementById("studentPanel").style.display = "block";
-    });
+  alert(
+    `Test Submitted!\n\n` +
+    `Score: ${score}/${totalQuestions}\n` +
+    `Correct: ${correctCount}\n` +
+    `Wrong: ${wrongCount}`
+  );
+
+  location.reload();
 }
 
 
@@ -281,5 +306,6 @@ function logout(){ auth.signOut(); }
 </script>
 </body>
 </html>
+
 
 
