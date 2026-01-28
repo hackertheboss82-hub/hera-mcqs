@@ -26,7 +26,6 @@ button { cursor:pointer; }
 
 <body>
 
-
 <!-- TEACHER LOGIN -->
 <div class="box" id="loginBox">
 <h2>Teacher Login</h2>
@@ -77,34 +76,6 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <button onclick="logout()">Logout</button>
 </div>
 
-function loadResultClasses() {
-  const resultClassSelect = document.getElementById("resultClassSelect");
-  if (!resultClassSelect) {
-    console.error("resultClassSelect element not found.");
-    return;
-  }
-
-  firebase.database().ref("attempts").once("value", snap => {
-    resultClassSelect.innerHTML = "";  // Clear existing options
-    snap.forEach(c => {
-      if (c.key.startsWith("class_")) {
-        let className = c.key.replace("class_", "");
-        let op = document.createElement("option");
-        op.value = className;
-        op.text = className;
-        resultClassSelect.appendChild(op);
-      }
-    });
-    // Optional: Add a default if no options were added
-    if (resultClassSelect.options.length === 0) {
-      resultClassSelect.innerHTML = '<option value="">No classes available</option>';
-    }
-  }, error => {
-    console.error("Error loading result classes:", error);
-    // Optionally notify the user
-  });
-}
-
 <!-- STUDENT PANEL -->
 <div class="box" id="studentPanel">
   
@@ -132,7 +103,6 @@ function loadResultClasses() {
   <h3 id="testTitle"></h3>
   <div id="questionBox"></div>
 
-
   <button onclick="submitTest()" style="margin-top:20px;background:#2e7d32;color:white">
     Submit Test
   </button>
@@ -151,6 +121,12 @@ let score = 0;
 let totalQuestions = 0;
 let correctCount = 0;
 let wrongCount = 0;
+
+// ✅ FIX: Show student panel by default
+window.onload = () => {
+  studentPanel.style.display = "block";
+};
+
 /* LOGIN */
 function teacherLogin(){
  auth.signInWithEmailAndPassword(
@@ -180,6 +156,23 @@ resultClassSelect.onchange = function(){
     });
 };
 
+function loadResultClasses() {
+  resultClassSelect.innerHTML = "";
+resultClassSelect.innerHTML = `<option value="">Select Class</option>`;
+
+  firebase.database().ref("tests").once("value", snap => {
+    snap.forEach(c => {
+      if (c.key.startsWith("class_")) {
+        let cls = c.key.replace("class_", "");
+        let op = document.createElement("option");
+        op.value = cls;
+        op.text = cls;
+        resultClassSelect.appendChild(op);
+      }
+    });
+  });
+}
+
 
 /* SAVE TEST */
 function saveTest(){
@@ -187,8 +180,12 @@ function saveTest(){
  const lines=bulkQuestions.value.trim().split("\n");
  let q=[];
 
+ // ✅ FIX: Add validation for questions
  for(let l of lines){
+  if(!l.includes("|")) continue;
   let p=l.split("|").map(x=>x.trim());
+  if(p.length < 6) continue;
+  if(isNaN(p[5])) continue;
   q.push({ q:p[0], options:p.slice(1,5), answer:+p[5] });
  }
 
@@ -231,13 +228,14 @@ function startStudentTest(){
 
   currentTest = testSelect.value;
 
+ // ✅ FIX: Prevent starting if already submitted (enforce stop)
  firebase.database()
   .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
   .once("value")
   .then(rSnap=>{
     if(rSnap.exists()){
       alert("Test already submitted. Contact teacher.");
-      return;
+      throw "STOP";
     }
   });
 
@@ -398,14 +396,31 @@ function allowReattempt(cls, test, roll){
   alert("Re-attempt allowed. Student can start test again.");
 }
 
+function loadTestsForTeacher() {
+  const cls = manageClass.value;
+  const testList = document.getElementById("testList");
+  testList.innerHTML = "";
+  if (!cls) return;
+
+  firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
+    if (!snap.exists()) {
+      testList.innerHTML = "<p>No tests found for this class.</p>";
+      return;
+    }
+    snap.forEach(t => {
+      testList.innerHTML += `<div>${t.key} <button onclick="deleteTest('${cls}', '${t.key}')">Delete</button></div>`;
+    });
+  });
+}
+
+function deleteTest(cls, testName) {
+  if (confirm(`Delete test "${testName}"?`)) {
+    firebase.database().ref(`tests/class_${cls}/${testName}`).remove();
+    loadTestsForTeacher(); // Refresh list
+  }
+}
+
 function logout(){ auth.signOut(); }
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
