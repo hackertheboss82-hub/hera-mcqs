@@ -400,26 +400,39 @@ function loadResults(){
   const cls = resultClassSelect.value;
   const test = resultTestSelect.value;
 
-  resultBox.innerHTML = "";
+  if(!cls || !test){
+    alert("Please select class and test");
+    return;
+  }
+
+  resultBox.innerHTML = "Loading...";
 
   firebase.database()
     .ref(`results/class_${cls}/${test}`)
-    .once("value", snap=>{
-      snap.forEach(st=>{
+    .once("value")
+    .then(snap => {
+
+      resultBox.innerHTML = "";
+
+      if(!snap.exists()){
+        resultBox.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      snap.forEach(st => {
         const d = st.val();
 
         resultBox.innerHTML += `
           <div style="border:1px solid #ccc;padding:8px;margin:5px">
-            <b>${d.student.name}</b> (Roll: ${st.key})<br>
-            Score: ${d.score}/${d.total}<br>
-            <button onclick="allowReattempt('${cls}','${test}','${st.key}')">
-              Allow Re-Attempt
-            </button>
+            <b>${d.student?.name || "Unknown"}</b>
+            (Roll: ${st.key})<br>
+            Score: ${d.score}/${d.total}
           </div>
         `;
       });
     });
 }
+
 function allowReattempt(cls, test, roll){
 
   if(!confirm("Allow student to re-attempt this test?")) return;
@@ -465,6 +478,7 @@ function logout(){ auth.signOut(); }
 </script>
 </body>
 </html>
+
 
 
 
