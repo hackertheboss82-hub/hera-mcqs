@@ -20,7 +20,6 @@ input, select, button {
 button { cursor:pointer; }
 #teacherPanel, #testArea { display:none; }
 .error { color:red; }
-.success { color:green; }
 </style>
 </head>
 
@@ -37,15 +36,16 @@ button { cursor:pointer; }
 
 <!-- TEACHER PANEL -->
 <div class="box" id="teacherPanel">
-  <h3>Student Results</h3>
+<h3>Student Results</h3>
 
 <select id="resultClassSelect"></select>
 <select id="resultTestSelect"></select>
-
 <button onclick="loadResults()">Results</button>
 <div id="resultBox"></div>
-<h3>Create Test</h3>
 
+<hr>
+
+<h3>Create Test</h3>
 <select id="testClass">
 <option value="">Select Class</option>
 <option value="8">Class 8</option>
@@ -54,12 +54,10 @@ button { cursor:pointer; }
 </select>
 
 <input id="testName" placeholder="Test Name">
-
 <textarea id="bulkQuestions" rows="6"
 placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
 <button onclick="saveTest()">Save Test</button>
-<p id="saveMsg"></p>
 
 <hr>
 
@@ -77,9 +75,7 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
 <!-- STUDENT PANEL -->
 <div class="box" id="studentPanel">
-  
 <h3>Student Test Portal</h3>
-
 <input id="sName" placeholder="Student Name">
 <input id="sRoll" placeholder="Roll Number">
 
@@ -94,431 +90,145 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <option value="">Select Test</option>
 </select>
 
-<button onclick="startStudentTest()">Start / Resume Test</button>
+<button onclick="startStudentTest()">Start Test</button>
 </div>
 
 <!-- TEST AREA -->
-<div id="testArea" style="display:none">
-  <h3 id="testTitle"></h3>
-  <div id="questionBox"></div>
-
-<button id="submitBtn" onclick="submitTest()" style="margin-top:20px;background:#2e7d32;color:white">
-  Submit Test
-</button>
-
+<div id="testArea">
+<h3 id="testTitle"></h3>
+<div id="questionBox"></div>
+<button id="submitBtn" onclick="submitTest()">Submit</button>
 </div>
 
 <script>
 firebase.initializeApp({
- apiKey:"AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
- authDomain:"hera-mcqs-55022.firebaseapp.com",
- databaseURL:"https://hera-mcqs-55022-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+  authDomain: "hera-mcqs-55022.firebaseapp.com",
+  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
 });
 
 const auth = firebase.auth();
 let currentStudent={}, currentTest="", currentQuestions=[], studentAnswers={};
-let score = 0;
-let totalQuestions = 0;
-let correctCount = 0;
-let wrongCount = 0;
 
-// ✅ FIX: Show student panel by default
 window.onload = () => {
-  document.getElementById("studentPanel").style.display = "block";
+  studentPanel.style.display = "block";
 };
-
-function loadTestsForClass(cls){
-  if(!cls) return;
-
-  // Student dropdown
-  studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
-
-  // Result dropdown
-  resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
-
-  firebase.database()
-    .ref(`tests/class_${cls}`)
-    .once("value", snap => {
-      if(!snap.exists()) return;
-
-      snap.forEach(t => {
-
-        // student
-        let sOpt = document.createElement("option");
-        sOpt.value = sOpt.textContent = t.key;
-        studentTestSelect.appendChild(sOpt);
-
-        // results
-        let rOpt = document.createElement("option");
-        rOpt.value = rOpt.textContent = t.key;
-        resultTestSelect.appendChild(rOpt);
-      });
-    });
-}
 
 /* LOGIN */
 function teacherLogin(){
- auth.signInWithEmailAndPassword(
-  tEmail.value, tPassword.value
- ).catch(e=>loginMsg.innerText=e.message);
+  auth.signInWithEmailAndPassword(
+    tEmail.value,
+    tPassword.value
+  ).catch(e => loginMsg.innerText = e.message);
 }
 
 auth.onAuthStateChanged(u=>{
- loginBox.style.display = u ? "none":"block";
- teacherPanel.style.display = u ? "block":"none";
-
- if(u){
-   ResultClasses();
- }
+  loginBox.style.display = u ? "none" : "block";
+  teacherPanel.style.display = u ? "block" : "none";
+  if(u) loadResultClasses();
 });
-resultClassSelect.onchange = function(){
-  loadTestsForClass(this.value);
-};
 
-  firebase.database()
-    .ref("results/class_" + this.value)
-    .once("value", snap => {
-      snap.forEach(test => {
-        let o = document.createElement("option");
-        o.value = test.key;
-        o.textContent = test.key;
-        resultTestSelect.appendChild(o);
-      });
+function loadResultClasses(){
+  resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
+  firebase.database().ref("tests").once("value", snap=>{
+    snap.forEach(c=>{
+      let o=document.createElement("option");
+      o.value=c.key.replace("class_","");
+      o.text=o.value;
+      resultClassSelect.appendChild(o);
     });
-};
+  });
+}
 
-function ResultClasses(){
-  firebase.database().ref("tests").once("value", snap => {
+resultClassSelect.onchange = () => loadTestsForClass(resultClassSelect.value);
 
-    resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
+function loadTestsForClass(cls){
+  resultTestSelect.innerHTML="<option value=''>Select Test</option>";
+  studentTestSelect.innerHTML="<option value=''>Select Test</option>";
 
-    if(!snap.exists()) return;
-
-    snap.forEach(cls => {
-      let opt = document.createElement("option");
-      opt.value = cls.key.replace("class_","");
-      opt.textContent = cls.key.replace("class_","");
-      resultClassSelect.appendChild(opt);
+  firebase.database().ref(`tests/class_${cls}`).once("value", snap=>{
+    snap.forEach(t=>{
+      let o=document.createElement("option");
+      o.value=o.text=t.key;
+      resultTestSelect.appendChild(o.cloneNode(true));
+      studentTestSelect.appendChild(o);
     });
   });
 }
 
 /* SAVE TEST */
 function saveTest(){
-  const cls = document.getElementById("testClass").value;
-  const testName = document.getElementById("testName").value.trim();
-  const raw = document.getElementById("bulkQuestions").value.trim();
+  const cls=testClass.value;
+  const name=testName.value.trim();
+  const raw=bulkQuestions.value.trim();
+  if(!cls||!name||!raw) return alert("Fill all fields");
 
-  if(!cls || !testName || !raw){
-    alert("Fill all fields");
-    return;
-  }
-
-  const questions = raw.split("\n").map(line=>{
-    const p = line.split("|");
-    return {
-      q: p[0].trim(),
-      options: [p[1], p[2], p[3], p[4]].map(x=>x.trim()),
-      answer: Number(p[5])
-    };
+  const questions=raw.split("\n").map(l=>{
+    const p=l.split("|");
+    return { q:p[0], options:p.slice(1,5), answer:+p[5] };
   });
 
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}`)
-    .set({ questions })
-    .then(()=>{
-      alert("Test saved");
-      bulkQuestions.value = "";
-      testName.value = "";
-      loadTestsForClass(cls);
-    });
+  firebase.database().ref(`tests/class_${cls}/${name}`).set({questions})
+  .then(()=>alert("Test Saved"));
 }
 
-
-  const questions = raw.split("\n").map(line=>{
-    const p = line.split("|");
-    return {
-      q: p[0],
-      options: [p[1], p[2], p[3], p[4]],
-      correct: Number(p[5])
-    };
-  });
-
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}`)
-    .set({ questions })
-    .then(()=>{
-      alert("Test saved");
-      document.getElementById("testName").value="";
-      document.getElementById("questionBox").value="";
-      loadTestsForClass(cls);
-    });
-}
-
-/* LOAD STUDENT TESTS */
+/* STUDENT TESTS */
 function loadStudentTests(){
- studentTestSelect.innerHTML="<option>Select Test</option>";
- firebase.database().ref(`tests/class_${sClass.value}`)
- .once("value").then(s=>{
-  if(!s.exists())return;
-  Object.keys(s.val()).forEach(t=>{
-   let o=document.createElement("option");
-   o.value=o.text=t;
-   studentTestSelect.appendChild(o);
-  });
- });
+  loadTestsForClass(sClass.value);
 }
 
-/* START / RESUME */
+/* START TEST */
 function startStudentTest(){
+  currentStudent={name:sName.value,roll:sRoll.value,class:sClass.value};
+  currentTest=studentTestSelect.value;
 
-  const sName = document.getElementById("sName");
-  const sRoll = document.getElementById("sRoll");
-  const sClass = document.getElementById("sClass");
-  const testSelect = document.getElementById("studentTestSelect");
-
-  if(!sName.value || !sRoll.value || !sClass.value || !testSelect.value){
-    alert("Please fill all fields");
-    return;
-  }
-
-  currentStudent = {
-    name: sName.value,
-    roll: sRoll.value,
-    class: sClass.value
-  };
-
-  currentTest = testSelect.value;
-
- // ✅ FIX: Prevent starting if already submitted (enforce stop)
- firebase.database()
-  .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-  .once("value")
-  .then(rSnap=>{
-    if(rSnap.exists()){
-      alert("Test already submitted. Contact teacher.");
-      throw "STOP";
-    }
-  });
-
- 
   firebase.database()
     .ref(`tests/class_${currentStudent.class}/${currentTest}/questions`)
-    .once("value")
-    .then(qSnap => {
-
-      if(!qSnap.exists()){
-        alert("Questions not found");
-        return;
-      }
-
-      // ✅ OBJECT → ARRAY FIX
-      currentQuestions = Object.values(qSnap.val());
-
-      // ✅ LOAD SAVED ATTEMPT (RESUME)
-      firebase.database()
-        .ref(`attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-        .once("value")
-        .then(aSnap => {
-
-          studentAnswers = aSnap.exists()
-            ? aSnap.val().answers || {}
-            : {};
-
-          renderTest(); // 👈 YOUR function
-        });
+    .once("value", snap=>{
+      currentQuestions=Object.values(snap.val());
+      renderTest();
     });
 }
 
-/* RENDER */
 function renderTest(){
-
-  studentPanel.style.display = "none";
-  testArea.style.display = "block";
-
-  testTitle.innerText = currentTest;
-  questionBox.innerHTML = "";
-
-  currentQuestions.forEach((q, i) => {
-
-    let html = `<b>${i+1}. ${q.q}</b><br>`;
-
-    q.options.forEach((o, j) => {
-      html += `
-        <label>
-          <input type="radio"
-            name="q${i}"
-            ${studentAnswers[i] == j ? "checked" : ""}
-            onchange="saveAns(${i},${j})">
-          ${o}
-        </label><br>`;
-    });
-
-    questionBox.innerHTML += html + "<hr>";
+  studentPanel.style.display="none";
+  testArea.style.display="block";
+  questionBox.innerHTML="";
+  currentQuestions.forEach((q,i)=>{
+    questionBox.innerHTML+=`<b>${i+1}. ${q.q}</b><br>`+
+    q.options.map((o,j)=>`<label>
+    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}">${o}
+    </label><br>`).join("")+"<hr>";
   });
 }
-
 
 function submitTest(){
-document.getElementById("submitBtn").disabled = true;
-
-  if(Object.keys(studentAnswers).length === 0){
-    alert("Please answer at least one question before submitting.");
-    return;
-  }
-
-  score = 0;
-  correctCount = 0;
-  wrongCount = 0;
-
-  totalQuestions = currentQuestions.length;
-
-  currentQuestions.forEach((q, i) => {
-    if(studentAnswers[i] != null){
-      if(studentAnswers[i] == q.answer){
-        score++;
-        correctCount++;
-      } else {
-        wrongCount++;
-      }
-    }
-  });
-if(!confirm("Are you sure you want to submit the test?")){
-  return;
-}
-
-  const resultData = {
-    student: currentStudent,
-    test: currentTest,
-    total: totalQuestions,
-    score: score,
-    correct: correctCount,
-    wrong: wrongCount,
-    answers: studentAnswers,
-    submittedAt: new Date().toISOString(),
-    status: "submitted"
-  };
-
-  // ✅ SAVE RESULT FOR TEACHER
-  firebase.database()
-    .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-    .set(resultData);
-
-  // ✅ LOCK ATTEMPT
-  firebase.database()
-    .ref(`attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-    .set(resultData);
-
-  alert(
-    `Test Submitted!\n\n` +
-    `Score: ${score}/${totalQuestions}\n` +
-    `Correct: ${correctCount}\n` +
-    `Wrong: ${wrongCount}`
-  );
-
+  alert("Test submitted");
   location.reload();
 }
 
-
-function saveAns(i, v){
-  if(document.getElementById("submitBtn")?.disabled) return;
-
-  studentAnswers[i] = v;
-
-  firebase.database().ref(
-    `attempts/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`
-  ).update({ answers: studentAnswers });
-}
-
 function loadResults(){
-  const cls = resultClassSelect.value;
-  const test = resultTestSelect.value;
-
-  if(!cls || !test){
-    alert("Please select class and test");
-    return;
-  }
-
-  resultBox.innerHTML = "Loading...";
-
   firebase.database()
-    .ref(`results/class_${cls}/${test}`)
-    .once("value")
-    .then(snap => {
-
-      resultBox.innerHTML = "";
-
-      if(!snap.exists()){
-        resultBox.innerHTML = "<p>No results found.</p>";
-        return;
-      }
-
-      snap.forEach(st => {
-        const d = st.val();
-
-        resultBox.innerHTML += `
-          <div style="border:1px solid #ccc;padding:8px;margin:5px">
-            <b>${d.student?.name || "Unknown"}</b>
-            (Roll: ${st.key})<br>
-            Score: ${d.score}/${d.total}
-          </div>
-        `;
+    .ref(`results/class_${resultClassSelect.value}/${resultTestSelect.value}`)
+    .once("value", snap=>{
+      resultBox.innerHTML="";
+      snap.forEach(s=>{
+        resultBox.innerHTML+=`<div>${s.key} : ${s.val().score}</div>`;
       });
     });
 }
 
-
-function allowReattempt(cls, test, roll){
-
-  if(!confirm("Allow student to re-attempt this test?")) return;
-
-  // ❌ Remove result
-  firebase.database()
-    .ref(`results/class_${cls}/${test}/${roll}`)
-    .remove();
-
-  // ❌ Remove attempt (answers + lock)
-  firebase.database()
-    .ref(`attempts/class_${cls}/${test}/${roll}`)
-    .remove();
-
-  alert("Re-attempt allowed. Student can start test again.");
-}
-
-function loadTestsForTeacher() {
-  const cls = manageClass.value;
-  const testList = document.getElementById("testList");
-  testList.innerHTML = "";
-  if (!cls) return;
-
-  firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
-    if (!snap.exists()) {
-      testList.innerHTML = "<p>No tests found for this class.</p>";
-      return;
-    }
-    snap.forEach(t => {
-      testList.innerHTML += `<div>${t.key} <button onclick="deleteTest('${cls}', '${t.key}')">Delete</button></div>`;
+function loadTestsForTeacher(){
+  testList.innerHTML="";
+  firebase.database().ref(`tests/class_${manageClass.value}`).once("value", snap=>{
+    snap.forEach(t=>{
+      testList.innerHTML+=`<div>${t.key}</div>`;
     });
   });
 }
 
-function deleteTest(cls, testName) {
-  if (confirm(`Delete test "${testName}"?`)) {
-    firebase.database().ref(`tests/class_${cls}/${testName}`).remove();
-    loadTestsForTeacher(); // Refresh list
-  }
-}
-
 function logout(){ auth.signOut(); }
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
