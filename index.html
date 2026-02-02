@@ -54,6 +54,7 @@ button { cursor:pointer; }
 </select>
 
 <input id="testName" placeholder="Test Name">
+<input id="testDuration" type="number" placeholder="Duration (minutes)">
 <textarea id="bulkQuestions" rows="6"
 placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
@@ -164,18 +165,37 @@ function TestsForClass(cls){
 
 /* SAVE TEST */
 function saveTest(){
-  const cls=testClass.value;
-  const name=testName.value.trim();
-  const raw=bulkQuestions.value.trim();
-  if(!cls||!name||!raw) return alert("Fill all fields");
+  const cls = testClass.value;
+  const name = testName.value.trim();
+  const raw = bulkQuestions.value.trim();
+  const duration = Number(testDuration.value);
 
-  const questions=raw.split("\n").map(l=>{
-    const p=l.split("|");
-    return { q:p[0], options:p.slice(1,5), answer:+p[5] };
+  if(!cls || !name || !raw || !duration){
+    alert("Fill all fields including duration");
+    return;
+  }
+
+  const questions = raw.split("\n").map(l=>{
+    const p = l.split("|");
+    return {
+      q: p[0].trim(),
+      options: p.slice(1,5).map(x=>x.trim()),
+      answer: Number(p[5])
+    };
   });
 
-  firebase.database().ref(`tests/class_${cls}/${name}`).set({questions})
-  .then(()=>alert("Test Saved"));
+  firebase.database()
+    .ref(`tests/class_${cls}/${name}`)
+    .set({
+      duration: duration,   // ✅ SAVE TIME
+      questions: questions
+    })
+    .then(()=>{
+      alert("Test Saved with duration");
+      testName.value="";
+      bulkQuestions.value="";
+      testDuration.value="";
+    });
 }
 
 /* STUDENT TESTS */
@@ -206,25 +226,26 @@ function startStudentTest(){
       currentStudent = { name, roll, class: cls };
       currentTest = test;
 
-      firebase.database()
-        .ref(`tests/class_${cls}/${test}/questions`)
-        .once("value", qSnap => {
+firebase.database()
+  .ref(`tests/class_${cls}/${test}`)
+  .once("value", snap => {
 
-          if (!qSnap.exists()) {
-            alert("No questions found");
-            return;
-          }
+    if (!snap.exists()) {
+      alert("Test not found");
+      return;
+    }
 
-          currentQuestions = Object.values(qSnap.val());
-          studentAnswers = {};
-startTimer(10); // 10 minutes
+    const data = snap.val();
 
-          renderTest();
-        });
-    });
-}
+    currentQuestions = Object.values(data.questions);
+    studentAnswers = {};
+
+    startTimer(data.duration); // ⏱ USE TEACHER TIME
+    renderTest();
+  });
 
 function renderTest(){
+testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
   studentPanel.style.display="none";
   testArea.style.display="block";
   questionBox.innerHTML="";
@@ -379,5 +400,6 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
+
 
 
