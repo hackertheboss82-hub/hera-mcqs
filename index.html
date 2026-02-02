@@ -259,15 +259,44 @@ function Results(){
   const test = resultTestSelect.value;
   if(!cls || !test) return alert("Select class and test");
 
-  firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap=>{
-    resultBox.innerHTML = "";
-    if(!snap.exists()) return resultBox.innerHTML = "No results";
-    snap.forEach(r=>{
-      const data = r.val();
-      resultBox.innerHTML += `<p>${r.key}: ${data.name} - ${data.score}/${data.total}</p>`;
+  firebase.database()
+    .ref(`results/class_${cls}/${test}`)
+    .once("value", snap => {
+
+      resultBox.innerHTML = "";
+
+      if(!snap.exists()){
+        resultBox.innerHTML = "<p>No results</p>";
+        return;
+      }
+
+      snap.forEach(r => {
+        const d = r.val();
+
+        resultBox.innerHTML += `
+          <div style="border:1px solid #ccc;padding:6px;margin:6px">
+            <b>${d.name}</b> (Roll: ${r.key})<br>
+            Score: ${d.score}/${d.total}<br>
+            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">
+              Allow Reattempt
+            </button>
+          </div>
+        `;
+      });
     });
-  });
 }
+function allowReattempt(cls, test, roll){
+  if(!confirm("Allow this student to reattempt the test?")) return;
+
+  firebase.database()
+    .ref(`results/class_${cls}/${test}/${roll}`)
+    .remove()
+    .then(() => {
+      alert("Reattempt allowed. Student can start test again.");
+      Results(); // refresh list
+    });
+}
+
 
 function TestsForTeacher() {
   const cls = manageClass.value;
@@ -322,3 +351,4 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
+
