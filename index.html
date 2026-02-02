@@ -38,7 +38,7 @@ button { cursor:pointer; }
 <div class="box" id="teacherPanel">
 <h3>Student Results</h3>
 
-<select id="resultClassSelect"></select>
+<select id="resultClassSelect" onchange="TestsForClass(this.value)"></select>
 <select id="resultTestSelect"></select>
 <button onclick="Results()">Results</button>
 <div id="resultBox"></div>
@@ -62,7 +62,7 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <hr>
 
 <h3>Manage Tests</h3>
-<select id="manageClass" onchange="TestsForTeacher()">
+<select id="manageClass" onchange="loadTestsForTeacher()">
 <option value="">Select Class</option>
 <option value="8">Class 8</option>
 <option value="9">Class 9</option>
@@ -79,7 +79,7 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <input id="sName" placeholder="Student Name">
 <input id="sRoll" placeholder="Roll Number">
 
-<select id="sClass" onchange="StudentTests()">
+<select id="sClass" onchange="TestsForClass(this.value)">
 <option value="">Select Class</option>
 <option value="8">Class 8</option>
 <option value="9">Class 9</option>
@@ -220,44 +220,6 @@ function startStudentTest(){
     });
 }
 
-
-    // ✅ continue ONLY if no previous attempt
-    loadStudentQuestions(cls, test);
-  });
-
-  const cls = studentClass.value;
-const test = studentTest.value;
-const roll = studentRoll.value;
-
-if (!cls || !test || !roll) {
-  alert("Fill all details");
-  return;
-}
-  firebase.database()
-  .ref(`results/class_${cls}/${test}/${roll}`)
-  .once("value")
-  .then(rSnap => {
-
-    if (rSnap.exists()) {
-      alert("You already submitted this test.\nContact teacher for reattempt.");
-      return;   // ⛔ STOP test loading
-    }
-
-    // ✅ ALLOW TEST
-    loadQuestionsForStudent(cls, test);
-  });
-
-  currentStudent={name:sName.value,roll:sRoll.value,class:sClass.value};
-  currentTest=studentTestSelect.value;
-
-  firebase.database()
-    .ref(`tests/class_${currentStudent.class}/${currentTest}/questions`)
-    .once("value", snap=>{
-      currentQuestions=Object.values(snap.val());
-      renderTest();
-    });
-}
-
 function renderTest(){
   studentPanel.style.display="none";
   testArea.style.display="block";
@@ -326,7 +288,7 @@ function loadTestsForTeacher() {
       if(!snap.exists()) return;
 
       testClass.value = cls;
-      testNameInput.value = testName;
+      testName.value = testName;
 
       bulkQuestions.value = Object.values(snap.val())
         .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer}`)
@@ -340,5 +302,3 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
-
-
