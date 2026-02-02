@@ -176,29 +176,50 @@ function saveTest(){
 }
 
 /* STUDENT TESTS */
-function loadStudentTests(){
-  loadTestsForClass(sClass.value);
-}
-
-/* START TEST */
 function startStudentTest(){
-  const cls = studentClassSelect.value;
-const test = studentTestSelect.value;
-const roll = studentRollInput.value;
 
-if (!cls || !test || !roll) {
-  alert("Please fill all details");
-  return;
+  const cls = sClass.value;
+  const test = studentTestSelect.value;
+  const roll = sRoll.value;
+  const name = sName.value;
+
+  if (!cls || !test || !roll || !name) {
+    alert("Please fill all details");
+    return;
+  }
+
+  // 🔒 Check if already attempted
+  firebase.database()
+    .ref(`results/class_${cls}/${test}/${roll}`)
+    .once("value")
+    .then(rSnap => {
+
+      if (rSnap.exists()) {
+        alert("Test already submitted.\nTeacher must allow reattempt.");
+        return;
+      }
+
+      // ✅ Load test
+      currentStudent = { name, roll, class: cls };
+      currentTest = test;
+
+      firebase.database()
+        .ref(`tests/class_${cls}/${test}/questions`)
+        .once("value", qSnap => {
+
+          if (!qSnap.exists()) {
+            alert("No questions found");
+            return;
+          }
+
+          currentQuestions = Object.values(qSnap.val());
+          studentAnswers = {};
+
+          renderTest();
+        });
+    });
 }
-firebase.database()
-  .ref(`results/class_${cls}/${test}/${roll}`)
-  .once("value")
-  .then(snapshot => {
 
-    if (snapshot.exists()) {
-      alert("You already submitted this test.\nContact teacher for reattempt.");
-      return; // ⛔ STOP here
-    }
 
     // ✅ continue ONLY if no previous attempt
     loadStudentQuestions(cls, test);
@@ -250,20 +271,27 @@ function renderTest(){
 }
 
 function submitTest(){
-  alert("Test submitted");
-  location.reload();
-}
 
-function loadResults(){
+  let score = 0;
+
+  currentQuestions.forEach((q, i) => {
+    if (studentAnswers[i] === q.answer) score++;
+  });
+
   firebase.database()
-    .ref(`results/class_${resultClassSelect.value}/${resultTestSelect.value}`)
-    .once("value", snap=>{
-      resultBox.innerHTML="";
-      snap.forEach(s=>{
-        resultBox.innerHTML+=`<div>${s.key} : ${s.val().score}</div>`;
-      });
+    .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+    .set({
+      name: currentStudent.name,
+      score: score,
+      total: currentQuestions.length,
+      time: Date.now()
+    })
+    .then(() => {
+      alert("Test submitted successfully");
+      location.reload();
     });
 }
+
 
 function loadTestsForTeacher() {
   const cls = manageClass.value;
@@ -312,4 +340,5 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
+
 
