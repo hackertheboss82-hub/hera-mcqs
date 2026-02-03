@@ -647,17 +647,27 @@ function startStudentTest(){
 }
 
 function renderTest(){
-  testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
-  studentPanel.style.display="none";
-  testArea.style.display="block";
-  questionBox.innerHTML="";
-  currentQuestions.forEach((q,i)=>{
-    questionBox.innerHTML+=`<b>${i+1}. ${q.q}</b><br>`+
-    q.options.map((o,j)=>`<label>
-    <<input type="radio" name="q${i}" 
-  ${studentAnswers[i] === j ? "checked" : ""} 
-  onchange="studentAnswers[${i}]=${j}">
-    </label><br>`).join("")+"<hr>";
+  testTitle.innerText = currentTest + " (" + currentQuestions.length + " Questions)";
+  studentPanel.style.display = "none";
+  testArea.style.display = "block";
+  questionBox.innerHTML = "";
+
+  currentQuestions.forEach(function(q, i){
+    let html = "<b>" + (i+1) + ". " + q.q + "</b><br>";
+
+    q.options.forEach(function(o, j){
+      html += `
+        <label>
+          <input type="radio" name="q${i}"
+            ${studentAnswers[i] === j ? "checked" : ""}
+            onchange="studentAnswers[${i}] = ${j}">
+          ${o}
+        </label><br>
+      `;
+    });
+
+    html += "<hr>";
+    questionBox.innerHTML += html;
   });
 }
 
@@ -863,4 +873,5 @@ function rejectSignup(key){
 
 </body>
 </html>
+
 
