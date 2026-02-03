@@ -216,7 +216,7 @@ function autoSaveAnswers(){
     .set({
       answers: studentAnswers,
       timeLeft: remainingTime,
-      savedAt: Date.now()
+      updated: Date.now()
     });
 }
 
@@ -228,7 +228,8 @@ function shuffleArray(arr){
   return arr;
 }
 
-/* STUDENT TESTS */
+let autoSaveInterval = null;
+
 function startStudentTest(){
 
   const cls = sClass.value;
@@ -241,7 +242,6 @@ function startStudentTest(){
     return;
   }
 
-  // 🔒 Check if already attempted
   firebase.database()
     .ref(`results/class_${cls}/${test}/${roll}`)
     .once("value")
@@ -252,13 +252,13 @@ function startStudentTest(){
         return;
       }
 
-      // ✅ Load test
       currentStudent = { name, roll, class: cls };
       currentTest = test;
 
       firebase.database()
         .ref(`tests/class_${cls}/${test}`)
-        .once("value", snap => {
+        .once("value")
+        .then(snap => {
 
           if (!snap.exists()) {
             alert("Test not found");
@@ -267,37 +267,41 @@ function startStudentTest(){
 
           const data = snap.val();
 
-         let allQuestions = Object.values(data.questions || {});
-
-          // 🔀 Shuffle
+          let allQuestions = Object.values(data.questions || {});
           shuffleArray(allQuestions);
 
-          // ✂️ Apply teacher limit
           const limit = data.limit || allQuestions.length;
           currentQuestions = allQuestions.slice(0, limit);
 
-         studentAnswers = {};
+          studentAnswers = {};
 
-// ♻️ Restore auto-saved answers if exist
-firebase.database()
-  .ref(`autosave/class_${cls}/${test}/${roll}`)
-  .once("value")
-  .then(snap => {
+          // ♻️ Restore auto-saved answers
+          firebase.database()
+            .ref(`autosave/class_${cls}/${test}/${roll}`)
+            .once("value")
+            .then(saveSnap => {
 
-    if(snap.exists()){
-      const saved = snap.val();
-      studentAnswers = saved.answers || {};
-      remainingTime = saved.timeLeft || (data.duration * 60);
-    } else {
-      remainingTime = data.duration * 60;
-    }
+              if (saveSnap.exists()) {
+                const saved = saveSnap.val();
+                studentAnswers = saved.answers || {};
+                remainingTime = saved.timeLeft || (data.duration * 60);
+              } else {
+                remainingTime = data.duration * 60;
+              }
 
-    startTimer(Math.ceil(remainingTime / 60));
-    renderTest();
+              startTimer(Math.ceil(remainingTime / 60));
+              renderTest();
 
-    // 🔁 Start auto-save every 5 seconds
-    autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-  });
+              clearInterval(autoSaveInterval);
+              autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+
+            });
+
+        });
+
+    });
+}
+
 
 
 function renderTest(){
@@ -339,11 +343,11 @@ function updateTimerDisplay(){
 }
 
 function submitTest(){
-clearInterval(autoSaveInterval);
-clearInterval(timerInterval);
 
-  // ✅ Disable reload warning before submitting
-  disableUnloadWarning();
+  clearInterval(autoSaveInterval);
+  clearInterval(timerInterval);
+
+  disableUnloadWarning(); // ⚠️ must exist
 
   let score = 0;
 
@@ -360,13 +364,17 @@ clearInterval(timerInterval);
       time: Date.now()
     })
     .then(() => {
-      alert("Test submitted successfully");
+
+      // 🧹 Remove autosave data
       firebase.database()
-  .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-  .remove();
+        .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+        .remove();
+
+      alert("Test submitted successfully");
       location.reload();
     });
 }
+
 
 
 function Results(){
@@ -471,4 +479,5 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
+
 
