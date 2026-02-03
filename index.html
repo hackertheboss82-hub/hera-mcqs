@@ -258,49 +258,80 @@ button:hover {
 </div>
 
 <!-- TEACHER PANEL -->
-<!-- MAIN TEACHER APP -->
-<div id="app" style="display:none; height:100vh; display:flex;">
+<div class="box" id="teacherPanel">
+<h3>Student Results</h3>
 
-  <!-- SIDEBAR -->
-  <div style="width:220px; background:#222; color:#fff; padding:15px;">
-    <h3>Hera MCQ</h3>
-    <button onclick="showTab('dashboard')">Dashboard</button><br><br>
-    <button onclick="showTab('createTest')">Create Test</button><br><br>
-    <button onclick="showTab('manageTest')">Manage Tests</button><br><br>
-    <button onclick="showTab('resultsTab')">Results</button><br><br>
-    <button onclick="showTab('approvalsTab')">Approvals</button><br><br>
-    <button onclick="logout()">Logout</button>
-  </div>
+<select id="resultClassSelect" onchange="TestsForClass(this.value)">
+<option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
+</select>
+<select id="resultTestSelect"></select>
+<button onclick="Results()">Results</button>
+<div id="resultBox"></div>
 
-  <!-- CONTENT AREA -->
-  <div style="flex:1; padding:20px;">
+<hr>
 
-    <div id="dashboard" class="tab">
-      <h2>Welcome Teacher 👋</h2>
-      <p>Select option from left menu</p>
-    </div>
+<h3>Create Test</h3>
+<select id="testClass">
+<option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
+</select>
 
-    <div id="createTest" class="tab" style="display:none">
-      <!-- MOVE CREATE TEST FORM HERE LATER -->
-      <h3>Create Test</h3>
-    </div>
+<input id="testName" placeholder="Test Name">
+<input id="testDuration" type="number" placeholder="Duration (minutes)">
+<input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
+<textarea id="bulkQuestions" rows="6"
+placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
-    <div id="manageTest" class="tab" style="display:none">
-      <!-- MOVE MANAGE TESTS HERE LATER -->
-      <h3>Manage Tests</h3>
-    </div>
+<button onclick="saveTest()">Save Test</button>
 
-    <div id="resultsTab" class="tab" style="display:none">
-      <!-- MOVE RESULTS HERE LATER -->
-      <h3>Results</h3>
-    </div>
+<hr>
 
-    <div id="approvalsTab" class="tab" style="display:none">
-      <h3>Pending Approvals</h3>
-      <div id="pendingSignupsList"></div>
-    </div>
+<h3>Manage Tests</h3>
+<hr>
+<h3>Pending Teacher Signups</h3>
+<div id="pendingSignupsList"></div>
+<select id="manageClass" onchange="TestsForTeacher()">
+<option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
+</select>
 
-  </div>
+<button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
+<div id="testList"></div>
+<button onclick="logout()">Logout</button>
 </div>
 
 <!-- STUDENT PANEL -->
@@ -373,12 +404,7 @@ function toggleTheme() {
 function showRegister(){
   document.getElementById("container").classList.add("active");
 }
-function showTab(id){
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.style.display = "none";
-  });
-  document.getElementById(id).style.display = "block";
-}
+
 function showLogin(){
   document.getElementById("container").classList.remove("active");
 }
@@ -453,8 +479,7 @@ function teacherSignup(){
 
 auth.onAuthStateChanged(u=>{
   container.style.display = u ? "none" : "block";
- document.getElementById("app").style.display = "flex";
-showTab("dashboard");
+  teacherPanel.style.display = u ? "block" : "none";
   if(u) {
     ResultClasses();
     loadPendingSignups(); // Load pending signups for admin
@@ -608,7 +633,7 @@ function startStudentTest(){
                 remainingTime = data.duration * 60;
               }
 
-             startTimer();
+              startTimer(Math.ceil(remainingTime / 60));
               renderTest();
 
               clearInterval(autoSaveInterval);
@@ -646,8 +671,10 @@ function renderTest(){
   });
 }
 
-function startTimer(){
+function startTimer(minutes){
   clearInterval(timerInterval);
+
+  remainingTime = minutes * 60;
   updateTimerDisplay();
 
   timerInterval = setInterval(() => {
@@ -846,6 +873,5 @@ function rejectSignup(key){
 
 </body>
 </html>
-
 
 
