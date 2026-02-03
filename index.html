@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Hera MCQ System</title>
-
+<link rel="icon" href="data:,">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -569,7 +569,9 @@ function autoSaveAnswers(){
 function shuffleArray(arr){
   for(let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
-      return arr;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 function startStudentTest(){
@@ -652,7 +654,9 @@ function renderTest(){
   currentQuestions.forEach((q,i)=>{
     questionBox.innerHTML+=`<b>${i+1}. ${q.q}</b><br>`+
     q.options.map((o,j)=>`<label>
-    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}">${o}
+    <<input type="radio" name="q${i}" 
+  ${studentAnswers[i] === j ? "checked" : ""} 
+  onchange="studentAnswers[${i}]=${j}">
     </label><br>`).join("")+"<hr>";
   });
 }
@@ -859,3 +863,4 @@ function rejectSignup(key){
 
 </body>
 </html>
+
