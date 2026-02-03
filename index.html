@@ -7,6 +7,21 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#f4f6f8; }
+.box {
+  width:360px; margin:40px auto; padding:20px;
+  background:#fff; border-radius:8px; box-shadow:0 0 10px #ccc;
+}
+input, select, button {
+  width:100%; padding:10px; margin-top:10px;
+}
+button { cursor:pointer; }
+#teacherPanel, #testArea { display:none; }
+.error { color:red; }
+.success { color:green; }
+
 /* Theme Variables */
 :root {
   --bg-color: #f4f6f8;
@@ -190,25 +205,11 @@ button:hover {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-<style>
-body { font-family: Arial; background:#f4f6f8; }
-.box {
-  width:360px; margin:40px auto; padding:20px;
-  background:#fff; border-radius:8px; box-shadow:0 0 10px #ccc;
-}
-input, select, button {
-  width:100%; padding:10px; margin-top:10px;
-}
-button { cursor:pointer; }
-#teacherPanel, #testArea { display:none; }
-.error { color:red; }
-.success { color:green; }
 </style>
 </head>
 
 <body>
 
-<!-- TEACHER LOGIN/SIGNUP -->
 <!-- TEACHER LOGIN/SIGNUP -->
 <div class="container" id="container">
   <!-- Orange Panel -->
@@ -258,7 +259,21 @@ button { cursor:pointer; }
 <div class="box" id="teacherPanel">
 <h3>Student Results</h3>
 
-<select id="resultClassSelect" onchange="TestsForClass(this.value)"></select>
+<select id="resultClassSelect" onchange="TestsForClass(this.value)">
+<option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
+</select>
 <select id="resultTestSelect"></select>
 <button onclick="Results()">Results</button>
 <div id="resultBox"></div>
@@ -268,6 +283,15 @@ button { cursor:pointer; }
 <h3>Create Test</h3>
 <select id="testClass">
 <option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
 <option value="8">Class 8</option>
 <option value="9">Class 9</option>
 <option value="10">Class 10</option>
@@ -286,10 +310,9 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <h3>Manage Tests</h3>
 <hr>
 <h3>Pending Teacher Signups</h3>
-
 <div id="pendingSignupsList"></div>
 <select id="manageClass" onchange="TestsForTeacher()">
-<<option value="">Select Class</option>
+<option value="">Select Class</option>
 <option value="jr_kg">Jr. KG</option>
 <option value="sr_kg">Sr. KG</option>
 <option value="1">Class 1</option>
@@ -302,9 +325,9 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <option value="8">Class 8</option>
 <option value="9">Class 9</option>
 <option value="10">Class 10</option>
-<button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
 </select>
 
+<button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
 <div id="testList"></div>
 <button onclick="logout()">Logout</button>
 </div>
@@ -317,6 +340,15 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 
 <select id="sClass" onchange="TestsForClass(this.value)">
 <option value="">Select Class</option>
+<option value="jr_kg">Jr. KG</option>
+<option value="sr_kg">Sr. KG</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
 <option value="8">Class 8</option>
 <option value="9">Class 9</option>
 <option value="10">Class 10</option>
@@ -349,6 +381,31 @@ let currentStudent={}, currentTest="", currentQuestions=[], studentAnswers={};
 let timerInterval = null;
 let remainingTime = 0; // seconds
 let autoSaveInterval = null;
+let currentTheme = 'light';
+
+// Theme Toggle
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById('themeToggle');
+  if (currentTheme === 'light') {
+    body.classList.add('dark-theme');
+    btn.innerText = 'Switch to Light Theme';
+    currentTheme = 'dark';
+  } else {
+    body.classList.remove('dark-theme');
+    btn.innerText = 'Switch to Dark Theme';
+    currentTheme = 'light';
+  }
+}
+
+// Show Register/Login
+function showRegister(){
+  document.getElementById("container").classList.add("active");
+}
+
+function showLogin(){
+  document.getElementById("container").classList.remove("active");
+}
 
 function disableUnloadWarning(){
   window.onbeforeunload = null;
@@ -416,7 +473,16 @@ function teacherSignup(){
       btn.innerHTML = 'Signup';
       btn.disabled = false;
     });
-};;
+}
+
+auth.onAuthStateChanged(u=>{
+  container.style.display = u ? "none" : "block";
+  teacherPanel.style.display = u ? "block" : "none";
+  if(u) {
+    ResultClasses();
+    loadPendingSignups(); // Load pending signups for admin
+  }
+});
 
 function ResultClasses(){
   firebase.database().ref("results").once("value", snap => {
@@ -578,8 +644,6 @@ function startStudentTest(){
     });
 }
 
-
-
 function renderTest(){
   testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
   studentPanel.style.display="none";
@@ -650,8 +714,6 @@ function submitTest(){
       location.reload();
     });
 }
-
-
 
 function Results(){
   const cls = resultClassSelect.value;
@@ -740,9 +802,6 @@ function editTest(cls, testName){
         .join("\n");
     });
 }
-function disableUnloadWarning(){
-  window.onbeforeunload = null;
-}
 
 function deleteTest(cls, testName){
   if(confirm("Delete this test?")){
@@ -751,15 +810,8 @@ function deleteTest(cls, testName){
 }
 
 function logout(){ auth.signOut(); }
-  auth.onAuthStateChanged(u=>{
-  loginBox.style.display = u ? "none" : "block";
-  teacherPanel.style.display = u ? "block" : "none";
-  if(u) {
-    ResultClasses();
-    loadPendingSignups(); // Load pending signups for admin
-  }
-});
-  function loadPendingSignups(){
+
+function loadPendingSignups(){
   const list = document.getElementById("pendingSignupsList");
   list.innerHTML = "<p>Loading...</p>";
   firebase.database().ref("pendingSignups").once("value", snap => {
@@ -803,33 +855,7 @@ function rejectSignup(key){
       loadPendingSignups(); // Refresh list
     });
 }
-  let currentTheme = 'light';
-
-// Theme Toggle
-function toggleTheme() {
-  const body = document.body;
-  const btn = document.getElementById('themeToggle');
-  if (currentTheme === 'light') {
-    body.classList.add('dark-theme');
-    btn.innerText = 'Switch to Light Theme';
-    currentTheme = 'dark';
-  } else {
-    body.classList.remove('dark-theme');
-    btn.innerText = 'Switch to Dark Theme';
-    currentTheme = 'light';
-  }
-}
-
-// Show Register/Login
-function showRegister(){
-  document.getElementById("container").classList.add("active");
-}
-
-function showLogin(){
-  document.getElementById("container").classList.remove("active");
-}
 </script>
 
 </body>
 </html>
-
