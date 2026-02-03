@@ -114,6 +114,8 @@ const auth = firebase.auth();
 let currentStudent={}, currentTest="", currentQuestions=[], studentAnswers={};
 let timerInterval = null;
 let remainingTime = 0; // seconds
+let autoSaveInterval = null;
+
 window.onbeforeunload = function () {
   if (testArea.style.display === "block") {
     return "Test is running. Leaving will submit the test.";
@@ -206,6 +208,17 @@ function saveTest(){
       questionLimit.value="";
     });
 }
+function autoSaveAnswers(){
+  if(!currentStudent.roll || !currentTest) return;
+
+  firebase.database()
+    .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+    .set({
+      answers: studentAnswers,
+      timeLeft: remainingTime,
+      savedAt: Date.now()
+    });
+}
 
 function shuffleArray(arr){
   for(let i = arr.length - 1; i > 0; i--){
@@ -263,12 +276,29 @@ function startStudentTest(){
           const limit = data.limit || allQuestions.length;
           currentQuestions = allQuestions.slice(0, limit);
 
-          studentAnswers = {};
-          startTimer(data.duration);
-          renderTest();
-        });
-    });
-}
+         studentAnswers = {};
+
+// ♻️ Restore auto-saved answers if exist
+firebase.database()
+  .ref(`autosave/class_${cls}/${test}/${roll}`)
+  .once("value")
+  .then(snap => {
+
+    if(snap.exists()){
+      const saved = snap.val();
+      studentAnswers = saved.answers || {};
+      remainingTime = saved.timeLeft || (data.duration * 60);
+    } else {
+      remainingTime = data.duration * 60;
+    }
+
+    startTimer(Math.ceil(remainingTime / 60));
+    renderTest();
+
+    // 🔁 Start auto-save every 5 seconds
+    autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+  });
+
 
 function renderTest(){
   testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
@@ -309,7 +339,12 @@ function updateTimerDisplay(){
 }
 
 function submitTest(){
-  clearInterval(timerInterval);
+clearInterval(autoSaveInterval);
+clearInterval(timerInterval);
+
+  // ✅ Disable reload warning before submitting
+  disableUnloadWarning();
+
   let score = 0;
 
   currentQuestions.forEach((q, i) => {
@@ -326,9 +361,13 @@ function submitTest(){
     })
     .then(() => {
       alert("Test submitted successfully");
+      firebase.database()
+  .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+  .remove();
       location.reload();
     });
 }
+
 
 function Results(){
   const cls = resultClassSelect.value;
@@ -417,6 +456,9 @@ function editTest(cls, testName){
         .join("\n");
     });
 }
+function disableUnloadWarning(){
+  window.onbeforeunload = null;
+}
 
 function deleteTest(cls, testName){
   if(confirm("Delete this test?")){
@@ -429,3 +471,4 @@ function logout(){ auth.signOut(); }
 
 </body>
 </html>
+
