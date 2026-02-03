@@ -20,18 +20,26 @@ input, select, button {
 button { cursor:pointer; }
 #teacherPanel, #testArea { display:none; }
 .error { color:red; }
+.success { color:green; }
 </style>
 </head>
 
 <body>
 
-<!-- TEACHER LOGIN -->
+<!-- TEACHER LOGIN/SIGNUP -->
 <div class="box" id="loginBox">
 <h2>Teacher Login</h2>
 <input id="tEmail" placeholder="Email">
 <input id="tPassword" type="password" placeholder="Password">
 <button onclick="teacherLogin()">Login</button>
+<hr>
+<h2>Teacher Signup</h2>
+<input id="tEmailSignup" placeholder="Email">
+<input id="tPasswordSignup" type="password" placeholder="Password">
+<input id="tConfirmPassword" type="password" placeholder="Confirm Password">
+<button onclick="teacherSignup()">Signup</button>
 <p id="loginMsg" class="error"></p>
+<p id="signupMsg" class="success"></p>
 </div>
 
 <!-- TEACHER PANEL -->
@@ -116,6 +124,10 @@ let timerInterval = null;
 let remainingTime = 0; // seconds
 let autoSaveInterval = null;
 
+function disableUnloadWarning(){
+  window.onbeforeunload = null;
+}
+
 window.onbeforeunload = function () {
   if (testArea.style.display === "block") {
     return "Test is running. Leaving will submit the test.";
@@ -128,10 +140,44 @@ window.onload = () => {
 
 /* LOGIN */
 function teacherLogin(){
-  auth.signInWithEmailAndPassword(
-    tEmail.value,
-    tPassword.value
-  ).catch(e => loginMsg.innerText = e.message);
+  const email = tEmail.value.trim();
+  const pass = tPassword.value.trim();
+  if (!email || !pass) {
+    loginMsg.innerText = "Enter email and password.";
+    return;
+  }
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(e => {
+      console.error("Login error:", e);
+      loginMsg.innerText = e.message;
+    });
+}
+
+/* SIGNUP */
+function teacherSignup(){
+  const email = tEmailSignup.value.trim();
+  const pass = tPasswordSignup.value.trim();
+  const confirmPass = tConfirmPassword.value.trim();
+  if (!email || !pass || !confirmPass) {
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Fill all fields.";
+    return;
+  }
+  if (pass !== confirmPass) {
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Passwords do not match.";
+    return;
+  }
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(() => {
+      signupMsg.innerText = "Signup successful! You are now logged in.";
+      loginMsg.innerText = "";
+    })
+    .catch(e => {
+      console.error("Signup error:", e);
+      signupMsg.innerText = "";
+      loginMsg.innerText = e.message;
+    });
 }
 
 auth.onAuthStateChanged(u=>{
@@ -142,12 +188,8 @@ auth.onAuthStateChanged(u=>{
 
 function ResultClasses(){
   firebase.database().ref("results").once("value", snap => {
-
-    resultClassSelect.innerHTML =
-      "<option value=''>Select Class</option>";
-
+    resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
     if(!snap.exists()) return;
-
     snap.forEach(cls => {
       let opt = document.createElement("option");
       opt.value = cls.key.replace("class_","");
@@ -160,7 +202,6 @@ function ResultClasses(){
 function TestsForClass(cls){
   resultTestSelect.innerHTML="<option value=''>Select Test</option>";
   studentTestSelect.innerHTML="<option value=''>Select Test</option>";
-
   firebase.database().ref(`tests/class_${cls}`).once("value", snap=>{
     snap.forEach(t=>{
       let o=document.createElement("option");
@@ -208,16 +249,17 @@ function saveTest(){
       questionLimit.value="";
     });
 }
+
 function autoSaveAnswers(){
   if(!currentStudent.roll || !currentTest) return;
-
   firebase.database()
     .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
     .set({
       answers: studentAnswers,
       timeLeft: remainingTime,
       updated: Date.now()
-    });
+    })
+    .catch(e => console.error("Auto-save failed:", e));
 }
 
 function shuffleArray(arr){
@@ -228,10 +270,7 @@ function shuffleArray(arr){
   return arr;
 }
 
-let autoSaveInterval = null;
-
 function startStudentTest(){
-
   const cls = sClass.value;
   const test = studentTestSelect.value;
   const roll = sRoll.value;
@@ -246,7 +285,6 @@ function startStudentTest(){
     .ref(`results/class_${cls}/${test}/${roll}`)
     .once("value")
     .then(rSnap => {
-
       if (rSnap.exists()) {
         alert("Test already submitted.\nTeacher must allow reattempt.");
         return;
@@ -259,28 +297,23 @@ function startStudentTest(){
         .ref(`tests/class_${cls}/${test}`)
         .once("value")
         .then(snap => {
-
           if (!snap.exists()) {
             alert("Test not found");
             return;
           }
 
           const data = snap.val();
-
           let allQuestions = Object.values(data.questions || {});
           shuffleArray(allQuestions);
-
           const limit = data.limit || allQuestions.length;
           currentQuestions = allQuestions.slice(0, limit);
-
           studentAnswers = {};
 
-          // ♻️ Restore auto-saved answers
+          // Restore auto-saved answers
           firebase.database()
             .ref(`autosave/class_${cls}/${test}/${roll}`)
             .once("value")
             .then(saveSnap => {
-
               if (saveSnap.exists()) {
                 const saved = saveSnap.val();
                 studentAnswers = saved.answers || {};
@@ -291,43 +324,34 @@ function startStudentTest(){
 
               startTimer(Math.ceil(remainingTime / 60));
               renderTest();
-
               clearInterval(autoSaveInterval);
               autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-
             });
-
         });
-
     });
 }
-
-
 
 function renderTest(){
   testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
   studentPanel.style.display="none";
   testArea.style.display="block";
   questionBox.innerHTML="";
+
   currentQuestions.forEach((q,i)=>{
     questionBox.innerHTML+=`<b>${i+1}. ${q.q}</b><br>`+
     q.options.map((o,j)=>`<label>
-    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}">${o}
+    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}" ${studentAnswers[i] === j ? 'checked' : ''}>${o}
     </label><br>`).join("")+"<hr>";
   });
 }
 
 function startTimer(minutes){
   clearInterval(timerInterval);
-
   remainingTime = minutes * 60;
   updateTimerDisplay();
-
   timerInterval = setInterval(() => {
     remainingTime--;
-
     updateTimerDisplay();
-
     if (remainingTime <= 0) {
       clearInterval(timerInterval);
       alert("Time is up! Test will be submitted automatically.");
@@ -343,14 +367,11 @@ function updateTimerDisplay(){
 }
 
 function submitTest(){
-
   clearInterval(autoSaveInterval);
   clearInterval(timerInterval);
-
-  disableUnloadWarning(); // ⚠️ must exist
+  disableUnloadWarning();
 
   let score = 0;
-
   currentQuestions.forEach((q, i) => {
     if (studentAnswers[i] === q.answer) score++;
   });
@@ -364,18 +385,17 @@ function submitTest(){
       time: Date.now()
     })
     .then(() => {
-
-      // 🧹 Remove autosave data
       firebase.database()
         .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
         .remove();
-
       alert("Test submitted successfully");
       location.reload();
+    })
+    .catch(e => {
+      console.error("Submission failed:", e);
+      alert("Submission failed. Try again.");
     });
 }
-
-
 
 function Results(){
   const cls = resultClassSelect.value;
@@ -385,9 +405,7 @@ function Results(){
   firebase.database()
     .ref(`results/class_${cls}/${test}`)
     .once("value", snap => {
-
       resultBox.innerHTML = "";
-
       if(!snap.exists()){
         resultBox.innerHTML = "<p>No results</p>";
         return;
@@ -395,7 +413,6 @@ function Results(){
 
       snap.forEach(r => {
         const d = r.val();
-
         resultBox.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:6px">
             <b>${d.name}</b> (Roll: ${r.key})<br>
@@ -411,13 +428,12 @@ function Results(){
 
 function allowReattempt(cls, test, roll){
   if(!confirm("Allow this student to reattempt the test?")) return;
-
   firebase.database()
     .ref(`results/class_${cls}/${test}/${roll}`)
     .remove()
     .then(() => {
       alert("Reattempt allowed. Student can start test again.");
-      Results(); // refresh list
+      Results();
     });
 }
 
@@ -430,7 +446,6 @@ function TestsForTeacher() {
   firebase.database()
     .ref(`tests/class_${cls}`)
     .once("value", snap => {
-
       if (!snap.exists()) {
         testList.innerHTML = "<p>No tests found.</p>";
         return;
@@ -440,44 +455,4 @@ function TestsForTeacher() {
         testList.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:5px">
             <b>${t.key}</b><br>
-            <button onclick="editTest('${cls}','${t.key}')">Edit</button>
-            <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
-          </div>
-        `;
-      });
-    });
-}
-
-function editTest(cls, testName){
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}`)
-    .once("value", snap=>{
-      if(!snap.exists()) return;
-
-      const data = snap.val();
-      testClass.value = cls;
-      testName.value = testName;
-      testDuration.value = data.duration || "";
-      questionLimit.value = data.limit || "";
-      bulkQuestions.value = Object.values(data.questions)
-        .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer}`)
-        .join("\n");
-    });
-}
-function disableUnloadWarning(){
-  window.onbeforeunload = null;
-}
-
-function deleteTest(cls, testName){
-  if(confirm("Delete this test?")){
-    firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(()=>alert("Deleted"));
-  }
-}
-
-function logout(){ auth.signOut(); }
-</script>
-
-</body>
-</html>
-
-
+            <button onclick="editTest('${cls}','${
