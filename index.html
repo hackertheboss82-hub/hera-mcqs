@@ -72,6 +72,9 @@ placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
 <hr>
 
 <h3>Manage Tests</h3>
+<hr>
+<h3>Pending Teacher Signups</h3>
+<div id="pendingSignupsList"></div>
 <select id="manageClass" onchange="TestsForTeacher()">
 <option value="">Select Class</option>
 <option value="8">Class 8</option>
@@ -168,28 +171,30 @@ function teacherSignup(){
     loginMsg.innerText = "Passwords do not match.";
     return;
   }
-  auth.createUserWithEmailAndPassword(email, pass)
+  // Save to pending instead of creating auth user
+  const signupData = { email, password: pass };
+  firebase.database().ref("pendingSignups").push(signupData)
     .then(() => {
-      signupMsg.innerText = "Signup successful! You are now logged in.";
+      signupMsg.innerText = "Signup request submitted! Wait for admin approval.";
       loginMsg.innerText = "";
+      tEmailSignup.value = "";
+      tPasswordSignup.value = "";
+      tConfirmPassword.value = "";
     })
     .catch(e => {
-      console.error("Signup error:", e);
-      signupMsg.innerText = "";
+      console.error("Signup request failed:", e);
       loginMsg.innerText = e.message;
     });
-}
-
-auth.onAuthStateChanged(u=>{
-  loginBox.style.display = u ? "none" : "block";
-  teacherPanel.style.display = u ? "block" : "none";
-  if(u) ResultClasses();
-});
+};
 
 function ResultClasses(){
   firebase.database().ref("results").once("value", snap => {
-    resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
+
+    resultClassSelect.innerHTML =
+      "<option value=''>Select Class</option>";
+
     if(!snap.exists()) return;
+
     snap.forEach(cls => {
       let opt = document.createElement("option");
       opt.value = cls.key.replace("class_","");
@@ -202,6 +207,7 @@ function ResultClasses(){
 function TestsForClass(cls){
   resultTestSelect.innerHTML="<option value=''>Select Test</option>";
   studentTestSelect.innerHTML="<option value=''>Select Test</option>";
+
   firebase.database().ref(`tests/class_${cls}`).once("value", snap=>{
     snap.forEach(t=>{
       let o=document.createElement("option");
@@ -249,17 +255,16 @@ function saveTest(){
       questionLimit.value="";
     });
 }
-
 function autoSaveAnswers(){
   if(!currentStudent.roll || !currentTest) return;
+
   firebase.database()
     .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
     .set({
       answers: studentAnswers,
       timeLeft: remainingTime,
       updated: Date.now()
-    })
-    .catch(e => console.error("Auto-save failed:", e));
+    });
 }
 
 function shuffleArray(arr){
@@ -271,6 +276,7 @@ function shuffleArray(arr){
 }
 
 function startStudentTest(){
+
   const cls = sClass.value;
   const test = studentTestSelect.value;
   const roll = sRoll.value;
@@ -285,6 +291,7 @@ function startStudentTest(){
     .ref(`results/class_${cls}/${test}/${roll}`)
     .once("value")
     .then(rSnap => {
+
       if (rSnap.exists()) {
         alert("Test already submitted.\nTeacher must allow reattempt.");
         return;
@@ -297,23 +304,28 @@ function startStudentTest(){
         .ref(`tests/class_${cls}/${test}`)
         .once("value")
         .then(snap => {
+
           if (!snap.exists()) {
             alert("Test not found");
             return;
           }
 
           const data = snap.val();
+
           let allQuestions = Object.values(data.questions || {});
           shuffleArray(allQuestions);
+
           const limit = data.limit || allQuestions.length;
           currentQuestions = allQuestions.slice(0, limit);
+
           studentAnswers = {};
 
-          // Restore auto-saved answers
+          // ♻️ Restore auto-saved answers
           firebase.database()
             .ref(`autosave/class_${cls}/${test}/${roll}`)
             .once("value")
             .then(saveSnap => {
+
               if (saveSnap.exists()) {
                 const saved = saveSnap.val();
                 studentAnswers = saved.answers || {};
@@ -324,34 +336,43 @@ function startStudentTest(){
 
               startTimer(Math.ceil(remainingTime / 60));
               renderTest();
+
               clearInterval(autoSaveInterval);
               autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+
             });
+
         });
+
     });
 }
+
+
 
 function renderTest(){
   testTitle.innerText = `${currentTest} (${currentQuestions.length} Questions)`;
   studentPanel.style.display="none";
   testArea.style.display="block";
   questionBox.innerHTML="";
-
   currentQuestions.forEach((q,i)=>{
     questionBox.innerHTML+=`<b>${i+1}. ${q.q}</b><br>`+
     q.options.map((o,j)=>`<label>
-    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}" ${studentAnswers[i] === j ? 'checked' : ''}>${o}
+    <input type="radio" name="q${i}" onchange="studentAnswers[${i}]=${j}">${o}
     </label><br>`).join("")+"<hr>";
   });
 }
 
 function startTimer(minutes){
   clearInterval(timerInterval);
+
   remainingTime = minutes * 60;
   updateTimerDisplay();
+
   timerInterval = setInterval(() => {
     remainingTime--;
+
     updateTimerDisplay();
+
     if (remainingTime <= 0) {
       clearInterval(timerInterval);
       alert("Time is up! Test will be submitted automatically.");
@@ -367,11 +388,14 @@ function updateTimerDisplay(){
 }
 
 function submitTest(){
+
   clearInterval(autoSaveInterval);
   clearInterval(timerInterval);
-  disableUnloadWarning();
+
+  disableUnloadWarning(); // ⚠️ must exist
 
   let score = 0;
+
   currentQuestions.forEach((q, i) => {
     if (studentAnswers[i] === q.answer) score++;
   });
@@ -385,17 +409,18 @@ function submitTest(){
       time: Date.now()
     })
     .then(() => {
+
+      // 🧹 Remove autosave data
       firebase.database()
         .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
         .remove();
+
       alert("Test submitted successfully");
       location.reload();
-    })
-    .catch(e => {
-      console.error("Submission failed:", e);
-      alert("Submission failed. Try again.");
     });
 }
+
+
 
 function Results(){
   const cls = resultClassSelect.value;
@@ -405,7 +430,9 @@ function Results(){
   firebase.database()
     .ref(`results/class_${cls}/${test}`)
     .once("value", snap => {
+
       resultBox.innerHTML = "";
+
       if(!snap.exists()){
         resultBox.innerHTML = "<p>No results</p>";
         return;
@@ -413,6 +440,7 @@ function Results(){
 
       snap.forEach(r => {
         const d = r.val();
+
         resultBox.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:6px">
             <b>${d.name}</b> (Roll: ${r.key})<br>
@@ -428,12 +456,13 @@ function Results(){
 
 function allowReattempt(cls, test, roll){
   if(!confirm("Allow this student to reattempt the test?")) return;
+
   firebase.database()
     .ref(`results/class_${cls}/${test}/${roll}`)
     .remove()
     .then(() => {
       alert("Reattempt allowed. Student can start test again.");
-      Results();
+      Results(); // refresh list
     });
 }
 
@@ -446,6 +475,7 @@ function TestsForTeacher() {
   firebase.database()
     .ref(`tests/class_${cls}`)
     .once("value", snap => {
+
       if (!snap.exists()) {
         testList.innerHTML = "<p>No tests found.</p>";
         return;
@@ -455,4 +485,94 @@ function TestsForTeacher() {
         testList.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:5px">
             <b>${t.key}</b><br>
-            <button onclick="editTest('${cls}','${
+            <button onclick="editTest('${cls}','${t.key}')">Edit</button>
+            <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
+          </div>
+        `;
+      });
+    });
+}
+
+function editTest(cls, testName){
+  firebase.database()
+    .ref(`tests/class_${cls}/${testName}`)
+    .once("value", snap=>{
+      if(!snap.exists()) return;
+
+      const data = snap.val();
+      testClass.value = cls;
+      testName.value = testName;
+      testDuration.value = data.duration || "";
+      questionLimit.value = data.limit || "";
+      bulkQuestions.value = Object.values(data.questions)
+        .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer}`)
+        .join("\n");
+    });
+}
+function disableUnloadWarning(){
+  window.onbeforeunload = null;
+}
+
+function deleteTest(cls, testName){
+  if(confirm("Delete this test?")){
+    firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(()=>alert("Deleted"));
+  }
+}
+
+function logout(){ auth.signOut(); }
+  auth.onAuthStateChanged(u=>{
+  loginBox.style.display = u ? "none" : "block";
+  teacherPanel.style.display = u ? "block" : "none";
+  if(u) {
+    ResultClasses();
+    loadPendingSignups(); // Load pending signups for admin
+  }
+});
+  function loadPendingSignups(){
+  const list = document.getElementById("pendingSignupsList");
+  list.innerHTML = "<p>Loading...</p>";
+  firebase.database().ref("pendingSignups").once("value", snap => {
+    list.innerHTML = "";
+    if (!snap.exists()) {
+      list.innerHTML = "<p>No pending signups.</p>";
+      return;
+    }
+    snap.forEach(child => {
+      const data = child.val();
+      list.innerHTML += `
+        <div style="border:1px solid #ccc;padding:6px;margin:5px">
+          <b>Email:</b> ${data.email}<br>
+          <button onclick="approveSignup('${child.key}', '${data.email}', '${data.password}')">Approve</button>
+          <button onclick="rejectSignup('${child.key}')">Reject</button>
+        </div>
+      `;
+    });
+  });
+}
+
+function approveSignup(key, email, password){
+  if (!confirm(`Approve signup for ${email}?`)) return;
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      firebase.database().ref(`pendingSignups/${key}`).remove();
+      alert("Signup approved and user created.");
+      loadPendingSignups(); // Refresh list
+    })
+    .catch(e => {
+      console.error("Approval failed:", e);
+      alert("Approval failed: " + e.message);
+    });
+}
+
+function rejectSignup(key){
+  if (!confirm("Reject this signup?")) return;
+  firebase.database().ref(`pendingSignups/${key}`).remove()
+    .then(() => {
+      alert("Signup rejected.");
+      loadPendingSignups(); // Refresh list
+    });
+}
+</script>
+
+</body>
+</html>
