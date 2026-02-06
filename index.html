@@ -781,12 +781,11 @@ function teacherSignup() {
       btn.disabled = false;
     });
 }
-
 auth.onAuthStateChanged(u => {
   if (u) {
-    // Check if teacher (e.g., if email ends with a teacher domain or has approvals)
-    firebase.database().ref("pendingSignups").orderByChild("email").equalTo(u.email).once("value", snap => {
-      const isTeacher = snap.exists() || u.email.includes("teacher");  // Adjust logic as needed
+    // Check if teacher by looking in 'teachers' node
+    firebase.database().ref(`teachers/${u.email.replace('.', '_')}`).once("value", snap => {
+      const isTeacher = snap.exists();
       container.style.display = "none";
       teacherPanel.style.display = isTeacher ? "block" : "none";
       studentPanel.style.display = isTeacher ? "none" : "block";
@@ -1310,3 +1309,4 @@ function rejectSignup(key) {
 
 </body>
 </html>
+
