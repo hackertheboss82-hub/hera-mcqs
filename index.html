@@ -531,15 +531,15 @@ button {
       <p id="studentLoginMsg" class="error"></p>
     </div>
     <div class="form-box register-box">
-  <h2>Signup</h2>
-  <input id="studentName" type="text" placeholder="Full Name" required>  <!-- New: Add name field -->
-  <input id="studentEmailSignup" type="email" placeholder="Email" required>
-  <input id="studentPasswordSignup" type="password" placeholder="Password" required>
-  <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-  <button onclick="studentSignup()">Signup</button>
-  <p id="studentSignupMsg" class="success"></p>
-  <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
-</div>
+      <h2>Signup</h2>
+      <input id="studentName" type="text" placeholder="Full Name" required>
+      <input id="studentEmailSignup" type="email" placeholder="Email" required>
+      <input id="studentPasswordSignup" type="password" placeholder="Password" required>
+      <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
+      <button onclick="studentSignup()">Signup</button>
+      <p id="studentSignupMsg" class="success"></p>
+      <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
+    </div>
   </div>
 </div>
 
@@ -671,8 +671,9 @@ button {
 <select id="studentTestSelect">
 <option value="">Select Test</option>
 </select>
+
 <button onclick="startStudentTest()">Start Test</button>
-<button onclick="logout()" style="margin-top: 10px;">Logout</button>  <!-- New: Add logout button -->
+<button onclick="logout()" style="margin-top: 10px;">Logout</button>
 </div>
 
 <!-- TEST AREA - CAT/CBT Style -->
@@ -778,10 +779,10 @@ window.onbeforeunload = function () {
 };
 
 window.onload = () => {
-  // Hide sections initially; auth state will show the correct one
   hideAllSections();
-  showStudentSection();  // Default to student for non-logged-in users
+  showStudentSection();
 };
+
 // Tab Switching
 function showTab(tabName) {
   const tabs = document.querySelectorAll('.tab-content');
@@ -810,38 +811,67 @@ function teacherLogin() {
     loginMsg.innerText = e.message;
   });
 }
+
 /* SIGNUP */
-function studentSignup() {
-  const name = studentName.value.trim();  // New: Get name
-  const email = studentEmailSignup.value.trim();
-  const pass = studentPasswordSignup.value.trim();
-  const confirmPass = studentConfirmPassword.value.trim();
-  if (!name || !email || !pass || !confirmPass) {  // New: Check name
-    studentSignupMsg.innerText = "Fill all fields.";  // Changed: Use signupMsg for errors
+function teacherSignup() {
+  const email = tEmailSignup.value.trim();
+  const pass = tPasswordSignup.value.trim();
+  const confirmPass = tConfirmPassword.value.trim();
+  if (!email || !pass || !confirmPass) {
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Fill all fields.";
     return;
   }
   if (pass !== confirmPass) {
-    studentSignupMsg.innerText = "Passwords do not match.";  // Changed: Use signupMsg
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Passwords do not match.";
     return;
   }
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      return user.updateProfile({ displayName: name });  // New: Set display name
-    })
+  const btn = document.querySelector('.register-box button');
+  btn.innerHTML = '<div class="loading"></div> Signing up...';
+  btn.disabled = true;
+
+  const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString() };
+  firebase.database().ref("pendingSignups").push(signupData)
     .then(() => {
-      studentSignupMsg.innerText = "Signup successful! Welcome.";  // Updated message
-      // Clear fields for professionalism
-      studentName.value = "";
-      studentEmailSignup.value = "";
-      studentPasswordSignup.value = "";
-      studentConfirmPassword.value = "";
-      // Firebase auto-signs in, so onAuthStateChanged will show studentPanel
+      signupMsg.innerText = "Signup request submitted! Wait for admin approval.";
+      loginMsg.innerText = "";
+      tEmailSignup.value = "";
+      tPasswordSignup.value = "";
+      tConfirmPassword.value = "";
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
     })
     .catch(e => {
-      studentSignupMsg.innerText = e.message;  // Changed: Use signupMsg for errors
+      console.error("Signup request failed:", e);
+      loginMsg.innerText = e.message;
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
     });
 }
+
+auth.onAuthStateChanged(u => {
+  if (u) {
+    const cachedIsTeacher = localStorage.getItem(`isTeacher_${u.email}`);
+    if (cachedIsTeacher !== null) {
+      const isTeacher = cachedIsTeacher === 'true';
+      applyAuthState(isTeacher, u);
+    } else {
+      const teacherKey = u.email.replace(/\./g, '_');
+      firebase.database().ref(`teachers/${teacherKey}`).once("value", snap => {
+        const isTeacher = snap.exists();
+        localStorage.setItem(`isTeacher_${u.email}`, isTeacher);
+        applyAuthState(isTeacher, u);
+      }).catch(e => console.error("Firebase error:", e));
+    }
+  } else {
+    container.style.display = "block";
+    teacherPanel.style.display = "none";
+    studentPanel.style.display = "block";
+    studentContainer.style.display = "block";
+    testArea.style.display = "none";
+  }
+});
 
 function applyAuthState(isTeacher, u) {
   container.style.display = "none";
@@ -858,9 +888,11 @@ function applyAuthState(isTeacher, u) {
       dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
     }).catch(e => console.error("Firebase error:", e));
   }
-  // Fixed: Check if u exists to avoid ReferenceError
-document.querySelector('.section-toggle').style.display = (u !== null && u !== undefined) ? "none" : "block";
-  
+  document.querySelector('.section-toggle').style.display = (u !== null && u !== undefined) ? "none" : "block";
+}
+
+// Student Auth Functions
+
 function showStudentLogin() {
   document.querySelector("#studentContainer .container").classList.remove("active");
 }
@@ -883,28 +915,32 @@ function studentLogin() {
 }
 
 function studentSignup() {
+  const name = studentName.value.trim();
   const email = studentEmailSignup.value.trim();
   const pass = studentPasswordSignup.value.trim();
   const confirmPass = studentConfirmPassword.value.trim();
-  if (!email || !pass || !confirmPass) {
-    studentSignupMsg.innerText = "";
-    studentLoginMsg.innerText = "Fill all fields.";
+  if (!name || !email || !pass || !confirmPass) {
+    studentSignupMsg.innerText = "Fill all fields.";
     return;
   }
   if (pass !== confirmPass) {
-    studentSignupMsg.innerText = "";
-    studentLoginMsg.innerText = "Passwords do not match.";
+    studentSignupMsg.innerText = "Passwords do not match.";
     return;
   }
   auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      return user.updateProfile({ displayName: name });
+    })
     .then(() => {
-      studentSignupMsg.innerText = "Signup successful! Login now.";
+      studentSignupMsg.innerText = "Signup successful! Welcome.";
+      studentName.value = "";
       studentEmailSignup.value = "";
       studentPasswordSignup.value = "";
       studentConfirmPassword.value = "";
     })
     .catch(e => {
-      studentLoginMsg.innerText = e.message;
+      studentSignupMsg.innerText = e.message;
     });
 }
 
@@ -952,7 +988,7 @@ function saveTest() {
     return {
       q: p[0].trim(),
       options: p.slice(1, 5).map(x => x.trim()),
-      answer: Number(p[5]) - 1  // Adjust for 0-based index
+      answer: Number(p[5]) - 1
     };
   });
 
@@ -1013,16 +1049,17 @@ function startStudentTest() {
   }
 
   firebase.database()
-  .ref(`results/class_${cls}/${test}/${roll}`)
-  .once("value")
-  .then(rSnap => {
-    if (rSnap.exists()) {
-      alert("Test already submitted.\nTeacher must allow reattempt.");
-      return;
-    }
-      // Proceed with test start (rest of function unchanged)
+    .ref(`results/class_${cls}/${test}/${roll}`)
+    .once("value")
+    .then(rSnap => {
+      if (rSnap.exists()) {
+        alert("Test already submitted.\nTeacher must allow reattempt.");
+        return;
+      }
+
       currentStudent = { name, roll, class: cls };
       currentTest = test;
+
       firebase.database()
         .ref(`tests/class_${cls}/${test}`)
         .once("value")
@@ -1031,14 +1068,17 @@ function startStudentTest() {
             alert("Test not found");
             return;
           }
+
           const data = snap.val();
           let allQuestions = Object.values(data.questions || {});
           shuffleArray(allQuestions);
           const limit = data.limit || allQuestions.length;
           currentQuestions = allQuestions.slice(0, limit);
+
           studentAnswers = {};
           markedForReview = {};
           currentQuestionIndex = 0;
+
           firebase.database()
             .ref(`savedTests/${roll}/${test}`)
             .once("value")
@@ -1052,10 +1092,12 @@ function startStudentTest() {
               } else {
                 remainingTime = data.duration * 60;
               }
-              hideAllSections();
-              document.getElementById("testArea").style.display = "flex";
-              startTimer(Math.ceil(remainingTime / 60));
-              renderTest();
+hideAllSections();
+document.getElementById("testArea").style.display = "flex";
+
+startTimer(Math.ceil(remainingTime / 60));
+renderTest();
+
               document.documentElement.requestFullscreen();
               document.addEventListener('contextmenu', e => e.preventDefault());
               document.addEventListener('fullscreenchange', () => {
@@ -1065,22 +1107,18 @@ function startStudentTest() {
                 if (document.hidden) alert('Tab switched!');
               });
               updateQuestionMap();
+
               clearInterval(autoSaveInterval);
               autoSaveInterval = setInterval(autoSaveAnswers, 5000);
             });
         });
     })
-   .catch(e => {
-    console.error("Check submission error:", e);
-    // If permission denied, assume not submitted and proceed (for students)
-    if (e.code === 'PERMISSION_DENIED') {
-      // Proceed with test start
-      // (Copy the rest of the function here, indented)
-    } else {
-      alert("Failed to check submission: " + e.message);
-    }
-  });
-  
+    .catch(e => {
+      console.error("Start test error:", e);
+      alert("Failed to start test: " + e.message);
+    });
+}
+
 function renderTest() {
   testTitle.innerText = currentTest;
   studentPanel.style.display = "none";
@@ -1091,6 +1129,10 @@ function renderTest() {
 
 function displayQuestion(index) {
   const q = currentQuestions[index];
+  if (!q) {
+    console.error("Question not found at index:", index);
+    return;  // Prevent errors if index is invalid
+  }
   const questionDisplay = document.getElementById('questionDisplay');
   questionDisplay.innerHTML = `
     <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
@@ -1107,7 +1149,6 @@ function displayQuestion(index) {
   progressBar.value = ((index + 1) / currentQuestions.length) * 100;
   updateQuestionMap();
 }
-
 function selectOption(qIndex, optIndex) {
   studentAnswers[qIndex] = optIndex;
   displayQuestion(qIndex);
@@ -1207,7 +1248,7 @@ function Results() {
     .once("value", snap => {
       resultBox.innerHTML = "";
       if (!snap.exists()) {
-        resultBox.innerHTML = "<p>No results found.</p>";  // New: Handle no data
+        resultBox.innerHTML = "<p>No results</p>";
         return;
       }
       snap.forEach(r => {
@@ -1223,7 +1264,7 @@ function Results() {
       });
     })
     .catch(e => {
-      console.error("Results error:", e);  // New: Log errors
+      console.error("Results error:", e);
       resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
     });
 }
@@ -1302,8 +1343,8 @@ function editTest(cls, testName) {
     .ref(`tests/class_${cls}/${testName}`)
     .once("value", snap => {
       if (!snap.exists()) {
-        alert("Test not found or access denied.");  // New: Alert if no data
-        console.error("Edit test failed: No data for", cls, testName);  // New: Log for debugging
+        alert("Test not found or access denied.");
+        console.error("Edit test failed: No data for", cls, testName);
         return;
       }
       const data = snap.val();
@@ -1316,7 +1357,7 @@ function editTest(cls, testName) {
         .join("\n");
     })
     .catch(e => {
-      console.error("Edit test error:", e);  // New: Log errors
+      console.error("Edit test error:", e);
       alert("Failed to load test: " + e.message);
     });
 }
@@ -1388,7 +1429,3 @@ function rejectTeacher(key) {
 
 </body>
 </html>
-
-
-
-
