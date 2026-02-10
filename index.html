@@ -824,13 +824,15 @@ function toggleTheme() {
   const btn = document.getElementById('themeToggle');
   if (currentTheme === 'light') {
     body.classList.add('dark-theme');
-    btn.innerText = 'Switch to Light Theme';
+    btn.innerText = 'Switch to Dark Theme';
     currentTheme = 'dark';
   } else {
     body.classList.remove('dark-theme');
     btn.innerText = 'Switch to Light Theme';
     currentTheme = 'light';
   }
+  // Enhancement: Persist theme
+  localStorage.setItem('theme', currentTheme);
 }
 
 // Show Register/Login
@@ -967,7 +969,9 @@ auth.onAuthStateChanged(u => {
     studentContainer.style.display = "block";
     testArea.style.display = "none";
   }
-});
+  // Fix: Remove the invalid line or correct it. Assuming you want to hide the section toggle when logged in.
+  document.querySelector('.section-toggle').style.display = u ? "none" : "block";
+});;
 
 function applyAuthState(isTeacher, u) {
   container.style.display = "none";
@@ -984,7 +988,13 @@ function applyAuthState(isTeacher, u) {
       dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
     }).catch(e => console.error("Firebase error:", e));
   }
-  document.querySelector('.section-toggle').style.display = (u !== null && u !== undefined) ? "none" : "block";
+  // Enhancement: Persist theme across sessions
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    document.getElementById('themeToggle').innerText = 'Switch to Light Theme';
+    currentTheme = 'dark';
+  }
 }
 
 // Student Auth Functions
@@ -1074,25 +1084,34 @@ function saveTest() {
   const duration = Number(testDuration.value);
   const limit = Number(questionLimit.value);
 
-  if (!cls || !name || !raw || !duration || !limit) {
-    alert("Fill all fields including duration");
+  if (!cls || !name || !raw || !duration || !limit || duration <= 0 || limit <= 0) {
+    alert("Fill all fields with valid values (duration and limit must be positive numbers).");
     return;
   }
 
   const questions = raw.split("\n").map(l => {
     const p = l.split("|");
+    if (p.length !== 6) {
+      alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
+      return null;
+    }
     return {
       q: p[0].trim(),
       options: p.slice(1, 5).map(x => x.trim()),
       answer: Number(p[5]) - 1
     };
-  });
+  }).filter(q => q); // Remove invalid questions
+
+  if (questions.length === 0) {
+    alert("No valid questions found.");
+    return;
+  }
 
   firebase.database()
     .ref(`tests/class_${cls}/${name}`)
     .set({
       duration: duration,
-      limit: limit,
+      limit: Math.min(limit, questions.length), // Ensure limit doesn't exceed questions
       questions: questions
     })
     .then(() => {
@@ -1101,16 +1120,12 @@ function saveTest() {
       bulkQuestions.value = "";
       testDuration.value = "";
       questionLimit.value = "";
+    })
+    .catch(e => {
+      console.error("Save test error:", e);
+      alert("Failed to save test: " + e.message);
     });
 }
-
-questionFile.addEventListener('change', e => {
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = () => { bulkQuestions.value = reader.result; };
-  reader.readAsText(file);
-});
-
 function autoSaveAnswers() {
   if (!currentStudent.roll || !currentTest) return;
   firebase.database()
@@ -1473,8 +1488,17 @@ function deleteTest(cls, testName) {
 function logout() {
   auth.signOut();
   testArea.style.display = "none";
+  // Enhancement: Reset state
+  currentStudent = {};
+  currentTest = "";
+  currentQuestions = [];
+  studentAnswers = {};
+  markedForReview = {};
+  clearInterval(timerInterval);
+  clearInterval(autoSaveInterval);
+  remainingTime = 0;
+  currentQuestionIndex = 0;
 }
-
 function loadPendingSignups() {
   const list = document.getElementById("pendingSignupsList");
   list.innerHTML = "<p>Loading...</p>";
@@ -1531,6 +1555,7 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
 
 
