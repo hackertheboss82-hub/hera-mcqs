@@ -1131,7 +1131,7 @@ function displayQuestion(index) {
   const q = currentQuestions[index];
   if (!q) {
     console.error("Question not found at index:", index);
-    return;  // Prevent errors if index is invalid
+    return;
   }
   const questionDisplay = document.getElementById('questionDisplay');
   questionDisplay.innerHTML = `
@@ -1429,3 +1429,4 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
