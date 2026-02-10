@@ -704,7 +704,7 @@ button {
     <button id="submitBtn" onclick="submitTest()">Submit</button>
   </div>
 </div>
-
+// SAFETY CLOSURE (prevents unexpected end error)
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
@@ -739,6 +739,15 @@ function toggleTheme() {
 function showRegister() {
   document.getElementById("container").classList.add("active");
 }
+
+function showLogin() {
+  document.getElementById("container").classList.remove("active");
+}
+
+function showStudentRegister() {
+  document.querySelector("#studentContainer .container").classList.add("active");
+}
+
 function hideAllSections() {
   document.getElementById("teacherAuth").style.display = "none";
   document.getElementById("studentContainer").style.display = "none";
@@ -747,9 +756,7 @@ function hideAllSections() {
   document.getElementById("testArea").style.display = "none";
 }
 
-function showLogin() {
-  document.getElementById("container").classList.remove("active");
-}
+
 
 function showTeacherSection() {
   document.querySelector('.teacher-section').style.display = 'block';
@@ -886,9 +893,7 @@ function applyAuthState(isTeacher, u) {
 }
 
 // Student Auth Functions
-function showStudentRegister() {
-  document.querySelector("#studentContainer .container").classList.add("active");
-}
+
 
 function showStudentLogin() {
   document.querySelector("#studentContainer .container").classList.remove("active");
@@ -1404,5 +1409,6 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
 
