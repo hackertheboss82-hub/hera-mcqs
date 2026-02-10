@@ -1016,32 +1016,20 @@ auth.onAuthStateChanged(u => {
 });
 
 function applyAuthState(isTeacher, u) {
-  hideAllSections(); // 🔑 critical
+  hideAllSections();  // This already hides studentContainer, teacherAuth, etc.
 
   if (isTeacher) {
-    // 👨‍🏫 Teacher UI
+    // Teacher UI
     teacherPanel.style.display = "flex";
-
-    ResultClasses();
-    loadPendingSignups();
-
-    firebase.database().ref("tests").once("value")
-      .then(snap => {
-        let totalTests = 0;
-        snap.forEach(cls => {
-          totalTests += Object.keys(cls.val() || {}).length;
-        });
-        dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
-      })
-      .catch(e => console.error("Firebase error:", e));
-
+    // ... rest of teacher logic
   } else {
-    // 👨‍🎓 Student UI
+    // Student UI - Only show the test selection panel, hide auth
     studentPanel.style.display = "block";
-    studentContainer.style.display = "block";
+    // Do NOT set studentContainer.style.display = "block";  // Remove this line
+    // ... rest of student logic (e.g., TestsForClass if needed)
   }
 
-  // 🌗 Restore theme
+  // Restore theme (unchanged)
   const savedTheme = localStorage.getItem("theme") || "light";
   if (savedTheme === "dark") {
     document.body.classList.add("dark-theme");
@@ -1538,21 +1526,35 @@ function deleteTest(cls, testName) {
 }
 
 function logout() {
-  auth.signOut();
-  hideAllSections();
-  showTeacherSection();
-  // Show toggle buttons again on logout
-  document.querySelector(".section-toggle").style.display = "flex";
-  // Enhancement: Reset state
-  currentStudent = {};
-  currentTest = "";
-currentQuestions = [];
-  studentAnswers = {};
-  markedForReview = {};
-  clearInterval(timerInterval);
-  clearInterval(autoSaveInterval);
-  remainingTime = 0;
-  currentQuestionIndex = 0;
+  // Clear cached role to prevent issues on refresh
+  if (auth.currentUser) {
+    localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
+  }
+
+  // Sign out and handle UI after success
+  auth.signOut()
+    .then(() => {
+      // Reset state variables
+      currentStudent = {};
+      currentTest = "";
+      currentQuestions = [];
+      studentAnswers = {};
+      markedForReview = {};
+      clearInterval(timerInterval);
+      clearInterval(autoSaveInterval);
+      remainingTime = 0;
+      currentQuestionIndex = 0;
+
+      // Hide all and show toggle (neutral state)
+      hideAllSections();
+      document.querySelector('.section-toggle').style.display = "flex";
+      // Optionally, default to teacher section or remember last: showTeacherSection();
+      // For now, just show toggle without defaulting to any auth form
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+      alert("Logout failed: " + error.message);
+    });
 }
 function loadPendingSignups() {
   const list = document.getElementById("pendingSignupsList");
@@ -1610,5 +1612,6 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
 
