@@ -800,7 +800,6 @@ function teacherLogin() {
     loginMsg.innerText = "Enter email and password.";
     return;
   }
-  try {
   auth.signInWithEmailAndPassword(email, pass)
   .then(() => {
     hideAllSections();
@@ -811,7 +810,6 @@ function teacherLogin() {
     loginMsg.innerText = e.message;
   });
 }
-
 /* SIGNUP */
 function teacherSignup() {
   const email = tEmailSignup.value.trim();
@@ -1406,3 +1404,4 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
