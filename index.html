@@ -216,14 +216,15 @@ button:hover {
 
 .option {
   margin: 10px 0;
+  padding: 12px 16px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #f9f9f9, #ffffff);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;  /* Full width for card feel, but controlled */
-  max-width: 600px;  /* Limit width for readability */
+  width: fit-content;  /* Prevents full-width stretch */
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -231,39 +232,31 @@ button:hover {
 .option:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  background: linear-gradient(135deg, #f0f8ff, #ffffff);
 }
 
 .option.selected {
   background: linear-gradient(135deg, var(--accent), #007bff);
   color: #fff;
   border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
 .option label {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
   width: 100%;
-  cursor: pointer;
 }
 
 .option input[type="radio"] {
   margin-right: 12px;
-  accent-color: var(--accent);  /* Modern radio styling */
 }
 
 .option-letter {
   font-weight: bold;
   margin-right: 8px;
-  color: inherit;
 }
 
 .option-text {
   flex: 1;
-  font-size: 16px;
-  line-height: 1.4;
 }
 
 .options-container {
@@ -1244,15 +1237,15 @@ function displayQuestion(index) {
   </div>
   <p class="question-text">${q.q}</p>
   <div class="options-container">
-    ${q.options.map((opt, i) => `
-      <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
-        <label onclick="selectOption(${index}, ${i})">
-          <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
-          <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
-          <span class="option-text">${opt}</span>
-        </label>
-      </div>
-    `).join('')}
+  ${q.options.map((opt, i) => `
+  <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
+    <label onclick="selectOption(${index}, ${i})">
+      <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
+      <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
+      <span class="option-text">${opt}</span>
+    </label>
+  </div>
+`).join('')}
   </div>
 `;
   progressBar.value = ((index + 1) / currentQuestions.length) * 100;
@@ -1363,13 +1356,13 @@ function Results() {
       snap.forEach(r => {
         const d = r.val();
         resultBox.innerHTML += `
-          <div style="border:1px solid #ccc;padding:6px;margin:6px">
-            <b>${d.name}</b> (Roll: ${r.key})<br>
-            Score: ${d.score}/${d.total}<br>
-            <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
-            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
-          </div>
-        `;
+  <div style="border:1px solid #ccc;padding:6px;margin:6px">
+    <b>${d.name}</b> (Roll: ${r.key})<br>
+    Score: ${d.score}/${d.total}<br>
+    <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
+    <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
+  </div>
+`;
       });
     })
     .catch(e => {
@@ -1538,5 +1531,6 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
 
