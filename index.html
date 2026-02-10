@@ -597,8 +597,8 @@ button {
         <h3>Manage Tests</h3>
         <select id="manageClass" onchange="TestsForTeacher()">
           <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG
-                    <option value="sr_kg">Sr. KG</option>
+          <option value="jr_kg">Jr. KG</option>
+          <option value="sr_kg">Sr. KG</option>
           <option value="1">Class 1</option>
           <option value="2">Class 2</option>
           <option value="3">Class 3</option>
@@ -613,7 +613,7 @@ button {
         <div id="testList"></div>
       </div>
 
-      <!-- Results Tab -->
+          <!-- Results Tab -->
       <div id="results" class="tab-content">
         <h3>Student Results</h3>
         <select id="resultClassSelect" onchange="TestsForClass(this.value)">
@@ -756,8 +756,6 @@ function hideAllSections() {
   document.getElementById("testArea").style.display = "none";
 }
 
-
-
 function showTeacherSection() {
   document.querySelector('.teacher-section').style.display = 'block';
   document.querySelector('.student-section').style.display = 'none';
@@ -812,7 +810,7 @@ function teacherLogin() {
     console.error("Login error:", e);
     loginMsg.innerText = e.message;
   });
-
+}
 
 /* SIGNUP */
 function teacherSignup() {
@@ -894,7 +892,6 @@ function applyAuthState(isTeacher, u) {
 
 // Student Auth Functions
 
-
 function showStudentLogin() {
   document.querySelector("#studentContainer .container").classList.remove("active");
 }
@@ -914,7 +911,7 @@ function studentLogin() {
   .catch(e => {
     studentLoginMsg.innerText = e.message;
   });
-
+}
 
 function studentSignup() {
   const email = studentEmailSignup.value.trim();
@@ -1409,6 +1406,3 @@ function rejectTeacher(key) {
 
 </body>
 </html>
-
-
-
