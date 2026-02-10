@@ -531,14 +531,15 @@ button {
       <p id="studentLoginMsg" class="error"></p>
     </div>
     <div class="form-box register-box">
-      <h2>Signup</h2>
-      <input id="studentEmailSignup" type="email" placeholder="Email" required>
-      <input id="studentPasswordSignup" type="password" placeholder="Password" required>
-      <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-      <button onclick="studentSignup()">Signup</button>
-      <p id="studentSignupMsg" class="success"></p>
-      <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
-    </div>
+  <h2>Signup</h2>
+  <input id="studentName" type="text" placeholder="Full Name" required>  <!-- New: Add name field -->
+  <input id="studentEmailSignup" type="email" placeholder="Email" required>
+  <input id="studentPasswordSignup" type="password" placeholder="Password" required>
+  <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
+  <button onclick="studentSignup()">Signup</button>
+  <p id="studentSignupMsg" class="success"></p>
+  <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
+</div>
   </div>
 </div>
 
@@ -670,8 +671,8 @@ button {
 <select id="studentTestSelect">
 <option value="">Select Test</option>
 </select>
-
 <button onclick="startStudentTest()">Start Test</button>
+<button onclick="logout()" style="margin-top: 10px;">Logout</button>  <!-- New: Add logout button -->
 </div>
 
 <!-- TEST AREA - CAT/CBT Style -->
@@ -777,11 +778,10 @@ window.onbeforeunload = function () {
 };
 
 window.onload = () => {
-  studentPanel.style.display = "block";
-  testArea.style.display = "none";
-  showStudentSection();  // Show student by default
+  // Hide sections initially; auth state will show the correct one
+  hideAllSections();
+  showStudentSection();  // Default to student for non-logged-in users
 };
-
 // Tab Switching
 function showTab(tabName) {
   const tabs = document.querySelectorAll('.tab-content');
@@ -811,69 +811,40 @@ function teacherLogin() {
   });
 }
 /* SIGNUP */
-function teacherSignup() {
-  const email = tEmailSignup.value.trim();
-  const pass = tPasswordSignup.value.trim();
-  const confirmPass = tConfirmPassword.value.trim();
-  if (!email || !pass || !confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Fill all fields.";
+function studentSignup() {
+  const name = studentName.value.trim();  // New: Get name
+  const email = studentEmailSignup.value.trim();
+  const pass = studentPasswordSignup.value.trim();
+  const confirmPass = studentConfirmPassword.value.trim();
+  if (!name || !email || !pass || !confirmPass) {  // New: Check name
+    studentSignupMsg.innerText = "Fill all fields.";  // Changed: Use signupMsg for errors
     return;
   }
   if (pass !== confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Passwords do not match.";
+    studentSignupMsg.innerText = "Passwords do not match.";  // Changed: Use signupMsg
     return;
   }
-  const btn = document.querySelector('.register-box button');
-  btn.innerHTML = '<div class="loading"></div> Signing up...';
-  btn.disabled = true;
-
-  const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString() };
-  firebase.database().ref("pendingSignups").push(signupData)
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      return user.updateProfile({ displayName: name });  // New: Set display name
+    })
     .then(() => {
-      signupMsg.innerText = "Signup request submitted! Wait for admin approval.";
-      loginMsg.innerText = "";
-      tEmailSignup.value = "";
-      tPasswordSignup.value = "";
-      tConfirmPassword.value = "";
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
+      studentSignupMsg.innerText = "Signup successful! Welcome.";  // Updated message
+      // Clear fields for professionalism
+      studentName.value = "";
+      studentEmailSignup.value = "";
+      studentPasswordSignup.value = "";
+      studentConfirmPassword.value = "";
+      // Firebase auto-signs in, so onAuthStateChanged will show studentPanel
     })
     .catch(e => {
-      console.error("Signup request failed:", e);
-      loginMsg.innerText = e.message;
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
+      studentSignupMsg.innerText = e.message;  // Changed: Use signupMsg for errors
     });
 }
-
-auth.onAuthStateChanged(u => {
-  if (u) {
-    const cachedIsTeacher = localStorage.getItem(`isTeacher_${u.email}`);
-    if (cachedIsTeacher !== null) {
-      const isTeacher = cachedIsTeacher === 'true';
-      applyAuthState(isTeacher, u);
-    } else {
-      const teacherKey = u.email.replace(/\./g, '_');
-      firebase.database().ref(`teachers/${teacherKey}`).once("value", snap => {
-        const isTeacher = snap.exists();
-        localStorage.setItem(`isTeacher_${u.email}`, isTeacher);
-        applyAuthState(isTeacher, u);
-      }).catch(e => console.error("Firebase error:", e));
-    }
-  } else {
-    container.style.display = "block";
-    teacherPanel.style.display = "none";
-    studentPanel.style.display = "block";
-    studentContainer.style.display = "block";
-    testArea.style.display = "none";
-  }
-});
-
 function applyAuthState(isTeacher, u) {
   container.style.display = "none";
-  teacherPanel.style.display = isTeacher ? "block" : "none";
+  teacherPanel.style.display = isTeacher ? "flex" : "none";  // Changed "block" to "flex" to match CSS
   studentPanel.style.display = isTeacher ? "none" : "block";
   studentContainer.style.display = "none";
   testArea.style.display = "none";
@@ -886,8 +857,8 @@ function applyAuthState(isTeacher, u) {
       dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
     }).catch(e => console.error("Firebase error:", e));
   }
-}
-
+}// Hide section-toggle when logged in to avoid confusion
+document.querySelector('.section-toggle').style.display = u ? "none" : "block";
 // Student Auth Functions
 
 function showStudentLogin() {
@@ -1404,4 +1375,5 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
