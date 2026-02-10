@@ -984,55 +984,72 @@ function teacherSignup() {
 }
 
 auth.onAuthStateChanged(u => {
-  if (u) {
-    const cachedIsTeacher = localStorage.getItem(`isTeacher_${u.email}`);
-    if (cachedIsTeacher !== null) {
-      const isTeacher = cachedIsTeacher === 'true';
-      applyAuthState(isTeacher, u);
-    } else {
-      const teacherKey = u.email.replace(/\./g, '_');
-      firebase.database().ref(`teachers/${teacherKey}`).once("value", snap => {
-        const isTeacher = snap.exists();
-        localStorage.setItem(`isTeacher_${u.email}`, isTeacher);
-        applyAuthState(isTeacher, u);
-      }).catch(e => console.error("Firebase error:", e));
-    }
-  } else {
+  hideAllSections();
+
+  if (!u) {
+    // ❌ Not logged in → show only auth
     container.style.display = "block";
-    teacherPanel.style.display = "none";
-    studentPanel.style.display = "none";
-    studentContainer.style.display = "block";
-    testArea.style.display = "none";
+    document.querySelector('.section-toggle').style.display = "flex";
+    return;
   }
-  // Fix: Remove the invalid line or correct it. Assuming you want to hide the section toggle when logged in.
-  document.querySelector('.section-toggle').style.display = u ? "none" : "block";
-});;
+
+  const cachedIsTeacher = localStorage.getItem(`isTeacher_${u.email}`);
+
+  if (cachedIsTeacher !== null) {
+    applyAuthState(cachedIsTeacher === "true", u);
+    return;
+  }
+
+  const teacherKey = u.email.replace(/\./g, "_");
+  firebase.database()
+    .ref(`teachers/${teacherKey}`)
+    .once("value")
+    .then(snap => {
+      const isTeacher = snap.exists();
+      localStorage.setItem(`isTeacher_${u.email}`, isTeacher);
+      applyAuthState(isTeacher, u);
+    })
+    .catch(err => {
+      console.error("Role check failed:", err);
+      auth.signOut();
+    });
+});
 
 function applyAuthState(isTeacher, u) {
-  container.style.display = "none";
-  teacherPanel.style.display = isTeacher ? "flex" : "none";
-  studentPanel.style.display = isTeacher ? "none" : "block";
-  studentContainer.style.display = "none";
-  testArea.style.display = "none";
+  hideAllSections(); // 🔑 critical
+
   if (isTeacher) {
+    // 👨‍🏫 Teacher UI
+    teacherPanel.style.display = "flex";
+
     ResultClasses();
     loadPendingSignups();
-    firebase.database().ref("tests").once("value", snap => {
-      let totalTests = 0;
-      snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
-      dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
-    }).catch(e => console.error("Firebase error:", e));
+
+    firebase.database().ref("tests").once("value")
+      .then(snap => {
+        let totalTests = 0;
+        snap.forEach(cls => {
+          totalTests += Object.keys(cls.val() || {}).length;
+        });
+        dashboardStats.innerHTML = `<p>Total Tests: ${totalTests}</p>`;
+      })
+      .catch(e => console.error("Firebase error:", e));
+
+  } else {
+    // 👨‍🎓 Student UI
+    studentPanel.style.display = "block";
+    studentContainer.style.display = "block";
   }
-  // Enhancement: Persist theme across sessions
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-theme');
-    document.getElementById('themeToggle').innerText = 'Switch to Light Theme';
-    currentTheme = 'dark';
+
+  // 🌗 Restore theme
+  const savedTheme = localStorage.getItem("theme") || "light";
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark-theme");
+    document.getElementById("themeToggle").innerText = "Switch to Light Theme";
+    currentTheme = "dark";
   }
 }
 
-// Student Auth Functions
 
 function showStudentLogin() {
   document.querySelector("#studentContainer .container").classList.remove("active");
@@ -1593,4 +1610,5 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
