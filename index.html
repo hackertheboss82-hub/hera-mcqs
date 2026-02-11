@@ -5,11 +5,10 @@
 <title>Hera MCQ System</title>
 <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css.all.min.css">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 body { font-family: 'Roboto', Arial; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; padding: 0; }
 .box {
@@ -833,12 +832,18 @@ button {
   </div>
 </div>
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
-  authDomain: "hera-mcqs-55022.firebaseapp.com",
-  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
-});
-
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
+    authDomain: "hera-mcqs-55022.firebaseapp.com",
+    databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
+  });
+  console.log("Firebase initialized successfully.");
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+  alert("Firebase failed to load. Check your connection and try again.");
+  // Optionally, disable features or redirect
+}
 const auth = firebase.auth();
 let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
 let timerInterval = null;
@@ -872,7 +877,9 @@ function showRegister() {
 function showLogin() {
   document.getElementById("container").classList.remove("active");
 }
-
+function isTeacherLoggedIn() {
+  return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
+}
 function showStudentRegister() {
   document.querySelector("#studentContainer .container").classList.add("active");
 }
@@ -912,8 +919,11 @@ window.onbeforeunload = function () {
 };
 
 window.onload = () => {
-  hideAllSections();
-  showStudentSection();
+  if (!auth.currentUser) {
+    hideAllSections();
+    document.querySelector('.section-toggle').style.display = "flex";
+    showStudentSection();
+  }
 };
 
 // Tab Switching
@@ -934,14 +944,14 @@ function teacherLogin() {
     loginMsg.innerText = "Enter email and password.";
     return;
   }
- auth.signInWithEmailAndPassword(email, pass)
+auth.signInWithEmailAndPassword(email, pass)
 .then(() => {
-  // UI will be handled by auth.onAuthStateChanged
+  // UI handled by auth.onAuthStateChanged
 })
-  .catch(e => {
-    console.error("Login error:", e);
-    loginMsg.innerText = e.message;
-  });
+.catch(e => {
+  console.error("Login error:", e);
+  loginMsg.innerText = e.message || "Login failed. Check credentials.";
+});
 }
 
 /* SIGNUP */
@@ -984,10 +994,9 @@ function teacherSignup() {
 
 auth.onAuthStateChanged(u => {
   hideAllSections();
-
   if (!u) {
   // Not logged in → show toggle and default to student section
-  hideAllSections();
+  hideAllSections();  // Keep only this one
   document.querySelector('.section-toggle').style.display = "flex";
   showStudentSection();  // Default to student portal
   return;
@@ -1016,20 +1025,14 @@ auth.onAuthStateChanged(u => {
 });
 
 function applyAuthState(isTeacher, u) {
-  hideAllSections();  // This already hides studentContainer, teacherAuth, etc.
-
+  hideAllSections();
   if (isTeacher) {
-    // Teacher UI
     teacherPanel.style.display = "flex";
-    // ... rest of teacher logic
+    loadPendingSignups();  // Load teacher-specific data
   } else {
-    // Student UI - Only show the test selection panel, hide auth
     studentPanel.style.display = "block";
-    // Do NOT set studentContainer.style.display = "block";  // Remove this line
-    // ... rest of student logic (e.g., TestsForClass if needed)
   }
-
-  // Restore theme (unchanged)
+  // Restore theme
   const savedTheme = localStorage.getItem("theme") || "light";
   if (savedTheme === "dark") {
     document.body.classList.add("dark-theme");
@@ -1052,11 +1055,12 @@ function studentLogin() {
   }
   auth.signInWithEmailAndPassword(email, pass)
 .then(() => {
-  // UI will be handled by auth.onAuthStateChanged
+  // UI handled by auth.onAuthStateChanged
 })
-  .catch(e => {
-    studentLoginMsg.innerText = e.message;
-  });
+.catch(e => {
+  console.error("Login error:", e);
+  studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
+});
 }
 
 function studentSignup() {
@@ -1117,6 +1121,10 @@ function TestsForClass(cls) {
 
 /* SAVE TEST */
 function saveTest() {
+  if (!isTeacherLoggedIn()) {
+    alert("Access denied. Please log in as a teacher.");
+    return;
+  }
   const cls = testClass.value;
   const name = testName.value.trim();
   const raw = bulkQuestions.value.trim();
@@ -1334,7 +1342,7 @@ function updateQuestionMap() {
     div.className = 'q-num';
     div.textContent = i + 1;
     if (i === currentQuestionIndex) div.classList.add('current');
-    if (studentAnswers[i] !== undefined) div.classList.add('attempted');
+if (studentAnswers[i] !== undefined) div.classList.add('attempted');
     else if (markedForReview[i]) div.classList.add('marked');
     else div.classList.add('not-attempted');
     div.onclick = () => {
@@ -1495,6 +1503,10 @@ function TestsForTeacher() {
 }
 
 function editTest(cls, testName) {
+  if (!isTeacherLoggedIn()) {
+    alert("Access denied. Please log in as a teacher.");
+    return;
+  }
   firebase.database()
     .ref(`tests/class_${cls}/${testName}`)
     .once("value", snap => {
@@ -1611,3 +1623,4 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
