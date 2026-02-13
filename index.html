@@ -618,6 +618,7 @@ button {
         <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
       </div>
       <button onclick="teacherLogin()">Login</button>
+      <button onclick="resendVerification()">Resend Verification</button>
       <p id="loginMsg" class="error"></p>
     </div>
     <!-- Register Form -->
@@ -938,7 +939,15 @@ function showTab(tabName) {
   document.getElementById(tabName).classList.add('active');
   document.getElementById('tab-' + tabName).classList.add('active');
 }
-
+function resendVerification() {
+  if (auth.currentUser) {
+    auth.currentUser.sendEmailVerification()
+      .then(() => alert("Verification email sent!"))
+      .catch(e => alert("Error: " + e.message));
+  } else {
+    alert("Log in first.");
+  }
+}
 /* LOGIN */
 function teacherLogin() {
   const email = tEmail.value.trim();
@@ -1647,6 +1656,7 @@ function rejectTeacher(key) {
 </script>
 </body>
 </html>
+
 
 
 
