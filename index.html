@@ -615,6 +615,7 @@ button {
       </div>
       <div class="input-box">
         <input id="tPassword" type="password" placeholder="Password" required>
+        <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
       </div>
       <button onclick="teacherLogin()">Login</button>
       <p id="loginMsg" class="error"></p>
@@ -652,6 +653,7 @@ button {
       <h2>Login</h2>
       <input id="studentEmail" type="email" placeholder="Email" required>
       <input id="studentPassword" type="password" placeholder="Password" required>
+      <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
       <button onclick="studentLogin()">Login</button>
       <p id="studentLoginMsg" class="error"></p>
     </div>
@@ -974,20 +976,33 @@ function teacherSignup() {
   btn.innerHTML = '<div class="loading"></div> Signing up...';
   btn.disabled = true;
 
-  const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString() };
-  firebase.database().ref("pendingSignups").push(signupData)
-    .then(() => {
-      signupMsg.innerText = "Signup request submitted! Wait for admin approval.";
-      loginMsg.innerText = "";
-      tEmailSignup.value = "";
-      tPasswordSignup.value = "";
-      tConfirmPassword.value = "";
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      // Send verification email
+      user.sendEmailVerification()
+        .then(() => {
+          // Store in pendingSignups as before, but add a note
+          const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false };
+          firebase.database().ref("pendingSignups").push(signupData)
+            .then(() => {
+              signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
+              loginMsg.innerText = "";
+              tEmailSignup.value = "";
+              tPasswordSignup.value = "";
+              tConfirmPassword.value = "";
+              btn.innerHTML = 'Signup';
+              btn.disabled = false;
+            });
+        })
+        .catch(e => {
+          signupMsg.innerText = "Signup failed: " + e.message;
+          btn.innerHTML = 'Signup';
+          btn.disabled = false;
+        });
     })
     .catch(e => {
-      console.error("Signup request failed:", e);
-      loginMsg.innerText = e.message;
+      signupMsg.innerText = e.message;
       btn.innerHTML = 'Signup';
       btn.disabled = false;
     });
@@ -1000,13 +1015,11 @@ auth.onAuthStateChanged(user => {
     showStudentSection();
     return;
   }
-if (!user.emailVerified) {
+  if (!user.emailVerified) {
     alert("Please verify your email before proceeding.");
     auth.signOut();  // Force logout if not verified
     return;
   }
-  // ... rest of the code (role check, etc.) ...
-});
   const uid = user.uid;
 
   firebase.database()
@@ -1018,12 +1031,12 @@ if (!user.emailVerified) {
       hideAllSections(); // 🔥 VERY IMPORTANT
 
       if (role === "teacher") {
-        // Set localStorage for teacher role (this was missing!)
+        // Set localStorage for teacher role
         localStorage.setItem(`isTeacher_${user.email}`, "true");
         document.getElementById("teacherPanel").style.display = "flex";
-        loadPendingSignups();  // Optional: Load approvals if needed
+        loadPendingSignups();
       } else {
-        // For students, ensure localStorage is not set to "true" (optional cleanup)
+        // For students, ensure localStorage is not set
         localStorage.removeItem(`isTeacher_${user.email}`);
         document.getElementById("studentPanel").style.display = "block";
       }
@@ -1032,29 +1045,8 @@ if (!user.emailVerified) {
       console.error("Role fetch error:", err);
       // Optional: Handle error (e.g., show login again)
     });
-});;
-auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      // Send verification email
-      user.sendEmailVerification()
-        .then(() => {
-          // Store in pendingSignups as before, but add a note
-          const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false };
-          firebase.database().ref("pendingSignups").push(signupData)
-            .then(() => {
-              signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
-              // ... reset fields ...
-            });
-        })
-        .catch(e => {
-          signupMsg.innerText = "Signup failed: " + e.message;
-        });
-    })
-    .catch(e => {
-      signupMsg.innerText = e.message;
-    });
-}
+});
+
 function applyAuthState(isTeacher, u) {
   hideAllSections();
   if (isTeacher) {
@@ -1108,27 +1100,14 @@ function studentSignup() {
   auth.createUserWithEmailAndPassword(email, pass)
     .then((userCredential) => {
       const user = userCredential.user;
-      return user.updateProfile({ displayName: name });
-    })
-    .then(() => {
-      studentSignupMsg.innerText = "Signup successful! Welcome.";
-      studentName.value = "";
-      studentEmailSignup.value = "";
-      studentPasswordSignup.value = "";
-      studentConfirmPassword.value = "";
-    })
-    .catch(e => {
-      studentSignupMsg.innerText = e.message;
-    });
-}
-auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
       user.sendEmailVerification()
         .then(() => {
           // Proceed as before, but require verification
           studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
-          // ... reset fields ...
+          studentName.value = "";
+          studentEmailSignup.value = "";
+          studentPasswordSignup.value = "";
+          studentConfirmPassword.value = "";
         })
         .catch(e => {
           studentSignupMsg.innerText = "Signup failed: " + e.message;
@@ -1138,6 +1117,7 @@ auth.createUserWithEmailAndPassword(email, pass)
       studentSignupMsg.innerText = e.message;
     });
 }
+
 function ResultClasses() {
   firebase.database().ref("results").once("value", snap => {
     resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
@@ -1290,33 +1270,29 @@ function startStudentTest() {
               if (saveSnap.exists()) {
                 const saved = saveSnap.val();
                 studentAnswers = saved.answers || {};
-                markedForReview = saved.marked || {};
-                remainingTime = saved.timeLeft || (data.duration * 60);
-                currentQuestionIndex = saved.currentIndex || 0;
-              } else {
-                remainingTime = data.duration * 60;
-              }
-hideAllSections();
-document.getElementById("testArea").style.display = "flex";
-
-startTimer(Math.ceil(remainingTime / 60));
-renderTest();
-
-              document.documentElement.requestFullscreen();
-              document.addEventListener('contextmenu', e => e.preventDefault());
-              document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) alert('Exited fullscreen!');
-              });
-              document.addEventListener('visibilitychange', () => {
-                if (document.hidden) alert('Tab switched!');
-              });
-              updateQuestionMap();
-
-              clearInterval(autoSaveInterval);
-              autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-            });
-        });
-    })
+                      markedForReview = saved.marked || {};
+      remainingTime = saved.timeLeft || (data.duration * 60);
+      currentQuestionIndex = saved.currentIndex || 0;
+    } else {
+      remainingTime = data.duration * 60;
+    }
+    hideAllSections();
+    document.getElementById("testArea").style.display = "flex";
+    startTimer(Math.ceil(remainingTime / 60));
+    renderTest();
+    document.documentElement.requestFullscreen();
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) alert('Exited fullscreen!');
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) alert('Tab switched!');
+    });
+    updateQuestionMap();
+    clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+  });
+});
     .catch(e => {
       console.error("Start test error:", e);
       alert("Failed to start test: " + e.message);
@@ -1338,24 +1314,24 @@ function displayQuestion(index) {
     return;
   }
   const questionDisplay = document.getElementById('questionDisplay');
- questionDisplay.innerHTML = `
-  <div class="question-header">
-    <i class="fas fa-question-circle"></i>
-    <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
-  </div>
-  <p class="question-text">${q.q}</p>
-  <div class="options-container">
-  ${q.options.map((opt, i) => `
-  <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
-    <label onclick="selectOption(${index}, ${i})">
-      <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
-      <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
-      <span class="option-text">${opt}</span>
-    </label>
-  </div>
-`).join('')}
-  </div>
-`;
+  questionDisplay.innerHTML = `
+    <div class="question-header">
+      <i class="fas fa-question-circle"></i>
+      <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
+    </div>
+    <p class="question-text">${q.q}</p>
+    <div class="options-container">
+    ${q.options.map((opt, i) => `
+    <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
+      <label onclick="selectOption(${index}, ${i})">
+        <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
+        <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
+        <span class="option-text">${opt}</span>
+      </label>
+    </div>
+  `).join('')}
+    </div>
+  `;
   progressBar.value = ((index + 1) / currentQuestions.length) * 100;
   updateQuestionMap();
 }
@@ -1381,7 +1357,6 @@ function updateNavigationButtons() {
   document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
 }
 
-
 function updateQuestionMap() {
   const grid = document.getElementById('questionGrid');
   grid.innerHTML = '';
@@ -1404,26 +1379,19 @@ function updateQuestionMap() {
 
 function startTimer(minutes) {
   remainingTime = minutes * 60;
-
   clearInterval(timerInterval);
-
   timerInterval = setInterval(() => {
     if (remainingTime <= 0) {
       clearInterval(timerInterval);
       submitTest();
       return;
     }
-
     remainingTime--;
-
     const mins = Math.floor(remainingTime / 60);
     const secs = remainingTime % 60;
-
-    document.getElementById("timerBox").innerText =
-      `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
   }, 1000);
 }
-
 
 function updateTimerDisplay() {
   const min = Math.floor(remainingTime / 60);
@@ -1434,9 +1402,7 @@ function updateTimerDisplay() {
 function submitTest() {
   clearInterval(timerInterval);
   clearInterval(autoSaveInterval);
-
   disableUnloadWarning();
-
   let score = 0;
   let detailedAnswers = {};
   currentQuestions.forEach((q, i) => {
@@ -1451,14 +1417,13 @@ function submitTest() {
       isCorrect: isCorrect
     };
   });
-
   firebase.database()
     .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
     .set({
       name: currentStudent.name,
       score: score,
       total: currentQuestions.length,
-      answers: detailedAnswers,  // Add this
+      answers: detailedAnswers,
       submittedAt: new Date().toISOString()
     })
     .then(() => {
@@ -1485,13 +1450,13 @@ function Results() {
       snap.forEach(r => {
         const d = r.val();
         resultBox.innerHTML += `
-  <div style="border:1px solid #ccc;padding:6px;margin:6px">
-    <b>${d.name}</b> (Roll: ${r.key})<br>
-    Score: ${d.score}/${d.total}<br>
-    <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
-    <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
-  </div>
-`;
+          <div style="border:1px solid #ccc;padding:6px;margin:6px">
+            <b>${d.name}</b> (Roll: ${r.key})<br>
+            Score: ${d.score}/${d.total}<br>
+            <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
+            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
+          </div>
+        `;
       });
     })
     .catch(e => {
@@ -1565,7 +1530,8 @@ function TestsForTeacher() {
       });
     });
 }
-// In the login form HTML, add: <a href="#" onclick="resetPassword()">Forgot Password?</a>
+
+// Password reset function
 function resetPassword() {
   const email = prompt("Enter your email:");
   if (email) {
@@ -1574,6 +1540,7 @@ function resetPassword() {
       .catch(e => alert("Error: " + e.message));
   }
 }
+
 function editTest(cls, testName) {
   if (!isTeacherLoggedIn()) {
     alert("Access denied. Please log in as a teacher.");
@@ -1657,22 +1624,15 @@ function loadPendingSignups() {
 }
 
 function approveTeacher(key, email, password) {
-
   auth.createUserWithEmailAndPassword(email, password)
     .then(userCred => {
-
       const uid = userCred.user.uid;
-
-      // Save role using UID
       firebase.database().ref("users/" + uid).set({
         email: email,
         role: "teacher",
         approvedAt: Date.now()
       });
-
-      // Remove from pending list
       firebase.database().ref("pendingSignups/" + key).remove();
-
       alert("Teacher approved successfully");
       loadPendingSignups();
     })
@@ -1684,11 +1644,11 @@ function rejectTeacher(key) {
   firebase.database().ref("pendingSignups/" + key).remove();
   loadPendingSignups();
 }
-
 </script>
 
 </body>
 </html>
+
 
 
 
