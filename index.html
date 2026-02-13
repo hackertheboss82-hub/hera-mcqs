@@ -1000,7 +1000,13 @@ auth.onAuthStateChanged(user => {
     showStudentSection();
     return;
   }
-
+if (!user.emailVerified) {
+    alert("Please verify your email before proceeding.");
+    auth.signOut();  // Force logout if not verified
+    return;
+  }
+  // ... rest of the code (role check, etc.) ...
+});
   const uid = user.uid;
 
   firebase.database()
@@ -1027,7 +1033,28 @@ auth.onAuthStateChanged(user => {
       // Optional: Handle error (e.g., show login again)
     });
 });;
-
+auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      // Send verification email
+      user.sendEmailVerification()
+        .then(() => {
+          // Store in pendingSignups as before, but add a note
+          const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false };
+          firebase.database().ref("pendingSignups").push(signupData)
+            .then(() => {
+              signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
+              // ... reset fields ...
+            });
+        })
+        .catch(e => {
+          signupMsg.innerText = "Signup failed: " + e.message;
+        });
+    })
+    .catch(e => {
+      signupMsg.innerText = e.message;
+    });
+}
 function applyAuthState(isTeacher, u) {
   hideAllSections();
   if (isTeacher) {
@@ -1094,7 +1121,23 @@ function studentSignup() {
       studentSignupMsg.innerText = e.message;
     });
 }
-
+auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      user.sendEmailVerification()
+        .then(() => {
+          // Proceed as before, but require verification
+          studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
+          // ... reset fields ...
+        })
+        .catch(e => {
+          studentSignupMsg.innerText = "Signup failed: " + e.message;
+        });
+    })
+    .catch(e => {
+      studentSignupMsg.innerText = e.message;
+    });
+}
 function ResultClasses() {
   firebase.database().ref("results").once("value", snap => {
     resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
@@ -1395,9 +1438,18 @@ function submitTest() {
   disableUnloadWarning();
 
   let score = 0;
-
+  let detailedAnswers = {};
   currentQuestions.forEach((q, i) => {
-    if (studentAnswers[i] === q.answer) score++;
+    const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+    const correctChoice = q.options[q.answer];
+    const isCorrect = studentAnswers[i] === q.answer;
+    if (isCorrect) score++;
+    detailedAnswers[i] = {
+      question: q.q,
+      studentAnswer: studentChoice,
+      correctAnswer: correctChoice,
+      isCorrect: isCorrect
+    };
   });
 
   firebase.database()
@@ -1406,6 +1458,7 @@ function submitTest() {
       name: currentStudent.name,
       score: score,
       total: currentQuestions.length,
+      answers: detailedAnswers,  // Add this
       submittedAt: new Date().toISOString()
     })
     .then(() => {
@@ -1480,15 +1533,12 @@ function allowReattempt(cls, test, roll) {
 function viewDetails(cls, test, roll) {
   firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
     const d = snap.val();
-    let details = `Score: ${d.score}/${d.total}\n`;
-    firebase.database().ref(`tests/class_${cls}/${test}`).once("value", qSnap => {
-      const questions = Object.values(qSnap.val().questions || {});
-      Object.keys(d.answers || {}).forEach(i => {
-        const q = questions[i];
-        details += `Q${+i+1}: ${d.answers[i] === q.answer ? 'Correct' : 'Incorrect'}\n`;
-      });
-      alert(details);
+    let details = `Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
+    Object.keys(d.answers || {}).forEach(i => {
+      const ans = d.answers[i];
+      details += `Q${+i+1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
     });
+    alert(details);  // Or display in a modal for better UX
   });
 }
 
@@ -1515,7 +1565,15 @@ function TestsForTeacher() {
       });
     });
 }
-
+// In the login form HTML, add: <a href="#" onclick="resetPassword()">Forgot Password?</a>
+function resetPassword() {
+  const email = prompt("Enter your email:");
+  if (email) {
+    auth.sendPasswordResetEmail(email)
+      .then(() => alert("Password reset email sent!"))
+      .catch(e => alert("Error: " + e.message));
+  }
+}
 function editTest(cls, testName) {
   if (!isTeacherLoggedIn()) {
     alert("Access denied. Please log in as a teacher.");
@@ -1631,6 +1689,7 @@ function rejectTeacher(key) {
 
 </body>
 </html>
+
 
 
 
