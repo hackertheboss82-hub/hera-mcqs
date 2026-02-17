@@ -1154,13 +1154,18 @@ function TestsForClass(cls) {
 }
 
 /* SAVE TEST */
+/* SAVE TEST */
 function saveTest() {
   if (!isTeacherLoggedIn()) {
     alert("Access denied. Please log in as a teacher.");
     return;
   }
   const cls = testClass.value;
-  const name = testName.value.trim();
+  let name = testName.value.trim();  // Get the raw name
+
+  // Sanitize the name: Replace invalid characters with "_"
+  name = name.replace(/[.#$[\$]/g, "_");  // Replaces ., #, $, [, ] with _
+
   const raw = bulkQuestions.value.trim();
   const duration = Number(testDuration.value);
   const limit = Number(questionLimit.value);
@@ -1658,6 +1663,7 @@ function rejectTeacher(key) {
 </script>
 </body>
 </html>
+
 
 
 
