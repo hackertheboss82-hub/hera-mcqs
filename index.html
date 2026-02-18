@@ -12,7 +12,16 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase app script failed to load');"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase auth script failed to load');"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase database script failed to load');"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+ <link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
   <style>
+    
     /* [CSS remains mostly unchanged; only minor tweaks for better mobile responsiveness and loading states] */
     body {
       font-family: 'Roboto', Arial;
@@ -22,7 +31,26 @@
       margin: 0;
       padding: 0;
     }
-
+{
+  "name": "Hera MCQ System",
+  "short_name": "Hera MCQs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
     .box {
       width: 360px;
       margin: 40px auto;
@@ -57,7 +85,12 @@
     .success {
       color: green;
     }
-
+<select id="themeSelector" onchange="changeTheme(this.value)">
+  <option value="light">Light</option>
+  <option value="dark">Dark</option>
+  <option value="blue">Blue</option>
+  <option value="green">Green</option>
+</select>
     /* Theme Variables */
     :root {
       --bg-color: #f4f6f8;
@@ -569,13 +602,30 @@
   gap: 20px;
 }
 
+/* Slide-in animation for cards */
 .dashboard-card {
-  background: var(--box-bg);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-left: 4px solid var(--accent);
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Pulse for buttons */
+.quick-actions button:hover {
+  animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Fade for tabs */
+.tab-content {
+  animation: fadeIn 0.3s ease-in;
 }
 
 .dashboard-card:hover {
@@ -750,6 +800,21 @@
         padding: 10px;
       }
     }
+    /* Blue Theme */
+.blue-theme {
+  --bg-color: #e3f2fd;
+  --text-color: #0d47a1;
+  --accent: #1976d2;
+  --box-bg: #ffffff;
+}
+
+/* Green Theme */
+.green-theme {
+  --bg-color: #e8f5e8;
+  --text-color: #1b5e20;
+  --accent: #388e3c;
+  --box-bg: #ffffff;
+}
   </style>
 </head>
 
@@ -830,6 +895,7 @@
         <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
         <button onclick="studentSignup()">Signup</button>
         <p id="studentSignupMsg" class="success"></p>
+        <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
         <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
       </div>
     </div>
@@ -883,7 +949,9 @@
 
   <div class="dashboard-card">
     <h3><i class="fas fa-chart-line"></i> Score Analytics</h3>
-    <div class="chart-container" id="scoreChart">
+   <div class="chart-container">
+  <canvas id="scoreChart"></canvas>
+</div>
       <p>Chart will load here (requires Chart.js for full power)</p>
     </div>
   </div>
@@ -969,7 +1037,16 @@
       </div>
     </div>
   </div>
-
+<div id="manageUsers" class="tab-content">
+  <h3>Manage Users</h3>
+  <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()">
+  <select id="userFilter" onchange="filterUsers()">
+    <option value="all">All Users</option>
+    <option value="teacher">Teachers</option>
+    <option value="student">Students</option>
+  </select>
+  <div id="userList"></div>
+</div>
   <!-- STUDENT PANEL -->
   <div class="box" id="studentPanel" style="display: none;">
     <h3>Student Test Portal</h3>
@@ -1078,7 +1155,103 @@
     function showLogin() {
       document.getElementById("container").classList.remove("active");
     }
+function loadUsers() {
+  firebase.database().ref("users").once("value", snap => {
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+    snap.forEach(user => {
+      const data = user.val();
+      list.innerHTML += `
+        <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
+          <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
+          <button onclick="deleteUser('${user.key}')">Delete</button>
+        </div>
+      `;
+    });
+  });
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open('hera-cache').then(cache => {
+      return cache.addAll(['/', '/index.html', '/style.css']);
+    })
+  );
+});
 
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
+});
+function changeTheme(theme) {
+  document.body.className = theme + '-theme';
+  localStorage.setItem('theme', theme);
+}
+const messaging = firebase.messaging();
+
+// Request permission and get token
+function requestNotificationPermission() {
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY_HERE' })  // Paste your VAPID key
+        .then(token => console.log('FCM Token:', token))
+        .catch(err => console.error('FCM Token error:', err));
+    }
+  });
+}
+// Listen for messages
+messaging.onMessage(payload => {
+  console.log('Message received:', payload);
+  // Show in-app notification
+  showNotification(payload.notification.title, payload.notification.body);
+});
+
+function showNotification(title, body) {
+  const notification = document.createElement('div');
+  notification.className = 'notification-item';
+  notification.innerHTML = `<b>${title}</b>: ${body}`;
+  document.getElementById('notificationsList').prepend(notification);
+  setTimeout(() => notification.remove(), 5000);  // Auto-remove after 5s
+}
+
+// Call on login
+auth.onAuthStateChanged(user => {
+  if (user) requestNotificationPermission();
+  // ... existing code
+});
+// On load, apply saved theme
+window.onload = () => {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  changeTheme(savedTheme);
+  document.getElementById('themeSelector').value = savedTheme;
+  // ... existing code
+};
+function filterUsers() {
+  const search = document.getElementById("userSearch").value.toLowerCase();
+  const filter = document.getElementById("userFilter").value;
+  const items = document.querySelectorAll(".user-item");
+  items.forEach(item => {
+    const name = item.dataset.name.toLowerCase();
+    const email = item.dataset.email.toLowerCase();
+    const role = item.dataset.role;
+    const matchesSearch = name.includes(search) || email.includes(search);
+    const matchesFilter = filter === "all" || role === filter;
+    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
+  });
+}
+
+function deleteUser(uid) {
+  if (confirm("Delete this user?")) {
+    firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
+  }
+}
+
+// Call loadUsers in showTab
+function showTab(tabName) {
+  // ... existing code ...
+  if (tabName === "manageUsers") loadUsers();
+}
     function isTeacherLoggedIn() {
       return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
     }
@@ -1165,7 +1338,47 @@
           loginMsg.innerText = e.message || "Login failed. Check credentials.";
         });
     }
+function loadUsers() {
+  firebase.database().ref("users").once("value", snap => {
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+    snap.forEach(user => {
+      const data = user.val();
+      list.innerHTML += `
+        <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
+          <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
+          <button onclick="deleteUser('${user.key}')">Delete</button>
+        </div>
+      `;
+    });
+  });
+}
 
+function filterUsers() {
+  const search = document.getElementById("userSearch").value.toLowerCase();
+  const filter = document.getElementById("userFilter").value;
+  const items = document.querySelectorAll(".user-item");
+  items.forEach(item => {
+    const name = item.dataset.name.toLowerCase();
+    const email = item.dataset.email.toLowerCase();
+    const role = item.dataset.role;
+    const matchesSearch = name.includes(search) || email.includes(search);
+    const matchesFilter = filter === "all" || role === filter;
+    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
+  });
+}
+
+function deleteUser(uid) {
+  if (confirm("Delete this user?")) {
+    firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
+  }
+}
+
+// Call loadUsers in showTab
+function showTab(tabName) {
+  // ... existing code ...
+  if (tabName === "manageUsers") loadUsers();
+}
     /* SIGNUP */
     function teacherSignup() {
       const email = tEmailSignup.value.trim();
@@ -1271,7 +1484,103 @@
         currentTheme = "dark";
       }
     }
+function loadDashboardStats() {
+  // Total tests
+  firebase.database().ref("tests").once("value", snap => {
+    let totalTests = 0;
+    snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
+    document.getElementById("totalTests").textContent = totalTests;
+  });
 
+  // Total students
+  firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
+    document.getElementById("totalStudents").textContent = snap.numChildren();
+  });
+
+  // Results and chart
+  firebase.database().ref("results").once("value", snap => {
+    let totalResults = 0, totalScore = 0, totalPossible = 0;
+    const classScores = {};
+    snap.forEach(cls => {
+      const className = cls.key.replace("class_", "");
+      let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
+      cls.forEach(test => {
+        test.forEach(result => {
+          const d = result.val();
+          totalResults++;
+          totalScore += d.score;
+          totalPossible += d.total;
+          classTotalScore += d.score;
+          classTotalPossible += d.total;
+          classCount++;
+        });
+      });
+      if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
+    });
+    document.getElementById("totalResults").textContent = totalResults;
+    document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
+
+    // Chart
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(classScores),
+        datasets: [{
+          label: 'Average Score (%)',
+          data: Object.values(classScores),
+          backgroundColor: 'rgba(0, 123, 255, 0.6)',
+          borderColor: 'rgba(0, 123, 255, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+  });
+
+  // Notifications
+  firebase.database().ref("results").limitToLast(5).once("value", snap => {
+    const list = document.getElementById("notificationsList");
+    list.innerHTML = "";
+    snap.forEach(cls => {
+      cls.forEach(test => {
+        test.forEach(result => {
+          const d = result.val();
+          list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} in ${cls.key.replace("class_", "")} - Score: ${d.score}/${d.total}</div>`;
+        });
+      });
+    });
+    if (!snap.exists()) list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
+  });
+}
+// Add to showTab to refresh stats
+function showTab(tabName) {
+  // ... existing code ...
+  if (tabName === "dashboard") loadDashboardStats();
+}
+
+// New function for exporting all results
+function exportAllResults() {
+  firebase.database().ref("results").once("value", snap => {
+    let csv = "Class,Test,Student,Roll,Score,Total\n";
+    snap.forEach(cls => {
+      const className = cls.key.replace("class_", "");
+      cls.forEach(test => {
+        const testName = test.key;
+        test.forEach(result => {
+          const d = result.val();
+          csv += `${className},${testName},${d.name},${result.key},${d.score},${d.total}\n`;
+        });
+      });
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'all_results.csv';
+    a.click();
+  });
+}
     function showStudentLogin() {
       document.querySelector("#studentContainer .container").classList.remove("active");
     }
@@ -1620,7 +1929,7 @@
     div.className = 'q-num';
     div.textContent = i + 1;
     if (i === currentQuestionIndex) div.classList.add('current');
-    if (studentAnswers[i] !== undefined) div.classList.add('attempted');
+    if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // Fixed: Added 'undefined'
     else if (markedForReview[i]) div.classList.add('marked');
     else div.classList.add('not-attempted');
     div.onclick = () => {
@@ -1672,14 +1981,14 @@
     };
   });
 
-  // Fetch the student's full name from database to ensure it's correct
+  // Fetch name and submit
   firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
     .then(nameSnap => {
-      const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;  // Fallbacks
+      const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
       firebase.database()
         .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
         .set({
-          name: studentName,  // Now uses full name from database
+          name: studentName,
           score: score,
           total: currentQuestions.length,
           answers: detailedAnswers,
@@ -1687,18 +1996,24 @@
         })
         .then(() => {
           alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
+          // Send FCM notification (requires server key from Firebase Console > Project Settings > Cloud Messaging)
+          fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: { 'Authorization': 'key=YOUR_SERVER_KEY', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: 'TEACHER_FCM_TOKEN',  // Replace with actual token
+              notification: { title: 'New Submission', body: `${studentName} submitted ${currentTest}` }
+            })
+          }).catch(e => console.error('FCM error:', e));
           location.reload();
         })
-        .catch(e => {
-          alert("Error submitting test: " + e.message);
-        });
+        .catch(e => alert("Error submitting test: " + e.message));
     })
     .catch(e => {
       console.error("Error fetching name:", e);
       alert("Error submitting test: " + e.message);
     });
 }
-
     function Results() {
       const cls = resultClassSelect.value;
       const test = resultTestSelect.value;
@@ -1917,6 +2232,7 @@
   </script>
 </body>
 </html>
+
 
 
 
