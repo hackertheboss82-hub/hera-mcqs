@@ -1545,28 +1545,33 @@
       timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
     }
 
-    function submitTest() {
-      clearInterval(timerInterval);
-      clearInterval(autoSaveInterval);
-      disableUnloadWarning();
-      let score = 0;
-      let detailedAnswers = {};
-      currentQuestions.forEach((q, i) => {
-        const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
-        const correctChoice = q.options[q.answer];
-        const isCorrect = studentAnswers[i] === q.answer;
-        if (isCorrect) score++;
-        detailedAnswers[i] = {
-          question: q.q,
-          studentAnswer: studentChoice,
-          correctAnswer: correctChoice,
-          isCorrect: isCorrect
-        };
-      });
+   function submitTest() {
+  clearInterval(timerInterval);
+  clearInterval(autoSaveInterval);
+  disableUnloadWarning();
+  let score = 0;
+  let detailedAnswers = {};
+  currentQuestions.forEach((q, i) => {
+    const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+    const correctChoice = q.options[q.answer];
+    const isCorrect = studentAnswers[i] === q.answer;
+    if (isCorrect) score++;
+    detailedAnswers[i] = {
+      question: q.q,
+      studentAnswer: studentChoice,
+      correctAnswer: correctChoice,
+      isCorrect: isCorrect
+    };
+  });
+
+  // Fetch the student's full name from database to ensure it's correct
+  firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
+    .then(nameSnap => {
+      const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;  // Fallbacks
       firebase.database()
         .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
         .set({
-          name: currentStudent.name,
+          name: studentName,  // Now uses full name from database
           score: score,
           total: currentQuestions.length,
           answers: detailedAnswers,
@@ -1579,7 +1584,12 @@
         .catch(e => {
           alert("Error submitting test: " + e.message);
         });
-    }
+    })
+    .catch(e => {
+      console.error("Error fetching name:", e);
+      alert("Error submitting test: " + e.message);
+    });
+}
 
     function Results() {
       const cls = resultClassSelect.value;
@@ -1631,17 +1641,20 @@
     }
 
     function viewDetails(cls, test, roll) {
-      firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
-        const d = snap.val();
-        let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
-        const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => a - b);
-        sortedKeys.forEach(i => {
-          const ans = d.answers[i];
-          details += `Q${+i + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
-        });
-        alert(details);  // For simplicity; consider a modal for better UX
-      });
-    }
+  firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
+    const d = snap.val();
+    let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
+    // Sort keys numerically to ensure order (0,1,2,... instead of random object order)
+    const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => parseInt(a) - parseInt(b));
+    sortedKeys.forEach(i => {
+      const ans = d.answers[i];
+      details += `Q${parseInt(i) + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
+    });
+    // Log to console for full view (in case alert truncates)
+    console.log("Full Results Details:", details);
+    alert(details);  // For simplicity; consider a modal for better UX
+  });
+}
 
     function allowReattempt(cls, test, roll) {
       if (!confirm("Allow this student to reattempt the test?")) return;
@@ -1796,4 +1809,5 @@
   </script>
 </body>
 </html>
+
 
