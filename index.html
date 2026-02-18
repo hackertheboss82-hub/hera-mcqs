@@ -1172,30 +1172,34 @@
   }
 
   function loadUsers() {
-    firebase.database().ref("users").once("value", snap => {
-      const list = document.getElementById("userList");
-      list.innerHTML = "";
-      if (!snap.exists()) {
-        list.innerHTML = "<p>No users found.</p>";
-        return;
-      }
-      snap.forEach(user => {
-        const data = user.val();
-        const name = data.name || data.email || "Unknown";
-        const email = data.email || "No email";
-        const role = data.role || "Unknown";
-        list.innerHTML += `
-          <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
-            <b>${name}</b> (${role}) - ${email}
-            <button onclick="deleteUser('${user.key}')">Delete</button>
-          </div>
-        `;
-      });
-    }).catch(e => {
-      console.error("Load users error:", e);
-      document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
-    });
+  if (!auth.currentUser || auth.currentUser.uid !== '8L7gh4mvQgZhiKxCgqfh5OtYn3w2') {
+    document.getElementById("userList").innerHTML = "<p>Access denied. Only admin can manage users.</p>";
+    return;
   }
+  firebase.database().ref("users").once("value", snap => {
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+    if (!snap.exists()) {
+      list.innerHTML = "<p>No users found.</p>";
+      return;
+    }
+    snap.forEach(user => {
+      const data = user.val();
+      const name = data.name || data.email || "Unknown";
+      const email = data.email || "No email";
+      const role = data.role || "Unknown";
+      list.innerHTML += `
+        <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
+          <b>${name}</b> (${role}) - ${email}
+          <button onclick="deleteUser('${user.key}')">Delete</button>
+        </div>
+      `;
+    });
+  }).catch(e => {
+    console.error("Load users error:", e);
+    document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
+  });
+}
 
   function filterUsers() {
     const search = document.getElementById("userSearch").value.toLowerCase();
@@ -2129,5 +2133,6 @@ messaging.onMessage(payload => {
 </script>
 </body>
 </html>
+
 
 
