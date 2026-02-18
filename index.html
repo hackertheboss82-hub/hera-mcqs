@@ -1171,46 +1171,45 @@
     document.getElementById("container").classList.remove("active");
   }
 
- function loadUsers() {
-  firebase.database().ref("users").once("value", snap => {
-    const list = document.getElementById("userList");
-    list.innerHTML = "";
-    if (!snap.exists()) {
-      list.innerHTML = "<p>No users found.</p>";
-      return;
-    }
-    snap.forEach(user => {
-      const data = user.val();
-      const name = data.name || data.email || "Unknown";
-      const email = data.email || "No email";
-      const role = data.role || "Unknown";
-      list.innerHTML += `
-        <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
-          <b>${name}</b> (${role}) - ${email}
-          <button onclick="deleteUser('${user.key}')">Delete</button>
-        </div>
-      `;
+  function loadUsers() {
+    firebase.database().ref("users").once("value", snap => {
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      if (!snap.exists()) {
+        list.innerHTML = "<p>No users found.</p>";
+        return;
+      }
+      snap.forEach(user => {
+        const data = user.val();
+        const name = data.name || data.email || "Unknown";
+        const email = data.email || "No email";
+        const role = data.role || "Unknown";
+        list.innerHTML += `
+          <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
+            <b>${name}</b> (${role}) - ${email}
+            <button onclick="deleteUser('${user.key}')">Delete</button>
+          </div>
+        `;
+      });
+    }).catch(e => {
+      console.error("Load users error:", e);
+      document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
     });
-  }).catch(e => {
-    console.error("Load users error:", e);
-    document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
-  });
-}
+  }
 
   function filterUsers() {
-  const search = document.getElementById("userSearch").value.toLowerCase();
-  const filter = document.getElementById("userFilter").value;
-  const items = document.querySelectorAll(".user-item");
-  console.log("Filtering:", search, filter, items.length);  // Debug
-  items.forEach(item => {
-    const name = item.dataset.name.toLowerCase();
-    const email = item.dataset.email.toLowerCase();
-    const role = item.dataset.role;
-    const matchesSearch = name.includes(search) || email.includes(search);
-    const matchesFilter = filter === "all" || role === filter;
-    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
-  });
-}
+    const search = document.getElementById("userSearch").value.toLowerCase();
+    const filter = document.getElementById("userFilter").value;
+    const items = document.querySelectorAll(".user-item");
+    items.forEach(item => {
+      const name = item.dataset.name.toLowerCase();
+      const email = item.dataset.email.toLowerCase();
+      const role = item.dataset.role;
+      const matchesSearch = name.includes(search) || email.includes(search);
+      const matchesFilter = filter === "all" || role === filter;
+      item.style.display = matchesSearch && matchesFilter ? "block" : "none";
+    });
+  }
 
   function deleteUser(uid) {
     if (confirm("Delete this user?")) {
@@ -1279,10 +1278,9 @@
     document.getElementById(tabName).classList.add('active');
     document.getElementById('tab-' + tabName).classList.add('active');
     if (tabName === "dashboard") loadDashboardStats();
-  if (tabName === "manageUsers") {
-  console.log("Loading users...");  // Debug log
-  loadUsers();
-}
+    if (tabName === "manageUsers") loadUsers();
+  }
+
   function resendVerification() {
     if (auth.currentUser) {
       auth.currentUser.sendEmailVerification()
@@ -1571,83 +1569,84 @@
   }
 
   function startStudentTest() {
-    if (!auth.currentUser) {alert("Login required"); return;}
-    const cls = sClass.value;
-    const test = studentTestSelect.value;
-    const roll = auth.currentUser.uid;
-    const name = auth.currentUser.displayName || auth.currentUser.email;
+  if (!auth.currentUser) {alert("Login required"); return;}
+  const cls = sClass.value;
+  const test = studentTestSelect.value;
+  const roll = auth.currentUser.uid;
+  const name = auth.currentUser.displayName || auth.currentUser.email;
 
-    if (!cls || !test) {
-      alert("Please select class and test");
-      return;
-    }
-
-    firebase.database()
-      .ref(`results/class_${cls}/${test}/${roll}`)
-      .once("value")
-      .then(rSnap => {
-        if (rSnap.exists()) {
-          alert("Test already submitted.\nTeacher must allow reattempt.");
-          return;
-        }
-
-        currentStudent = {name, roll, class: cls};
-        currentTest = test;
-
-        firebase.database()
-          .ref(`tests/class_${cls}/${test}`)
-          .once("value")
-          .then(snap => {
-            if (!snap.exists()) {
-              alert("Test not found");
-              return;
-            }
-
-            const data = snap.val();
-            let allQuestions = Object.values(data.questions || {});
-            shuffleArray(allQuestions);
-            const limit = data.limit || allQuestions.length;
-            currentQuestions = allQuestions.slice(0, limit);
-
-            studentAnswers = {};
-            markedForReview = {};
-            currentQuestionIndex = 0;
-
-            firebase.database()
-              .ref(`savedTests/${roll}/${test}`)
-              .once("value")
-              .then(saveSnap => {
-                if (saveSnap.exists()) {
-                  const saved = saveSnap.val();
-                  studentAnswers = saved.answers || {};
-                  markedForReview = saved.marked || {};
-                  remainingTime = saved.timeLeft || (data.duration * 60);
-                  currentQuestionIndex = saved.currentIndex || 0;
-                } else {
-                  remainingTime = data.duration * 60;
-                }
-                hideAllSections();
-                document.getElementById("testArea").style.display = "flex";
-                startTimer(Math.ceil(remainingTime / 60));
-                renderTest();
-                document.documentElement.requestFullscreen();
-                document.addEventListener('contextmenu', e => e.preventDefault());
-                document.addEventListener('fullscreenchange', () => {
-                  if (!document.fullscreenElement) alert('Exited fullscreen!');
-                });
-                document.addEventListener('visibilitychange', () => {
-                  if (document.hidden) alert('Tab switched!');
-                });
-                updateQuestionMap();
-                clearInterval(autoSaveInterval);
-                autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-              });
-          });
-      })
-      .catch(e => {        console.error("Start test error:", e);
-        alert("Failed to start test: " + e.message);
-      });
+  if (!cls || !test) {
+    alert("Please select class and test");
+    return;
   }
+
+  firebase.database()
+    .ref(`results/class_${cls}/${test}/${roll}`)
+    .once("value")
+    .then(rSnap => {
+      if (rSnap.exists()) {
+        alert("Test already submitted.\nTeacher must allow reattempt.");
+        return;
+      }
+
+      currentStudent = {name, roll, class: cls};
+      currentTest = test;
+
+      firebase.database()
+        .ref(`tests/class_${cls}/${test}`)
+        .once("value")
+        .then(snap => {
+          if (!snap.exists()) {
+            alert("Test not found");
+            return;
+          }
+
+          const data = snap.val();
+          let allQuestions = Object.values(data.questions || {});
+          shuffleArray(allQuestions);
+          const limit = data.limit || allQuestions.length;
+          currentQuestions = allQuestions.slice(0, limit);
+
+          studentAnswers = {};
+          markedForReview = {};
+          currentQuestionIndex = 0;
+
+          firebase.database()
+            .ref(`savedTests/${roll}/${test}`)
+            .once("value")
+            .then(saveSnap => {
+              if (saveSnap.exists()) {
+                const saved = saveSnap.val();
+                studentAnswers = saved.answers || {};
+                markedForReview = saved.marked || {};
+                remainingTime = saved.timeLeft || (data.duration * 60);
+                currentQuestionIndex = saved.currentIndex || 0;
+              } else {
+                remainingTime = data.duration * 60;
+              }
+              hideAllSections();
+              document.getElementById("testArea").style.display = "flex";
+              startTimer(Math.ceil(remainingTime / 60));
+              renderTest();
+              document.documentElement.requestFullscreen();
+              document.addEventListener('contextmenu', e => e.preventDefault());
+              document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) alert('Exited fullscreen!');
+              });
+              document.addEventListener('visibilitychange', () => {
+                if (document.hidden) alert('Tab switched!');
+              });
+              updateQuestionMap();
+              clearInterval(autoSaveInterval);
+              autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+            });
+        });
+    })
+    .catch(e => {
+      console.error("Start test error:", e);
+      alert("Failed to start test: " + e.message);
+    });
+}
 
   function renderTest() {
     testTitle.innerText = currentTest;
@@ -2103,20 +2102,19 @@
   const messaging = firebase.messaging();
 
   function requestNotificationPermission() {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY_HERE' })
-          .then(token => console.log('FCM Token:', token))
-          .catch(err => console.error('FCM Token error:', err));
-      }
-    });
-  }
-
-  messaging.onMessage(payload => {
-    console.log('Message received:', payload);
-    showNotification(payload.notification.title, payload.notification.body);
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY_HERE' })
+        .then(token => console.log('FCM Token:', token))
+        .catch(err => console.error('FCM Token error:', err));
+    }
   });
+}
 
+messaging.onMessage(payload => {
+  console.log('Message received:', payload);
+  showNotification(payload.notification.title, payload.notification.body);
+});
   function showNotification(title, body) {
     const notification = document.createElement('div');
     notification.className = 'notification-item';
@@ -2131,4 +2129,5 @@
 </script>
 </body>
 </html>
+
 
