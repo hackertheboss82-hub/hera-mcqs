@@ -1171,35 +1171,46 @@
     document.getElementById("container").classList.remove("active");
   }
 
-  function loadUsers() {
-    firebase.database().ref("users").once("value", snap => {
-      const list = document.getElementById("userList");
-      list.innerHTML = "";
-      snap.forEach(user => {
-        const data = user.val();
-        list.innerHTML += `
-          <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
-            <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
-            <button onclick="deleteUser('${user.key}')">Delete</button>
-          </div>
-        `;
-      });
+ function loadUsers() {
+  firebase.database().ref("users").once("value", snap => {
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+    if (!snap.exists()) {
+      list.innerHTML = "<p>No users found.</p>";
+      return;
+    }
+    snap.forEach(user => {
+      const data = user.val();
+      const name = data.name || data.email || "Unknown";
+      const email = data.email || "No email";
+      const role = data.role || "Unknown";
+      list.innerHTML += `
+        <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
+          <b>${name}</b> (${role}) - ${email}
+          <button onclick="deleteUser('${user.key}')">Delete</button>
+        </div>
+      `;
     });
-  }
+  }).catch(e => {
+    console.error("Load users error:", e);
+    document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
+  });
+}
 
   function filterUsers() {
-    const search = document.getElementById("userSearch").value.toLowerCase();
-    const filter = document.getElementById("userFilter").value;
-    const items = document.querySelectorAll(".user-item");
-    items.forEach(item => {
-      const name = item.dataset.name.toLowerCase();
-      const email = item.dataset.email.toLowerCase();
-      const role = item.dataset.role;
-      const matchesSearch = name.includes(search) || email.includes(search);
-      const matchesFilter = filter === "all" || role === filter;
-      item.style.display = matchesSearch && matchesFilter ? "block" : "none";
-    });
-  }
+  const search = document.getElementById("userSearch").value.toLowerCase();
+  const filter = document.getElementById("userFilter").value;
+  const items = document.querySelectorAll(".user-item");
+  console.log("Filtering:", search, filter, items.length);  // Debug
+  items.forEach(item => {
+    const name = item.dataset.name.toLowerCase();
+    const email = item.dataset.email.toLowerCase();
+    const role = item.dataset.role;
+    const matchesSearch = name.includes(search) || email.includes(search);
+    const matchesFilter = filter === "all" || role === filter;
+    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
+  });
+}
 
   function deleteUser(uid) {
     if (confirm("Delete this user?")) {
@@ -1268,9 +1279,10 @@
     document.getElementById(tabName).classList.add('active');
     document.getElementById('tab-' + tabName).classList.add('active');
     if (tabName === "dashboard") loadDashboardStats();
-    if (tabName === "manageUsers") loadUsers();
-  }
-
+  if (tabName === "manageUsers") {
+  console.log("Loading users...");  // Debug log
+  loadUsers();
+}
   function resendVerification() {
     if (auth.currentUser) {
       auth.currentUser.sendEmailVerification()
@@ -2119,3 +2131,4 @@
 </script>
 </body>
 </html>
+
