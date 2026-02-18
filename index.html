@@ -1,1340 +1,1468 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<title>Hera MCQ System</title>
-<link rel="icon" href="data:,">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase app script failed to load');"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase auth script failed to load');"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase database script failed to load');"></script>
-<style>
-body { font-family: 'Roboto', Arial; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; padding: 0; }
-.box {
-  width:360px; margin:40px auto; padding:20px;
-  background: var(--box-bg); border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);
-  color: var(--text-color);
-}
-input, select, button {
-  width:100%; padding:10px; margin-top:10px;
-  background: #f0f0f0; color: var(--text-color); border: 1px solid #ccc;
-}
-button { cursor:pointer; }
-#teacherPanel, #testArea { display:none; }
-.error { color:red; }
-.success { color:green; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Hera MCQ System</title>
+  <link rel="icon" href="data:,">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Firebase Scripts (consider loading conditionally for performance) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase app script failed to load');"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase auth script failed to load');"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase database script failed to load');"></script>
+  <style>
+    /* [CSS remains mostly unchanged; only minor tweaks for better mobile responsiveness and loading states] */
+    body {
+      font-family: 'Roboto', Arial;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: 0.3s;
+      margin: 0;
+      padding: 0;
+    }
 
-/* Theme Variables */
-:root {
-  --bg-color: #f4f6f8;
-  --text-color: #333;
-  --accent: #007bff;
-  --box-bg: #fff;
-}
+    .box {
+      width: 360px;
+      margin: 40px auto;
+      padding: 20px;
+      background: var(--box-bg);
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+    }
 
-.dark-theme {
-  --bg-color: #1e1e2f;
-  --text-color: #fff;
-  --accent: #0056b3;
-  --box-bg: #111;
-}
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #f0f0f0;
+      color: var(--text-color);
+      border: 1px solid #ccc;
+    }
 
-/* New Animated Login/Signup Styles */
-.container{
-  position:relative;
-  width:800px;
-  max-width:95%;
-  height:450px;
-  background: var(--box-bg);
-  border-radius:15px;
-  overflow:hidden;
-  box-shadow:0 0 30px rgba(0,120,255,0.5);
-}
+    button {
+      cursor: pointer;
+    }
 
-.orange-panel{
-  position:absolute;
-  width:50%;
-  height:100%;
-  right:0;
-  background: linear-gradient(135deg, var(--accent), #0056b3);
-  transition:.8s ease;
-  z-index:1;
-}
+    #teacherPanel, #testArea {
+      display: none;
+    }
 
-.container.active .orange-panel{
-  transform: translateX(-100%);
-}
+    .error {
+      color: red;
+    }
 
-.form-box{
-  position:absolute;
-  width:50%;
-  height:100%;
-  padding:40px;
-  color: var(--text-color);
-  z-index:2;
-}
+    .success {
+      color: green;
+    }
 
-.login-box{
-  left:0;
-}
+    /* Theme Variables */
+    :root {
+      --bg-color: #f4f6f8;
+      --text-color: #333;
+      --accent: #007bff;
+      --box-bg: #fff;
+    }
 
-.register-box{
-  right:0;
-  opacity:0;
-  pointer-events:none;
-}
+    .dark-theme {
+      --bg-color: #1e1e2f;
+      --text-color: #fff;
+      --accent: #0056b3;
+      --box-bg: #111;
+    }
 
-.container.active .register-box{
-  opacity:1;
-  pointer-events:auto;
-}
+    /* Animated Login/Signup Styles */
+    .container {
+      position: relative;
+      width: 800px;
+      max-width: 95%;
+      height: 450px;
+      background: var(--box-bg);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 120, 255, 0.5);
+    }
 
-.container.active .login-box{
-  opacity:0;
-  pointer-events:none;
-}
+    .orange-panel {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      right: 0;
+      background: linear-gradient(135deg, var(--accent), #0056b3);
+      transition: .8s ease;
+      z-index: 1;
+    }
 
-.input-box input{
-  width:100%;
-  padding:12px;
-  border:none;
-  outline:none;
-  border-radius:5px;
-  background: #f0f0f0;
-}
+    .container.active .orange-panel {
+      transform: translateX(-100%);
+    }
 
-button{
-  width:100%;
-  padding:12px;
-  margin-top:15px;
-  border:none;
-  border-radius:5px;
-  background: var(--accent);
-  color: var(--text-color);
-  font-size:16px;
-  cursor:pointer;
-  transition: 0.3s;
-}
+    .form-box {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      padding: 40px;
+      color: var(--text-color);
+      z-index: 2;
+    }
 
-button:hover {
-  opacity: 0.8;
-}
+    .login-box {
+      left: 0;
+    }
 
-.switch-btn{
-  background:transparent;
-  border:1px solid var(--text-color);
-}
+    .register-box {
+      right: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
 
-.panel-text{
-  position:absolute;
-  width:50%;
-  height:100%;
-  right:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  color: var(--text-color);
-  text-align:center;
-  padding:20px;
-  z-index:3;
-  transition:.8s ease;
-}
+    .container.active .register-box {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-.container.active .panel-text{
-  transform: translateX(-100%);
-}
+    .container.active .login-box {
+      opacity: 0;
+      pointer-events: none;
+    }
 
-/* Professional Test Area Styling - CAT/CBT Style */
-#testArea {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: var(--bg-color);
-  color: var(--text-color);
-}
+    .input-box input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      outline: none;
+      border-radius: 5px;
+      background: #f0f0f0;
+    }
 
-.test-header {
-  background: linear-gradient(135deg, var(--accent), #0056b3);
-  color: #fff;
-  padding: 15px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-.test-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 5px;
+      background: var(--accent);
+      color: var(--text-color);
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
 
-.question-area {
-  flex: 3;
-  padding: 40px;
-  overflow-y: auto;
-  background: var(--box-bg);
-  font-family: 'Roboto', sans-serif;
-}
+    button:hover {
+      opacity: 0.8;
+    }
 
-.question-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
+    .switch-btn {
+      background: transparent;
+      border: 1px solid var(--text-color);
+    }
 
-.question-header i {
-  color: var(--accent);
-  margin-right: 10px;
-  font-size: 24px;
-}
+    .panel-text {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-color);
+      text-align: center;
+      padding: 20px;
+      z-index: 3;
+      transition: .8s ease;
+    }
 
-.question-display h4 {
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--text-color);
-  margin: 0;
-}
+    .container.active .panel-text {
+      transform: translateX(-100%);
+    }
 
-.question-text {
-  font-size: 18px;
-  line-height: 1.6;
-  margin-bottom: 25px;
-  color: var(--text-color);
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid var(--accent);
-}
-.options {
-  display: flex;
-  flex-direction: column;
-}
+    /* Professional Test Area Styling */
+    #testArea {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
 
-.option {
-  margin: 10px 0;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #f9f9f9, #ffffff);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: fit-content;  /* Prevents full-width stretch */
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
+    .test-header {
+      background: linear-gradient(135deg, var(--accent), #0056b3);
+      color: #fff;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.option:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
+    .test-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
 
-.option.selected {
-  background: linear-gradient(135deg, var(--accent), #007bff);
-  color: #fff;
-  border-color: var(--accent);
-}
+    .question-area {
+      flex: 3;
+      padding: 40px;
+      overflow-y: auto;
+      background: var(--box-bg);
+      font-family: 'Roboto', sans-serif;
+    }
 
-.option label {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
+    .question-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
 
-.option input[type="radio"] {
-  margin-right: 12px;
-}
+    .question-header i {
+      color: var(--accent);
+      margin-right: 10px;
+      font-size: 24px;
+    }
 
-.option-letter {
-  font-weight: bold;
-  margin-right: 8px;
-}
+    .question-display h4 {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-color);
+      margin: 0;
+    }
 
-.option-text {
-  flex: 1;
-}
+    .question-text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      color: var(--text-color);
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+    }
 
-.options-container {
-  margin-top: 20px;
-}
+    .options {
+      display: flex;
+      flex-direction: column;
+    }
 
-.option input[type="radio"] {
-  margin-right: 10px;
-}
+    .option {
+      margin: 10px 0;
+      padding: 12px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #f9f9f9, #ffffff);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: fit-content;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-.question-map {
-  flex: 1;
-  padding: 20px;
-  background: var(--box-bg);
-  border-left: 1px solid #ccc;
-  overflow-y: auto;
-}
+    .option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
 
-.map-title {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
+    .option.selected {
+      background: linear-gradient(135deg, var(--accent), #007bff);
+      color: #fff;
+      border-color: var(--accent);
+    }
 
-.question-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-}
-.q-num {
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #ddd;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: bold;
-  position: relative;
-}
+    .option label {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
 
-.q-num:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
+    .option input[type="radio"] {
+      margin-right: 12px;
+    }
 
-.q-num.current {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-}
+    .option-letter {
+      font-weight: bold;
+      margin-right: 8px;
+    }
 
-.q-num.attempted {
-  background: #4caf50;
-  color: #fff;
-  border-color: #4caf50;
-}
+    .option-text {
+      flex: 1;
+    }
 
-.q-num.marked {
-  background: #ff9800;
-  color: #fff;
-  border-color: #ff9800;
-}
+    .options-container {
+      margin-top: 20px;
+    }
 
-.q-num.not-attempted {
-  background: #f0f0f0;
-  color: #666;
-}
+    .question-map {
+      flex: 1;
+      padding: 20px;
+      background: var(--box-bg);
+      border-left: 1px solid #ccc;
+      overflow-y: auto;
+    }
 
-.q-num::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: #fff;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s;
-  white-space: nowrap;
-}
+    .map-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
 
-.q-num:hover::after {
-  opacity: 1;
-  visibility: visible;
-}
-.q-num.current {
-  border: 2px solid var(--accent);
-}
+    .question-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
 
-.legend {
-  margin-top: 20px;
-  font-size: 12px;
-}
+    .q-num {
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ddd;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      position: relative;
+    }
 
-.legend div {
-  margin: 5px 0;
-  display: flex;
-  align-items: center;
-}
+    .q-num:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
 
-.legend span {
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-  border-radius: 3px;
-}
+    .q-num.current {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
 
-.test-footer {
-  background: var(--box-bg);
-  padding: 15px 30px;
-  border-top: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-}
+    .q-num.attempted {
+      background: #4caf50;
+      color: #fff;
+      border-color: #4caf50;
+    }
 
-.footer-buttons button {
-  margin: 0 10px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, var(--accent), #007bff);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.3s ease;
-}
+    .q-num.marked {
+      background: #ff9800;
+      color: #fff;
+      border-color: #ff9800;
+    }
 
-.footer-buttons button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
+    .q-num.not-attempted {
+      background: #f0f0f0;
+      color: #666;
+    }
 
-.footer-buttons button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
+    .q-num::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .container {
-    width: 90%;
-    height: auto;
-  }
-  .form-box {
-    width: 100%;
-    position: static;
-  }
-  .orange-panel, .panel-text {
-    display: none;
-  }
-  .test-body {
-    flex-direction: column;
-  }
-  .question-map {
-    border-left: none;
-    border-top: 1px solid #ccc;
-    max-height: 200px;
-  }
-  .question-grid {
-    grid-template-columns: repeat(10, 1fr);
-  }
-}
+    .q-num:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
 
-/* Loading Spinner */
-.loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+    .legend {
+      margin-top: 20px;
+      font-size: 12px;
+    }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+    .legend div {
+      margin: 5px 0;
+      display: flex;
+      align-items: center;
+    }
 
-/* Tabbed Dashboard Styles */
-#teacherPanel {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+    .legend span {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      border-radius: 3px;
+    }
 
-.header {
-  background: var(--accent);
-  color: #fff;
-  padding: 15px;
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-}
+    .test-footer {
+      background: var(--box-bg);
+      padding: 15px 30px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.dashboard-container {
-  display: flex;
-  flex: 1;
-}
+    .footer-buttons button {
+      margin: 0 10px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--accent), #007bff);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
 
-.sidebar {
+    .footer-buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .footer-buttons button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .section-toggle {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .section-toggle button {
+        min-width: 120px;
+        font-size: 12px;
+        padding: 8px 15px;
+      }
+
+      .container {
+        width: 95%;
+        height: auto;
+        margin: 10px auto;
+      }
+
+      .form-box {
+        width: 100%;
+        position: static;
+        padding: 20px;
+      }
+
+      .orange-panel, .panel-text {
+        display: none;
+      }
+
+      .test-body {
+        flex-direction: column;
+      }
+
+      .question-area {
+        padding: 20px;
+        flex: none;
+      }
+
+      .question-map {
+        border-left: none;
+        border-top: 1px solid #ccc;
+        max-height: 200px;
+        flex: none;
+      }
+
+      .question-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .test-footer {
+        padding: 10px;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .footer-buttons {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .footer-buttons button {
+        margin: 5px;
+        padding: 8px 12px;
+        font-size: 14px;
+        flex: 1;
+        min-width: 80px;
+      }
+    }
+
+    /* Loading Spinner */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Tabbed Dashboard */
+    #teacherPanel {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .header {
+      background: var(--accent);
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex: 1;
+    }
+
+    .sidebar {
   width: 250px;
   background: var(--box-bg);
   border-right: 1px solid #ccc;
   padding: 20px 0;
 }
 
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-.sidebar li {
-  padding: 15px 20px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: 0.3s;
-}
+    .sidebar li {
+      padding: 15px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: 0.3s;
+    }
 
-.sidebar li:hover, .sidebar li.active {
-  background: var(--accent);
-  color: #fff;
-}
+    .sidebar li:hover, .sidebar li.active {
+      background: var(--accent);
+      color: #fff;
+    }
 
-.main-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
 
-.tab-content {
-  display: none;
-}
+    .tab-content {
+      display: none;
+    }
 
-.tab-content.active {
-  display: block;
-}
+    .tab-content.active {
+      display: block;
+    }
 
-@media (max-width: 768px) {
-  .dashboard-container {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #ccc;
-  }
-}
+    @media (max-width: 768px) {
+      .dashboard-container {
+        flex-direction: column;
+      }
 
-/* New Styles for Separation and Polish */
-/* Improved Header & Portal Toggle */
-.section-toggle {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
-  background: var(--box-bg);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-.section-toggle button {
-  width: auto;
-  min-width: 160px;
-  margin: 0;
-  border-radius: 25px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 14px;
-}
-.section-toggle button.active {
-  background: var(--accent);
-  color: #fff;
-}
-.section-toggle button:not(.active) {
-  background: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--accent);
-}
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+      }
+    }
 
-.auth-section {
-  display: none; /* Hidden by default, controlled by JS */
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 80px);
-  margin: 0;
-  padding: 20px;
-  animation: fadeIn 0.5s ease-in;
-}
+    /* Improved Header & Portal Toggle */
+    .section-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+      background: var(--box-bg);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.container {
-  box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
-}
-button {
-  background: linear-gradient(135deg, var(--accent), #0056b3);
-}
-@media (max-width: 768px) {
-  .auth-section {
-    margin: 20px 0;
-  }
-  .container {
-    width: 95%;
-    height: auto;
-    padding: 20px;
-  }
-  .form-box {
-    width: 100%;
-    padding: 20px;
-  }
-  button {
-    font-size: 14px;
-    padding: 10px;
-  }
-}
-</style>
+    .section-toggle button {
+      width: auto;
+      min-width: 160px;
+      margin: 0;
+      border-radius: 25px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 14px;
+    }
+
+    .section-toggle button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .section-toggle button:not(.active) {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--accent);
+    }
+
+    .auth-section {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 80px);
+      margin: 0;
+      padding: 20px;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), #0056b3);
+    }
+
+    @media (max-width: 768px) {
+      .auth-section {
+        margin: 20px 0;
+      }
+
+      .container {
+        width: 95%;
+        height: auto;
+        padding: 20px;
+      }
+
+      .form-box {
+        width: 100%;
+        padding: 20px;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-<div class="section-toggle">
-  <button id="toggleTeacher" class="active" onclick="showTeacherSection()">Teacher Portal</button>
-  <button id="toggleStudent" onclick="showStudentSection()">Student Portal</button>
-</div>
+  <div class="section-toggle">
+    <button id="toggleTeacher" class="active" onclick="showTeacherSection()">Teacher Portal</button>
+    <button id="toggleStudent" onclick="showStudentSection()">Student Portal</button>
+  </div>
 
-<!-- TEACHER LOGIN/SIGNUP -->
-<div class="auth-section teacher-section" id="teacherAuth" style="display: flex;">
-  <div class="container" id="container">
-    <!-- Orange Panel -->
-    <div class="orange-panel"></div>
-    <!-- Text Panel -->
-    <div class="panel-text">
-      <h1>Welcome Back!</h1>
-      <p>Login to continue</p>
-      <br>
-      <button class="switch-btn" onclick="showRegister()">Go to Signup</button>
-    </div>
-    <!-- Login Form -->
-    <div class="form-box login-box">
-      <h2>Login</h2>
-      <div class="input-box">
-        <input id="tEmail" type="email" placeholder="Email" required>
+  <!-- TEACHER LOGIN/SIGNUP -->
+  <div class="auth-section teacher-section" id="teacherAuth" style="display: flex;">
+    <div class="container" id="container">
+      <!-- Orange Panel -->
+      <div class="orange-panel"></div>
+      <!-- Text Panel -->
+      <div class="panel-text">
+        <h1>Welcome Back!</h1>
+        <p>Login to continue</p>
+        <br>
+        <button class="switch-btn" onclick="showRegister()">Go to Signup</button>
       </div>
-      <div class="input-box">
-        <input id="tPassword" type="password" placeholder="Password" required>
+      <!-- Login Form -->
+      <div class="form-box login-box">
+        <h2>Login</h2>
+        <div class="input-box">
+          <input id="tEmail" type="email" placeholder="Email" required>
+        </div>
+        <div class="input-box">
+          <input id="tPassword" type="password" placeholder="Password" required>
+          <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
+        </div>
+        <button onclick="teacherLogin()">Login</button>
+        <button onclick="resendVerification()">Resend Verification</button>
+        <p id="loginMsg" class="error"></p>
+      </div>
+      <!-- Register Form -->
+      <div class="form-box register-box">
+        <h2>Signup</h2>
+        <div class="input-box">
+          <input id="tEmailSignup" type="email" placeholder="Email" required>
+        </div>
+        <div class="input-box">
+          <input id="tPasswordSignup" type="password" placeholder="Password" required>
+        </div>
+        <div class="input-box">
+          <input id="tConfirmPassword" type="password" placeholder="Confirm Password" required>
+        </div>
+        <button onclick="teacherSignup()">Signup</button>
+        <p id="signupMsg" class="success"></p>
+        <br><br>
+        <button class="switch-btn" onclick="showLogin()">Back to Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT LOGIN/SIGNUP -->
+  <div class="auth-section student-section" id="studentContainer" style="display: none;">
+    <div class="container">
+      <div class="orange-panel"></div>
+      <div class="panel-text">
+        <h1>Student Portal</h1>
+        <p>Login to take tests</p>
+        <button class="switch-btn" onclick="showStudentRegister()">Go to Signup</button>
+      </div>
+      <div class="form-box login-box">
+        <h2>Login</h2>
+        <input id="studentEmail" type="email" placeholder="Email" required>
+        <input id="studentPassword" type="password" placeholder="Password" required>
         <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
+        <button onclick="studentLogin()">Login</button>
+        <p id="studentLoginMsg" class="error"></p>
       </div>
-      <button onclick="teacherLogin()">Login</button>
-      <button onclick="resendVerification()">Resend Verification</button>
-      <p id="loginMsg" class="error"></p>
-    </div>
-    <!-- Register Form -->
-    <div class="form-box register-box">
-      <h2>Signup</h2>
-      <div class="input-box">
-        <input id="tEmailSignup" type="email" placeholder="Email" required>
+      <div class="form-box register-box">
+        <h2>Signup</h2>
+        <input id="studentName" type="text" placeholder="Full Name" required>
+        <input id="studentEmailSignup" type="email" placeholder="Email" required>
+        <input id="studentPasswordSignup" type="password" placeholder="Password" required>
+        <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
+        <button onclick="studentSignup()">Signup</button>
+        <p id="studentSignupMsg" class="success"></p>
+        <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
       </div>
-      <div class="input-box">
-        <input id="tPasswordSignup" type="password" placeholder="Password" required>
-      </div>
-      <div class="input-box">
-        <input id="tConfirmPassword" type="password" placeholder="Confirm Password" required>
-      </div>
-      <button onclick="teacherSignup()">Signup</button>
-      <p id="signupMsg" class="success"></p>
-      <br><br>
-      <button class="switch-btn" onclick="showLogin()">Back to Login</button>
     </div>
   </div>
-</div>
 
-<!-- STUDENT LOGIN/SIGNUP -->
-<div class="auth-section student-section" id="studentContainer" style="display: none;">
-  <div class="container">
-    <div class="orange-panel"></div>
-    <div class="panel-text">
-      <h1>Student Portal</h1>
-      <p>Login to take tests</p>
-      <button class="switch-btn" onclick="showStudentRegister()">Go to Signup</button>
-    </div>
-    <div class="form-box login-box">
-      <h2>Login</h2>
-      <input id="studentEmail" type="email" placeholder="Email" required>
-      <input id="studentPassword" type="password" placeholder="Password" required>
-      <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
-      <button onclick="studentLogin()">Login</button>
-      <p id="studentLoginMsg" class="error"></p>
-    </div>
-    <div class="form-box register-box">
-      <h2>Signup</h2>
-      <input id="studentName" type="text" placeholder="Full Name" required>
-      <input id="studentEmailSignup" type="email" placeholder="Email" required>
-      <input id="studentPasswordSignup" type="password" placeholder="Password" required>
-      <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-      <button onclick="studentSignup()">Signup</button>
-      <p id="studentSignupMsg" class="success"></p>
-      <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
+  <!-- TEACHER PANEL -->
+  <div id="teacherPanel">
+    <div class="header">Hera MCQ System</div>
+    <div class="dashboard-container">
+      <div class="sidebar">
+        <ul>
+          <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
+          <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
+          <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
+          <li id="tab-results" onclick="showTab('results')">Results</li>
+          <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
+          <li onclick="logout()">Logout</li>
+        </ul>
+      </div>
+      <div class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+          <h3>Dashboard</h3>
+          <p>Welcome to the Hera MCQ System. Use the sidebar to navigate.</p>
+          <div id="dashboardStats">
+            <p>Loading stats...</p>
+          </div>
+        </div>
+
+        <!-- Create Test Tab -->
+        <div id="createTest" class="tab-content">
+          <h3>Create Test</h3>
+          <select id="testClass">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <input id="testName" placeholder="Test Name">
+          <input id="testDuration" type="number" placeholder="Duration (minutes)">
+          <input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
+          <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
+          <input type="file" id="questionFile" accept=".csv">
+          <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+        </div>
+
+        <!-- Manage Tests Tab -->
+        <div id="manageTests" class="tab-content">
+          <h3>Manage Tests</h3>
+          <select id="manageClass" onchange="TestsForTeacher()">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <div id="testList"></div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results" class="tab-content">
+          <h3>Student Results</h3>
+          <select id="resultClassSelect" onchange="TestsForClass(this.value)">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <select id="resultTestSelect"></select>
+          <button onclick="Results()">Results</button>
+          <button onclick="exportResults()">Export CSV</button>
+          <div id="resultBox"></div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="approvals" class="tab-content">
+          <h3>Pending Teacher Signups</h3>
+          <div id="pendingSignupsList"></div>
+        </div>
+
+        <button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- TEACHER PANEL -->
-<div id="teacherPanel">
-  <div class="header">Hera MCQ System</div>
-  <div class="dashboard-container">
-    <div class="sidebar">
-      <ul>
-        <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
-        <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
-        <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
-        <li id="tab-results" onclick="showTab('results')">Results</li>
-        <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
-        <li onclick="logout()">Logout</li>
-      </ul>
+  <!-- STUDENT PANEL -->
+  <div class="box" id="studentPanel" style="display: none;">
+    <h3>Student Test Portal</h3>
+    <select id="sClass" onchange="TestsForClass(this.value)">
+      <option value="">Select Class</option>
+      <option value="jr_kg">Jr. KG</option>
+      <option value="sr_kg">Sr. KG</option>
+      <option value="1">Class 1</option>
+      <option value="2">Class 2</option>
+      <option value="3">Class 3</option>
+      <option value="4">Class 4</option>
+      <option value="5">Class 5</option>
+      <option value="6">Class 6</option>
+      <option value="7">Class 7</option>
+      <option value="8">Class 8</option>
+      <option value="9">Class 9</option>
+      <option value="10">Class 10</option>
+    </select>
+
+    <select id="studentTestSelect">
+      <option value="">Select Test</option>
+    </select>
+
+    <button onclick="startStudentTest()">Start Test</button>
+    <button onclick="logout()" style="margin-top: 10px;">Logout</button>
+  </div>
+
+  <!-- TEST AREA - CAT/CBT Style -->
+  <div id="testArea">
+    <div class="test-header">
+      <span id="testTitle"></span>
+      <progress value="0" max="100" id="progressBar"></progress>
+      <span id="timerBox"></span>
     </div>
-    <div class="main-content">
-      <!-- Dashboard Tab -->
-      <div id="dashboard" class="tab-content active">
-        <h3>Dashboard</h3>
-        <p>Welcome to the Hera MCQ System. Use the sidebar to navigate.</p>
-        <div id="dashboardStats">
-          <p>Loading stats...</p>
+    <div class="test-body">
+      <div class="question-area">
+        <div id="questionDisplay" class="question-display"></div>
+      </div>
+      <div class="question-map">
+        <div class="map-title">Question Map</div>
+        <div id="questionGrid" class="question-grid"></div>
+        <div class="legend">
+          <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
+          <div><span style="background: #4caf50;"></span> Attempted</div>
+          <div><span style="background: #ff9800;"></span> Marked for Review</div>
         </div>
       </div>
-
-      <!-- Create Test Tab -->
-      <div id="createTest" class="tab-content">
-        <h3>Create Test</h3>
-        <select id="testClass">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <input id="testName" placeholder="Test Name">
-        <input id="testDuration" type="number" placeholder="Duration (minutes)">
-        <input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
-        <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
-        <input type="file" id="questionFile" accept=".csv">
-        <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+    </div>
+    <div class="test-footer">
+      <div class="footer-buttons">
+        <button id="markReviewBtn" onclick="markForReview()">Mark for Review</button>
+        <button id="prevBtn" onclick="navigateQuestion(-1)" disabled>Prev</button>
+        <button id="nextBtn" onclick="navigateQuestion(1)">Next</button>
       </div>
-
-      <!-- Manage Tests Tab -->
-      <div id="manageTests" class="tab-content">
-        <h3>Manage Tests</h3>
-        <select id="manageClass" onchange="TestsForTeacher()">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <div id="testList"></div>
-      </div>
-
-      <!-- Results Tab -->
-      <div id="results" class="tab-content">
-        <h3>Student Results</h3>
-        <select id="resultClassSelect" onchange="TestsForClass(this.value)">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <select id="resultTestSelect"></select>
-        <button onclick="Results()">Results</button>
-        <button onclick="exportResults()">Export CSV</button>
-        <div id="resultBox"></div>
-      </div>
-
-      <!-- Approvals Tab -->
-      <div id="approvals" class="tab-content">
-        <h3>Pending Teacher Signups</h3>
-        <div id="pendingSignupsList"></div>
-      </div>
-
-      <button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
+      <button id="submitBtn" onclick="submitTest()">Submit</button>
     </div>
   </div>
-</div>
 
-<!-- STUDENT PANEL -->
-<div class="box" id="studentPanel" style="display: none;">
-<h3>Student Test Portal</h3>
-<select id="sClass" onchange="TestsForClass(this.value)">
-<option value="">Select Class</option>
-<option value="jr_kg">Jr. KG</option>
-<option value="sr_kg">Sr. KG</option>
-<option value="1">Class 1</option>
-<option value="2">Class 2</option>
-<option value="3">Class 3</option>
-<option value="4">Class 4</option>
-<option value="5">Class 5</option>
-<option value="6">Class 6</option>
-<option value="7">Class 7</option>
-<option value="8">Class 8</option>
-<option value="9">Class 9</option>
-<option value="10">Class 10</option>
-</select>
+  <script>
+    // Firebase initialization (replace placeholders with your secure config)
+    try {
+      firebase.initializeApp({
+        apiKey: "YOUR_API_KEY",  // Replace with your actual API key (secure it!)
+        authDomain: "YOUR_AUTH_DOMAIN.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com"
+      });
+      console.log("Firebase initialized successfully.");
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      alert("Firebase failed to load. Check your connection and try again.");
+    }
 
-<select id="studentTestSelect">
-<option value="">Select Test</option>
-</select>
+    const auth = firebase ? firebase.auth() : null;
+    let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
+    let timerInterval = null;
+    let remainingTime = 0;
+    let autoSaveInterval = null;
+    let currentTheme = 'light';
+    let currentQuestionIndex = 0;
 
-<button onclick="startStudentTest()">Start Test</button>
-<button onclick="logout()" style="margin-top: 10px;">Logout</button>
-</div>
+    // Theme Toggle
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.getElementById('themeToggle');
+      if (currentTheme === 'light') {
+        body.classList.add('dark-theme');
+        btn.innerText = 'Switch to Dark Theme';
+        currentTheme = 'dark';
+      } else {
+        body.classList.remove('dark-theme');
+        btn.innerText = 'Switch to Light Theme';
+        currentTheme = 'light';
+      }
+      localStorage.setItem('theme', currentTheme);
+    }
 
-<!-- TEST AREA - CAT/CBT Style -->
-<div id="testArea">
-  <div class="test-header">
-    <span id="testTitle"></span>
-    <progress value="0" max="100" id="progressBar"></progress>
-    <span id="timerBox"></span>
-  </div>
-  <div class="test-body">
-    <div class="question-area">
-      <div id="questionDisplay" class="question-display"></div>
-    </div>
-    <div class="question-map">
-      <div class="map-title">Question Map</div>
-      <div id="questionGrid" class="question-grid"></div>
-      <div class="legend">
-        <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
-        <div><span style="background: #4caf50;"></span> Attempted</div>
-        <div><span style="background: #ff9800;"></span> Marked for Review</div>
-      </div>
-    </div>
-  </div>
-  <div class="test-footer">
-    <div class="footer-buttons">
-      <button id="markReviewBtn" onclick="markForReview()">Mark for Review</button>
-      <button id="prevBtn" onclick="navigateQuestion(-1)" disabled>Prev</button>
-      <button id="nextBtn" onclick="navigateQuestion(1)">Next</button>
-    </div>
-    <button id="submitBtn" onclick="submitTest()">Submit</button>
-  </div>
-</div>
-<script>
-// Firebase initialization (runs immediately after scripts load)
-try {
-  firebase.initializeApp({
-    apiKey: "AIzaSyBQ2-dTUTPwhf7WqceEwXpk9CtPksR1xCk",
-    authDomain: "hera-mcqs-55022.firebaseapp.com",
-    databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com"
-  });
-  console.log("Firebase initialized successfully.");
-} catch (error) {
-  console.error("Firebase initialization failed:", error);
-  alert("Firebase failed to load. Check your connection and try again.");
-}
+    // Show Register/Login
+    function showRegister() {
+      document.getElementById("container").classList.add("active");
+    }
 
-const auth = firebase ? firebase.auth() : null;
-let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
-let timerInterval = null;
-let remainingTime = 0;
-let autoSaveInterval = null;
-let currentTheme = 'light';
-let currentQuestionIndex = 0;
+    function showLogin() {
+      document.getElementById("container").classList.remove("active");
+    }
 
-// Theme Toggle
-function toggleTheme() {
-  const body = document.body;
-  const btn = document.getElementById('themeToggle');
-  if (currentTheme === 'light') {
-    body.classList.add('dark-theme');
-    btn.innerText = 'Switch to Dark Theme';
-    currentTheme = 'dark';
-  } else {
-    body.classList.remove('dark-theme');
-    btn.innerText = 'Switch to Light Theme';
-    currentTheme = 'light';
-  }
-  localStorage.setItem('theme', currentTheme);
-}
+    function isTeacherLoggedIn() {
+      return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
+    }
 
-// Show Register/Login
-function showRegister() {
-  document.getElementById("container").classList.add("active");
-}
+    function showStudentRegister() {
+      document.querySelector("#studentContainer .container").classList.add("active");
+    }
 
-function showLogin() {
-  document.getElementById("container").classList.remove("active");
-}
+    function hideAllSections() {
+      document.getElementById("teacherAuth").style.display = "none";
+      document.getElementById("studentContainer").style.display = "none";
+      document.getElementById("teacherPanel").style.display = "none";
+      document.getElementById("studentPanel").style.display = "none";
+      document.getElementById("testArea").style.display = "none";
+      document.querySelector(".section-toggle").style.display = "none";
+    }
 
-function isTeacherLoggedIn() {
-  return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
-}
+    function showTeacherSection() {
+      document.getElementById("teacherAuth").style.display = "flex";
+      document.getElementById("studentContainer").style.display = "none";
+      document.getElementById("toggleTeacher").classList.add("active");
+      document.getElementById("toggleStudent").classList.remove("active");
+    }
 
-function showStudentRegister() {
-  document.querySelector("#studentContainer .container").classList.add("active");
-}
+    function showStudentSection() {
+      document.getElementById("teacherAuth").style.display = "none";
+      document.getElementById("studentContainer").style.display = "flex";
+      document.getElementById("toggleTeacher").classList.remove("active");
+      document.getElementById("toggleStudent").classList.add("active");
+    }
 
-function hideAllSections() {
-  document.getElementById("teacherAuth").style.display = "none";
-  document.getElementById("studentContainer").style.display = "none";
-  document.getElementById("teacherPanel").style.display = "none";
-  document.getElementById("studentPanel").style.display = "none";
-  document.getElementById("testArea").style.display = "none";
-  document.querySelector(".section-toggle").style.display = "none";
-}
+    function disableUnloadWarning() {
+      window.onbeforeunload = null;
+    }
 
-function showTeacherSection() {
-  document.getElementById("teacherAuth").style.display = "flex";
-  document.getElementById("studentContainer").style.display = "none";
-  document.getElementById("toggleTeacher").classList.add("active");
-  document.getElementById("toggleStudent").classList.remove("active");
-}
+    window.onbeforeunload = function () {
+      if (testArea.style.display === "block") {
+        return "Test is running. Leaving will submit the test.";
+      }
+    };
 
-function showStudentSection() {
-  document.getElementById("teacherAuth").style.display = "none";
-  document.getElementById("studentContainer").style.display = "flex";
-  document.getElementById("toggleTeacher").classList.remove("active");
-  document.getElementById("toggleStudent").classList.add("active");
-}
+    window.onload = () => {
+      if (!auth.currentUser) {
+        hideAllSections();
+        document.querySelector('.section-toggle').style.display = "flex";
+        showStudentSection();
+      }
+    };
 
-function disableUnloadWarning() {
-  window.onbeforeunload = null;
-}
+    // Tab Switching
+    function showTab(tabName) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      const sidebarItems = document.querySelectorAll('.sidebar li');
+      sidebarItems.forEach(item => item.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
 
-window.onbeforeunload = function () {
-  if (testArea.style.display === "block") {
-    return "Test is running. Leaving will submit the test.";
-  }
-};
+    function resendVerification() {
+      if (auth.currentUser) {
+        auth.currentUser.sendEmailVerification()
+          .then(() => alert("Verification email sent!"))
+          .catch(e => alert("Error: " + e.message));
+      } else {
+        alert("Log in first.");
+      }
+    }
 
-window.onload = () => {
-  if (!auth.currentUser) {
-    hideAllSections();
-    document.querySelector('.section-toggle').style.display = "flex";
-    showStudentSection();
-  }
-};
-
-// Tab Switching
-function showTab(tabName) {
-  const tabs = document.querySelectorAll('.tab-content');
-  tabs.forEach(tab => tab.classList.remove('active'));
-  const sidebarItems = document.querySelectorAll('.sidebar li');
-  sidebarItems.forEach(item => item.classList.remove('active'));
-  document.getElementById(tabName).classList.add('active');
-  document.getElementById('tab-' + tabName).classList.add('active');
-}
-function resendVerification() {
-  if (auth.currentUser) {
-    auth.currentUser.sendEmailVerification()
-      .then(() => alert("Verification email sent!"))
-      .catch(e => alert("Error: " + e.message));
-  } else {
-    alert("Log in first.");
-  }
-}
-/* LOGIN */
-function teacherLogin() {
-  const email = tEmail.value.trim();
-  const pass = tPassword.value.trim();
-  if (!email || !pass) {
-    loginMsg.innerText = "Enter email and password.";
-    return;
-  }
-  auth.signInWithEmailAndPassword(email, pass)
-  .then(() => {
-    // UI handled by auth.onAuthStateChanged
-  })
-  .catch(e => {
-    console.error("Login error:", e);
-    loginMsg.innerText = e.message || "Login failed. Check credentials.";
-  });
-}
-
-/* SIGNUP */
-function teacherSignup() {
-  const email = tEmailSignup.value.trim();
-  const pass = tPasswordSignup.value.trim();
-  const confirmPass = tConfirmPassword.value.trim();
-  if (!email || !pass || !confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Fill all fields.";
-    return;
-  }
-  if (pass !== confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Passwords do not match.";
-    return;
-  }
-  const btn = document.querySelector('.register-box button');
-  btn.innerHTML = '<div class="loading"></div> Signing up...';
-  btn.disabled = true;
-
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      // Send verification email
-      user.sendEmailVerification()
+    /* LOGIN */
+    function teacherLogin() {
+      const email = tEmail.value.trim();
+      const pass = tPassword.value.trim();
+      if (!email || !pass) {
+        loginMsg.innerText = "Enter email and password.";
+        return;
+      }
+      auth.signInWithEmailAndPassword(email, pass)
         .then(() => {
-          // Store in pendingSignups as before, but add a note
-          const signupData = { email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false };
-          firebase.database().ref("pendingSignups").push(signupData)
+          // UI handled by auth.onAuthStateChanged
+        })
+        .catch(e => {
+          console.error("Login error:", e);
+          loginMsg.innerText = e.message || "Login failed. Check credentials.";
+        });
+    }
+
+    /* SIGNUP */
+    function teacherSignup() {
+      const email = tEmailSignup.value.trim();
+      const pass = tPasswordSignup.value.trim();
+      const confirmPass = tConfirmPassword.value.trim();
+      if (!email || !pass || !confirmPass) {
+        signupMsg.innerText = "";
+        loginMsg.innerText = "Fill all fields.";
+        return;
+      }
+      if (pass !== confirmPass) {
+        signupMsg.innerText = "";
+        loginMsg.innerText = "Passwords do not match.";
+        return;
+      }
+      const btn = document.querySelector('.register-box button');
+      btn.innerHTML = '<div class="loading"></div> Signing up...';
+      btn.disabled = true;
+
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Send verification email
+          user.sendEmailVerification()
             .then(() => {
-              signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
-              loginMsg.innerText = "";
-              tEmailSignup.value = "";
-              tPasswordSignup.value = "";
-              tConfirmPassword.value = "";
+              // Store in pendingSignups as before, but add a note
+              const signupData = {email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false};
+              firebase.database().ref("pendingSignups").push(signupData)
+                .then(() => {
+                  signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
+                  loginMsg.innerText = "";
+                  tEmailSignup.value = "";
+                  tPasswordSignup.value = "";
+                  tConfirmPassword.value = "";
+                  btn.innerHTML = 'Signup';
+                  btn.disabled = false;
+                });
+            })
+            .catch(e => {
+              signupMsg.innerText = "Signup failed: " + e.message;
               btn.innerHTML = 'Signup';
               btn.disabled = false;
             });
         })
         .catch(e => {
-          signupMsg.innerText = "Signup failed: " + e.message;
+          signupMsg.innerText = e.message;
           btn.innerHTML = 'Signup';
           btn.disabled = false;
         });
-    })
-    .catch(e => {
-      signupMsg.innerText = e.message;
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        hideAllSections();
+        document.querySelector(".section-toggle").style.display = "flex";
+        showStudentSection();
+        return;
+      }
+      if (!user.emailVerified) {
+        alert("Please verify your email before proceeding.");
+        auth.signOut();  // Force logout if not verified
+        return;
+      }
+      const uid = user.uid;
+
+      firebase.database()
+        .ref("users/" + uid + "/role")
+        .once("value")
+        .then(snapshot => {
+          const role = snapshot.val();
+
+          hideAllSections(); // 🔥 VERY IMPORTANT
+
+          if (role === "teacher") {
+            // Set localStorage for teacher role
+            localStorage.setItem(`isTeacher_${user.email}`, "true");
+            document.getElementById("teacherPanel").style.display = "flex";
+            loadPendingSignups();
+          } else {
+            // For students, ensure localStorage is not set
+            localStorage.removeItem(`isTeacher_${user.email}`);
+            document.getElementById("studentPanel").style.display = "block";
+          }
+        })
+        .catch(err => {
+          console.error("Role fetch error:", err);
+          // Optional: Handle error (e.g., show login again)
+        });
     });
-}
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    hideAllSections();
-    document.querySelector(".section-toggle").style.display = "flex";
-    showStudentSection();
-    return;
-  }
-  if (!user.emailVerified) {
-    alert("Please verify your email before proceeding.");
-    auth.signOut();  // Force logout if not verified
-    return;
-  }
-  const uid = user.uid;
-
-  firebase.database()
-    .ref("users/" + uid + "/role")
-    .once("value")
-    .then(snapshot => {
-      const role = snapshot.val();
-
-      hideAllSections(); // 🔥 VERY IMPORTANT
-
-      if (role === "teacher") {
-        // Set localStorage for teacher role
-        localStorage.setItem(`isTeacher_${user.email}`, "true");
-        document.getElementById("teacherPanel").style.display = "flex";
+    function applyAuthState(isTeacher, u) {
+      hideAllSections();
+      if (isTeacher) {
+        teacherPanel.style.display = "flex";
         loadPendingSignups();
       } else {
-        // For students, ensure localStorage is not set
-        localStorage.removeItem(`isTeacher_${user.email}`);
-        document.getElementById("studentPanel").style.display = "block";
+        studentPanel.style.display = "block";
       }
-    })
-    .catch(err => {
-      console.error("Role fetch error:", err);
-      // Optional: Handle error (e.g., show login again)
-    });
-});
+      const savedTheme = localStorage.getItem("theme") || "light";
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark-theme");
+        document.getElementById("themeToggle").innerText = "Switch to Light Theme";
+        currentTheme = "dark";
+      }
+    }
 
-function applyAuthState(isTeacher, u) {
-  hideAllSections();
-  if (isTeacher) {
-    teacherPanel.style.display = "flex";
-    loadPendingSignups();
-  } else {
-    studentPanel.style.display = "block";
-  }
-  const savedTheme = localStorage.getItem("theme") || "light";
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark-theme");
-    document.getElementById("themeToggle").innerText = "Switch to Light Theme";
-    currentTheme = "dark";
-  }
-}
+    function showStudentLogin() {
+      document.querySelector("#studentContainer .container").classList.remove("active");
+    }
 
-function showStudentLogin() {
-  document.querySelector("#studentContainer .container").classList.remove("active");
-}
-
-function studentLogin() {
-  const email = studentEmail.value.trim();
-  const pass = studentPassword.value.trim();
-  if (!email || !pass) {
-    studentLoginMsg.innerText = "Enter email and password.";
-    return;
-  }
-  auth.signInWithEmailAndPassword(email, pass)
-  .then(() => {
-    // UI handled by auth.onAuthStateChanged
-  })
-  .catch(e => {
-    console.error("Login error:", e);
-    studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
-  });
-}
-
-function studentSignup() {
-  const name = studentName.value.trim();
-  const email = studentEmailSignup.value.trim();
-  const pass = studentPasswordSignup.value.trim();
-  const confirmPass = studentConfirmPassword.value.trim();
-  if (!name || !email || !pass || !confirmPass) {
-    studentSignupMsg.innerText = "Fill all fields.";
-    return;
-  }
-  if (pass !== confirmPass) {
-    studentSignupMsg.innerText = "Passwords do not match.";
-    return;
-  }
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      user.sendEmailVerification()
+    function studentLogin() {
+      const email = studentEmail.value.trim();
+      const pass = studentPassword.value.trim();
+      if (!email || !pass) {
+        studentLoginMsg.innerText = "Enter email and password.";
+        return;
+      }
+      auth.signInWithEmailAndPassword(email, pass)
         .then(() => {
-          // Proceed as before, but require verification
-          studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
-          studentName.value = "";
-          studentEmailSignup.value = "";
-          studentPasswordSignup.value = "";
-          studentConfirmPassword.value = "";
+          // UI handled by auth.onAuthStateChanged
+        })
+        .catch(e => {
+          console.error("Login error:", e);
+          studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
+        });
+    }
+
+    function studentSignup() {
+      const name = studentName.value.trim();
+      const email = studentEmailSignup.value.trim();
+      const pass = studentPasswordSignup.value.trim();
+      const confirmPass = studentConfirmPassword.value.trim();
+      if (!name || !email || !pass || !confirmPass) {
+        studentSignupMsg.innerText = "Fill all fields.";
+        return;
+      }
+      if (pass !== confirmPass) {
+        studentSignupMsg.innerText = "Passwords do not match.";
+        return;
+      }
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          user.updateProfile({displayName: name}).then(() => {
+            firebase.database().ref("users/" + user.uid).set({
+              name: name,
+              email: email,
+              role: "student"
+            });
+            user.sendEmailVerification()
+              .then(() => {
+                studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
+                studentName.value = "";
+                studentEmailSignup.value = "";
+                studentPasswordSignup.value = "";
+                studentConfirmPassword.value = "";
+              });
+          });
         })
         .catch(e => {
           studentSignupMsg.innerText = "Signup failed: " + e.message;
         });
-    })
-    .catch(e => {
-      studentSignupMsg.innerText = e.message;
-    });
-}
-
-function ResultClasses() {
-  firebase.database().ref("results").once("value", snap => {
-    resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
-    if (!snap.exists()) return;
-    snap.forEach(cls => {
-      let opt = document.createElement("option");
-      opt.value = cls.key.replace("class_", "");
-      opt.textContent = cls.key.replace("class_", "");
-      resultClassSelect.appendChild(opt);
-    });
-  });
-}
-
-function TestsForClass(cls) {
-  resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
-  studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
-  firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
-    snap.forEach(t => {
-      let o = document.createElement("option");
-      o.value = o.text = t.key;
-      resultTestSelect.appendChild(o.cloneNode(true));
-      studentTestSelect.appendChild(o);
-    });
-  });
-}
-
-/* SAVE TEST */
-/* SAVE TEST */
-function saveTest() {
-  if (!isTeacherLoggedIn()) {
-    alert("Access denied. Please log in as a teacher.");
-    return;
-  }
-  const cls = testClass.value;
-  let name = testName.value.trim();  // Get the raw name
-
-  // Sanitize the name: Replace invalid characters with "_"
-  name = name.replace(/[.#$[\$]/g, "_");  // Replaces ., #, $, [, ] with _
-
-  const raw = bulkQuestions.value.trim();
-  const duration = Number(testDuration.value);
-  const limit = Number(questionLimit.value);
-
-  if (!cls || !name || !raw || !duration || !limit || duration <= 0 || limit <= 0) {
-    alert("Fill all fields with valid values (duration and limit must be positive numbers).");
-    return;
-  }
-
-  const questions = raw.split("\n").map(l => {
-    const p = l.split("|");
-    if (p.length !== 6) {
-      alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
-      return null;
     }
-    return {
-      q: p[0].trim(),
-      options: p.slice(1, 5).map(x => x.trim()),
-      answer: Number(p[5]) - 1
-    };
-  }).filter(q => q);
 
-  if (questions.length === 0) {
-    alert("No valid questions found.");
-    return;
-  }
+    function ResultClasses() {
+      firebase.database().ref("results").once("value", snap => {
+        resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
+        if (!snap.exists()) return;
+        snap.forEach(cls => {
+          let opt = document.createElement("option");
+          opt.value = cls.key.replace("class_", "");
+          opt.textContent = cls.key.replace("class_", "");
+          resultClassSelect.appendChild(opt);
+        });
+      });
+    }
 
-  firebase.database()
-    .ref(`tests/class_${cls}/${name}`)
-    .set({
-      duration: duration,
-      limit: Math.min(limit, questions.length),
-      questions: questions
-    })
-    .then(() => {
-      alert("Test Saved with duration");
-      testName.value = "";
-      bulkQuestions.value = "";
-      testDuration.value = "";
-      questionLimit.value = "";
-    })
-    .catch(e => {
-      console.error("Save test error:", e);
-      alert("Failed to save test: " + e.message);
-    });
-}
+    function TestsForClass(cls) {
+      resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
+      studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
+      firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
+        snap.forEach(t => {
+          let o = document.createElement("option");
+          o.value = o.text = t.key;
+          resultTestSelect.appendChild(o.cloneNode(true));
+          studentTestSelect.appendChild(o);
+        });
+      });
+    }
 
-function autoSaveAnswers() {
-  if (!currentStudent.roll || !currentTest) return;
-  firebase.database()
-    .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-    .set({
-      answers: studentAnswers,
-      marked: markedForReview,
-      timeLeft: remainingTime,
-      currentIndex: currentQuestionIndex,
-      updated: Date.now()
-    });
-}
+    /* SAVE TEST */
+    function saveTest() {
+      if (!isTeacherLoggedIn()) {
+        alert("Access denied. Please log in as a teacher.");
+        return;
+      }
+      const cls = testClass.value;
+      let name = testName.value.trim();  // Get the raw name
 
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+      // Sanitize the name: Replace invalid characters with "_"
+      name = name.replace(/[.#$[\$]/g, "_");  // Replaces ., #, $, [, ] with _
 
-function startStudentTest() {
-  if (!auth.currentUser) { alert("Login required"); return; }
-  const cls = sClass.value;
-  const test = studentTestSelect.value;
-  const roll = auth.currentUser.uid;
-  const name = auth.currentUser.displayName || auth.currentUser.email;
+      const raw = bulkQuestions.value.trim();
+      const duration = Number(testDuration.value);
+      const limit = Number(questionLimit.value);
 
-  if (!cls || !test) {
-    alert("Please select class and test");
-    return;
-  }
-
-  firebase.database()
-    .ref(`results/class_${cls}/${test}/${roll}`)
-    .once("value")
-    .then(rSnap => {
-      if (rSnap.exists()) {
-        alert("Test already submitted.\nTeacher must allow reattempt.");
+      if (!cls || !name || !duration || !limit || duration <= 0 || limit <= 0) {
+        alert("Fill all fields with valid values (duration and limit must be positive numbers).");
         return;
       }
 
-      currentStudent = { name, roll, class: cls };
-      currentTest = test;
+      let questions = [];
+
+      // Handle bulk textarea input
+      if (raw) {
+        questions = raw.split("\n").map(l => {
+          const p = l.split("|");
+          if (p.length !== 6) {
+            alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
+            return null;
+          }
+          return {
+            q: p[0].trim(),
+            options: p.slice(1, 5).map(x => x.trim()),
+            answer: Number(p[5]) - 1
+          };
+        }).filter(q => q);
+      }
+
+      // Handle CSV file input
+      const fileInput = document.getElementById('questionFile');
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const csvText = e.target.result;
+          const csvLines = csvText.split("\n");
+          csvLines.forEach(line => {
+            const p = line.split(",");
+            if (p.length === 6) {
+              questions.push({
+                q: p[0].trim(),
+                options: p.slice(1, 5).map(x => x.trim()),
+                answer: Number(p[5]) - 1
+              });
+            }
+          });
+          // After parsing CSV, save the test
+          finalizeSaveTest(cls, name, duration, limit, questions);
+        };
+        reader.readAsText(file);
+        return; // Exit early, save will happen in onload
+      }
+
+      // If no file, proceed with textarea questions
+      finalizeSaveTest(cls, name, duration, limit, questions);
+    }
+
+    function finalizeSaveTest(cls, name, duration, limit, questions) {
+      if (questions.length === 0) {
+        alert("No valid questions found.");
+        return;
+      }
 
       firebase.database()
-        .ref(`tests/class_${cls}/${test}`)
+        .ref(`tests/class_${cls}/${name}`)
+        .set({
+          duration: duration,
+          limit: Math.min(limit, questions.length),
+          questions: questions
+        })
+        .then(() => {
+          alert("Test Saved with duration");
+          testName.value = "";
+          bulkQuestions.value = "";
+          testDuration.value = "";
+          questionLimit.value = "";
+          document.getElementById('questionFile').value = ""; // Clear file input
+        })
+        .catch(e => {
+          console.error("Save test error:", e);
+          alert("Failed to save test: " + e.message);
+        });
+    }
+
+    function autoSaveAnswers() {
+      if (!currentStudent.roll || !currentTest) return;
+      firebase.database()
+        .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+        .set({
+          answers: studentAnswers,
+          marked: markedForReview,
+          timeLeft: remainingTime,
+          currentIndex: currentQuestionIndex,
+          updated: Date.now()
+        });
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startStudentTest() {
+      if (!auth.currentUser) {alert("Login required"); return;}
+      const cls = sClass.value;
+      const test = studentTestSelect.value;
+      const roll = auth.currentUser.uid;
+      const name = auth.currentUser.displayName || auth.currentUser.email;
+
+      if (!cls || !test) {
+        alert("Please select class and test");
+        return;
+      }
+
+      firebase.database()
+        .ref(`results/class_${cls}/${test}/${roll}`)
         .once("value")
-        .then(snap => {
-          if (!snap.exists()) {
-            alert("Test not found");
+        .then(rSnap => {
+          if (rSnap.exists()) {
+            alert("Test already submitted.\nTeacher must allow reattempt.");
             return;
           }
 
-          const data = snap.val();
-          let allQuestions = Object.values(data.questions || {});
-          shuffleArray(allQuestions);
-          const limit = data.limit || allQuestions.length;
-          currentQuestions = allQuestions.slice(0, limit);
-
-          studentAnswers = {};
-          markedForReview = {};
-          currentQuestionIndex = 0;
+          currentStudent = {name, roll, class: cls};
+          currentTest = test;
 
           firebase.database()
-            .ref(`savedTests/${roll}/${test}`)
+            .ref(`tests/class_${cls}/${test}`)
             .once("value")
-            .then(saveSnap => {
-              if (saveSnap.exists()) {
-                const saved = saveSnap.val();
-                studentAnswers = saved.answers || {};
-                markedForReview = saved.marked || {};
-                remainingTime = saved.timeLeft || (data.duration * 60);
-                currentQuestionIndex = saved.currentIndex || 0;
-              } else {
-                remainingTime = data.duration * 60;
+            .then(snap => {
+              if (!snap.exists()) {
+                alert("Test not found");
+                return;
               }
-              hideAllSections();
-              document.getElementById("testArea").style.display = "flex";
-              startTimer(Math.ceil(remainingTime / 60));
-              renderTest();
-              document.documentElement.requestFullscreen();
-              document.addEventListener('contextmenu', e => e.preventDefault());
-              document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) alert('Exited fullscreen!');
-              });
-              document.addEventListener('visibilitychange', () => {
-                if (document.hidden) alert('Tab switched!');
-              });
-              updateQuestionMap();
-              clearInterval(autoSaveInterval);
-              autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+
+              const data = snap.val();
+              let allQuestions = Object.values(data.questions || {});
+              shuffleArray(allQuestions);
+              const limit = data.limit || allQuestions.length;
+              currentQuestions = allQuestions.slice(0, limit);
+
+              studentAnswers = {};
+              markedForReview = {};
+              currentQuestionIndex = 0;
+
+              firebase.database()
+                .ref(`savedTests/${roll}/${test}`)
+                .once("value")
+                .then(saveSnap => {
+                  if (saveSnap.exists()) {
+                    const saved = saveSnap.val();
+                    studentAnswers = saved.answers || {};
+                    markedForReview = saved.marked || {};
+                    remainingTime = saved.timeLeft || (data.duration * 60);
+                    currentQuestionIndex = saved.currentIndex || 0;
+                  } else {
+                    remainingTime = data.duration * 60;
+                  }
+                  hideAllSections();
+                  document.getElementById("testArea").style.display = "flex";
+                  startTimer(Math.ceil(remainingTime / 60));
+                  renderTest();
+                  document.documentElement.requestFullscreen();
+                  document.addEventListener('contextmenu', e => e.preventDefault());
+                  document.addEventListener('fullscreenchange', () => {
+                    if (!document.fullscreenElement) alert('Exited fullscreen!');
+                  });
+                  document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) alert('Tab switched!');
+                  });
+                  updateQuestionMap();
+                  clearInterval(autoSaveInterval);
+                  autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+                });
             });
+        })
+        .catch(e => {
+          console.error("Start test error:", e);
+          alert("Failed to start test: " + e.message);
         });
-    })
-    .catch(e => {
-      console.error("Start test error:", e);
-      alert("Failed to start test: " + e.message);
-    });
-}
+    }
 
-function renderTest() {
-  testTitle.innerText = currentTest;
-  studentPanel.style.display = "none";
-  testArea.style.display = "flex";
-  displayQuestion(currentQuestionIndex);
-  updateNavigationButtons();
-}
+    function renderTest() {
+      testTitle.innerText = currentTest;
+      studentPanel.style.display = "none";
+      testArea.style.display = "flex";
+      displayQuestion(currentQuestionIndex);
+      updateNavigationButtons();
+    }
 
-function displayQuestion(index) {
-  const q = currentQuestions[index];
-  if (!q) {
-    console.error("Question not found at index:", index);
-    return;
-  }
-  const questionDisplay = document.getElementById('questionDisplay');
-  questionDisplay.innerHTML = `
+    function displayQuestion(index) {
+      const q = currentQuestions[index];
+      if (!q) {
+        console.error("Question not found at index:", index);
+        return;
+      }
+      // Basic sanitization for question text (remove potential script tags)
+      const sanitizedQ = q.q.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
+      const questionDisplay = document.getElementById('questionDisplay');
+      questionDisplay.innerHTML = `
     <div class="question-header">
       <i class="fas fa-question-circle"></i>
       <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
     </div>
-    <p class="question-text">${q.q}</p>
+    <p class="question-text">${sanitizedQ}</p>
     <div class="options-container">
     ${q.options.map((opt, i) => `
     <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
@@ -1347,32 +1475,32 @@ function displayQuestion(index) {
   `).join('')}
     </div>
   `;
-  progressBar.value = ((index + 1) / currentQuestions.length) * 100;
-  updateQuestionMap();
-}
+      progressBar.value = ((index + 1) / currentQuestions.length) * 100;
+      updateQuestionMap();
+    }
 
-function selectOption(qIndex, optIndex) {
-  studentAnswers[qIndex] = optIndex;
-  displayQuestion(qIndex);
-}
+    function selectOption(qIndex, optIndex) {
+      studentAnswers[qIndex] = optIndex;
+      displayQuestion(qIndex);
+    }
 
-function markForReview() {
-  markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
-  updateQuestionMap();
-}
+    function markForReview() {
+      markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
+      updateQuestionMap();
+    }
 
-function navigateQuestion(direction) {
-  currentQuestionIndex += direction;
-  displayQuestion(currentQuestionIndex);
-  updateNavigationButtons();
-}
+    function navigateQuestion(direction) {
+      currentQuestionIndex += direction;
+      displayQuestion(currentQuestionIndex);
+      updateNavigationButtons();
+    }
 
-function updateNavigationButtons() {
-  document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
-  document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
-}
+    function updateNavigationButtons() {
+      document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+      document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
+    }
 
-function updateQuestionMap() {
+    function updateQuestionMap() {
   const grid = document.getElementById('questionGrid');
   grid.innerHTML = '';
   currentQuestions.forEach((_, i) => {
@@ -1391,79 +1519,79 @@ function updateQuestionMap() {
     grid.appendChild(div);
   });
 }
-function startTimer(minutes) {
-  remainingTime = minutes * 60;
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    if (remainingTime <= 0) {
+    function startTimer(minutes) {
+      remainingTime = minutes * 60;
       clearInterval(timerInterval);
-      submitTest();
-      return;
+      timerInterval = setInterval(() => {
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          submitTest();
+          return;
+        }
+        remainingTime--;
+        const mins = Math.floor(remainingTime / 60);
+        const secs = remainingTime % 60;
+        document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      }, 1000);
     }
-    remainingTime--;
-    const mins = Math.floor(remainingTime / 60);
-    const secs = remainingTime % 60;
-    document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  }, 1000);
-}
 
-function updateTimerDisplay() {
-  const min = Math.floor(remainingTime / 60);
-  const sec = remainingTime % 60;
-  timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
-}
+    function updateTimerDisplay() {
+      const min = Math.floor(remainingTime / 60);
+      const sec = remainingTime % 60;
+      timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
 
-function submitTest() {
-  clearInterval(timerInterval);
-  clearInterval(autoSaveInterval);
-  disableUnloadWarning();
-  let score = 0;
-  let detailedAnswers = {};
-  currentQuestions.forEach((q, i) => {
-    const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
-    const correctChoice = q.options[q.answer];
-    const isCorrect = studentAnswers[i] === q.answer;
-    if (isCorrect) score++;
-    detailedAnswers[i] = {
-      question: q.q,
-      studentAnswer: studentChoice,
-      correctAnswer: correctChoice,
-      isCorrect: isCorrect
-    };
-  });
-  firebase.database()
-    .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-    .set({
-      name: currentStudent.name,
-      score: score,
-      total: currentQuestions.length,
-      answers: detailedAnswers,
-      submittedAt: new Date().toISOString()
-    })
-    .then(() => {
-      alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
-      location.reload();
-    })
-    .catch(e => {
-      alert("Error submitting test: " + e.message);
-    });
-}
+    function submitTest() {
+      clearInterval(timerInterval);
+      clearInterval(autoSaveInterval);
+      disableUnloadWarning();
+      let score = 0;
+      let detailedAnswers = {};
+      currentQuestions.forEach((q, i) => {
+        const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+        const correctChoice = q.options[q.answer];
+        const isCorrect = studentAnswers[i] === q.answer;
+        if (isCorrect) score++;
+        detailedAnswers[i] = {
+          question: q.q,
+          studentAnswer: studentChoice,
+          correctAnswer: correctChoice,
+          isCorrect: isCorrect
+        };
+      });
+      firebase.database()
+        .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+        .set({
+          name: currentStudent.name,
+          score: score,
+          total: currentQuestions.length,
+          answers: detailedAnswers,
+          submittedAt: new Date().toISOString()
+        })
+        .then(() => {
+          alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
+          location.reload();
+        })
+        .catch(e => {
+          alert("Error submitting test: " + e.message);
+        });
+    }
 
-function Results() {
-  const cls = resultClassSelect.value;
-  const test = resultTestSelect.value;
-  if (!cls || !test) return alert("Select class and test");
-  firebase.database()
-    .ref(`results/class_${cls}/${test}`)
-    .once("value", snap => {
-      resultBox.innerHTML = "";
-      if (!snap.exists()) {
-        resultBox.innerHTML = "<p>No results</p>";
-        return;
-      }
-      snap.forEach(r => {
-        const d = r.val();
-        resultBox.innerHTML += `
+    function Results() {
+      const cls = resultClassSelect.value;
+      const test = resultTestSelect.value;
+      if (!cls || !test) return alert("Select class and test");
+      firebase.database()
+        .ref(`results/class_${cls}/${test}`)
+        .once("value", snap => {
+          resultBox.innerHTML = "";
+          if (!snap.exists()) {
+            resultBox.innerHTML = "<p>No results</p>";
+            return;
+          }
+          snap.forEach(r => {
+            const d = r.val();
+            resultBox.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:6px">
             <b>${d.name}</b> (Roll: ${r.key})<br>
             Score: ${d.score}/${d.total}<br>
@@ -1471,161 +1599,162 @@ function Results() {
             <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
           </div>
         `;
+          });
+        })
+        .catch(e => {
+          console.error("Results error:", e);
+          resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
+        });
+    }
+
+    function exportResults() {
+      const cls = resultClassSelect.value;
+      const test = resultTestSelect.value;
+      if (!cls || !test) return alert("Select class and test");
+      firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
+        let csv = "Name,Roll,Score,Total\n";
+        snap.forEach(r => {
+          const d = r.val();
+          csv += `${d.name},${r.key},${d.score},${d.total}\n`;
+        });
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'results.csv';
+        a.click();
       });
-    })
-    .catch(e => {
-      console.error("Results error:", e);
-      resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
-    });
-}
+    }
 
-function exportResults() {
-  const cls = resultClassSelect.value;
-  const test = resultTestSelect.value;
-  if (!cls || !test) return alert("Select class and test");
-  firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
-    let csv = "Name,Roll,Score,Total\n";
-    snap.forEach(r => {
-      const d = r.val();
-      csv += `${d.name},${r.key},${d.score},${d.total}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'results.csv';
-    a.click();
-  });
-}
+    function viewDetails(cls, test, roll) {
+      firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
+        const d = snap.val();
+        let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
+        const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => a - b);
+        sortedKeys.forEach(i => {
+          const ans = d.answers[i];
+          details += `Q${+i + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
+        });
+        alert(details);  // For simplicity; consider a modal for better UX
+      });
+    }
 
-function allowReattempt(cls, test, roll) {
-  if (!confirm("Allow this student to reattempt the test?")) return;
-  firebase.database()
-    .ref(`results/class_${cls}/${test}/${roll}`)
-    .remove()
-    .then(() => {
-      alert("Reattempt allowed. Student can start test again.");
-      Results();
-    });
-}
+    function allowReattempt(cls, test, roll) {
+      if (!confirm("Allow this student to reattempt the test?")) return;
+      firebase.database()
+        .ref(`results/class_${cls}/${test}/${roll}`)
+        .remove()
+        .then(() => {
+          alert("Reattempt allowed. Student can start test again.");
+          Results();
+        });
+    }
 
-function viewDetails(cls, test, roll) {
-  firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
-    const d = snap.val();
-    let details = `Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
-    Object.keys(d.answers || {}).forEach(i => {
-      const ans = d.answers[i];
-      details += `Q${+i+1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
-    });
-    alert(details);  // Or display in a modal for better UX
-  });
-}
-
-function TestsForTeacher() {
-  const cls = manageClass.value;
-  const testList = document.getElementById("testList");
-  testList.innerHTML = "";
-  if (!cls) return;
-  firebase.database()
-    .ref(`tests/class_${cls}`)
-    .once("value", snap => {
-      if (!snap.exists()) {
-        testList.innerHTML = "<p>No tests found.</p>";
-        return;
-      }
-      snap.forEach(t => {
-        testList.innerHTML += `
+    function TestsForTeacher() {
+      const cls = manageClass.value;
+      const testList = document.getElementById("testList");
+      testList.innerHTML = "";
+      if (!cls) return;
+      firebase.database()
+        .ref(`tests/class_${cls}`)
+        .once("value", snap => {
+          if (!snap.exists()) {
+            testList.innerHTML = "<p>No tests found.</p>";
+            return;
+          }
+          snap.forEach(t => {
+            testList.innerHTML += `
           <div style="border:1px solid #ccc;padding:6px;margin:5px">
             <b>${t.key}</b><br>
             <button onclick="editTest('${cls}','${t.key}')">Edit</button>
             <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
           </div>
         `;
-      });
-    });
-}
+          });
+        });
+    }
 
-// Password reset function
-function resetPassword() {
-  const email = prompt("Enter your email:");
-  if (email) {
-    auth.sendPasswordResetEmail(email)
-      .then(() => alert("Password reset email sent!"))
-      .catch(e => alert("Error: " + e.message));
-  }
-}
+    // Password reset function
+    function resetPassword() {
+      const email = prompt("Enter your email:");
+      if (email) {
+        auth.sendPasswordResetEmail(email)
+          .then(() => alert("Password reset email sent!"))
+          .catch(e => alert("Error: " + e.message));
+      }
+    }
 
-function editTest(cls, testName) {
-  if (!isTeacherLoggedIn()) {
-    alert("Access denied. Please log in as a teacher.");
-    return;
-  }
-  firebase.database()
-    .ref(`tests/class_${cls}/${testName}`)
-    .once("value", snap => {
-      if (!snap.exists()) {
-        alert("Test not found or access denied.");
-        console.error("Edit test failed: No data for", cls, testName);
+    function editTest(cls, testName) {
+      if (!isTeacherLoggedIn()) {
+        alert("Access denied. Please log in as a teacher.");
         return;
       }
-      const data = snap.val();
-      testClass.value = cls;
-      testName.value = testName;
-      testDuration.value = data.duration || "";
-      questionLimit.value = data.limit || "";
-      bulkQuestions.value = Object.values(data.questions || {})
-        .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
-        .join("\n");
-    })
-    .catch(e => {
-      console.error("Edit test error:", e);
-      alert("Failed to load test: " + e.message);
-    });
-}
-
-function deleteTest(cls, testName) {
-  if (confirm("Delete this test?")) {
-    firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(() => alert("Deleted"));
-  }
-}
-
-function logout() {
-  if (auth.currentUser) {
-    localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
-  }
-  auth.signOut()
-    .then(() => {
-      currentStudent = {};
-      currentTest = "";
-      currentQuestions = [];
-      studentAnswers = {};
-      markedForReview = {};
-      clearInterval(timerInterval);
-      clearInterval(autoSaveInterval);
-      remainingTime = 0;
-      currentQuestionIndex = 0;
-      hideAllSections();
-      document.querySelector('.section-toggle').style.display = "flex";
-    })
-    .catch((error) => {
-      console.error("Logout failed:", error);
-      alert("Logout failed: " + error.message);
-    });
-}
-
-function loadPendingSignups() {
-  const list = document.getElementById("pendingSignupsList");
-  list.innerHTML = "<p>Loading...</p>";
-  firebase.database().ref("pendingSignups").once("value", snap => {
-    list.innerHTML = "";
-    if (!snap.exists()) {
-      list.innerHTML = "<p>No pending signups.</p>";
-      return;
+      firebase.database()
+        .ref(`tests/class_${cls}/${testName}`)
+        .once("value", snap => {
+          if (!snap.exists()) {
+            alert("Test not found or access denied.");
+            console.error("Edit test failed: No data for", cls, testName);
+            return;
+          }
+          const data = snap.val();
+          testClass.value = cls;
+          testName.value = testName;
+          testDuration.value = data.duration || "";
+          questionLimit.value = data.limit || "";
+          bulkQuestions.value = Object.values(data.questions || {})
+            .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
+            .join("\n");
+        })
+        .catch(e => {
+          console.error("Edit test error:", e);
+          alert("Failed to load test: " + e.message);
+        });
     }
-    snap.forEach(child => {
-      const data = child.val();
-      const key = child.key;
-      list.innerHTML += `
+
+    function deleteTest(cls, testName) {
+      if (confirm("Delete this test?")) {
+        firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(() => alert("Deleted"));
+      }
+    }
+
+    function logout() {
+      if (auth.currentUser) {
+        localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
+      }
+      auth.signOut()
+        .then(() => {
+          currentStudent = {};
+          currentTest = "";
+          currentQuestions = [];
+          studentAnswers = {};
+          markedForReview = {};
+          clearInterval(timerInterval);
+          clearInterval(autoSaveInterval);
+          remainingTime = 0;
+          currentQuestionIndex = 0;
+          hideAllSections();
+          document.querySelector('.section-toggle').style.display = "flex";
+        })
+        .catch((error) => {
+          console.error("Logout failed:", error);
+          alert("Logout failed: " + error.message);
+        });
+    }
+
+    function loadPendingSignups() {
+      const list = document.getElementById("pendingSignupsList");
+      list.innerHTML = "<p>Loading...</p>";
+      firebase.database().ref("pendingSignups").once("value", snap => {
+        list.innerHTML = "";
+        if (!snap.exists()) {
+          list.innerHTML = "<p>No pending signups.</p>";
+          return;
+        }
+        snap.forEach(child => {
+          const data = child.val();
+          const key = child.key;
+          list.innerHTML += `
         <div style="border:1px solid #ccc;padding:10px;margin:8px;border-radius:6px">
           <b>${data.email}</b><br>
           Status: ${data.status}<br><br>
@@ -1633,48 +1762,33 @@ function loadPendingSignups() {
           <button onclick="rejectTeacher('${key}')">Reject</button>
         </div>
       `;
-    });
-  });
-}
-
-function approveTeacher(key, email, password) {
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(userCred => {
-      const uid = userCred.user.uid;
-      // Set the role in the database (this was missing!)
-      firebase.database().ref("users/" + uid).set({
-        email: email,
-        role: "teacher",
-        approvedAt: Date.now()
+        });
       });
-      // Remove from pending list
-      firebase.database().ref("pendingSignups/" + key).remove();
-      alert("Teacher approved successfully");
-      loadPendingSignups();
-    })
-    .catch(err => alert(err.message));
-}
+    }
 
-function rejectTeacher(key) {
-  if (!confirm("Reject this signup?")) return;
-  firebase.database().ref("pendingSignups/" + key).remove();
-  loadPendingSignups();
-}
-</script>
+    function approveTeacher(key, email, password) {
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(userCred => {
+          const uid = userCred.user.uid;
+          // Set the role in the database
+          firebase.database().ref("users/" + uid).set({
+            email: email,
+            role: "teacher",
+            approvedAt: Date.now()
+          });
+          // Remove from pending list
+          firebase.database().ref("pendingSignups/" + key).remove();
+          alert("Teacher approved successfully");
+          loadPendingSignups();
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function rejectTeacher(key) {
+      if (!confirm("Reject this signup?")) return;
+      firebase.database().ref("pendingSignups/" + key).remove();
+      loadPendingSignups();
+    }
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
