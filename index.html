@@ -8,21 +8,19 @@
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <!-- Firebase Scripts (consider loading conditionally for performance) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase app script failed to load');"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase auth script failed to load');"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" onload="window.firebaseLoaded = true;" onerror="console.error('Firebase database script failed to load');"></script>
- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
- <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
- <link rel="manifest" href="manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
   <style>
-    
-    /* [CSS remains mostly unchanged; only minor tweaks for better mobile responsiveness and loading states] */
     body {
       font-family: 'Roboto', Arial;
       background: var(--bg-color);
@@ -31,26 +29,7 @@
       margin: 0;
       padding: 0;
     }
-{
-  "name": "Hera MCQ System",
-  "short_name": "Hera MCQs",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#007bff",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+
     .box {
       width: 360px;
       margin: 40px auto;
@@ -85,12 +64,7 @@
     .success {
       color: green;
     }
-<select id="themeSelector" onchange="changeTheme(this.value)">
-  <option value="light">Light</option>
-  <option value="dark">Dark</option>
-  <option value="blue">Blue</option>
-  <option value="green">Green</option>
-</select>
+
     /* Theme Variables */
     :root {
       --bg-color: #f4f6f8;
@@ -104,6 +78,20 @@
       --text-color: #fff;
       --accent: #0056b3;
       --box-bg: #111;
+    }
+
+    .blue-theme {
+      --bg-color: #e3f2fd;
+      --text-color: #0d47a1;
+      --accent: #1976d2;
+      --box-bg: #ffffff;
+    }
+
+    .green-theme {
+      --bg-color: #e8f5e8;
+      --text-color: #1b5e20;
+      --accent: #388e3c;
+      --box-bg: #ffffff;
     }
 
     /* Animated Login/Signup Styles */
@@ -560,77 +548,90 @@
       height: 100vh;
     }
 
-    .header {
-      background: var(--accent);
-      color: #fff;
-      padding: 15px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
+    .sidebar {
+      width: 250px;
+      background: var(--box-bg);
+      border-right: 1px solid #ccc;
+      padding: 20px 0;
     }
 
-   /* Enhanced Dashboard Styles */
-.dashboard-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: linear-gradient(135deg, var(--bg-color), #e0e7ff);
-}
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-.header {
-  background: linear-gradient(135deg, var(--accent), #0056b3);
-  color: #fff;
-  padding: 20px;
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.5s ease-in;
-}
+    .sidebar li {
+      padding: 15px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: 0.3s;
+    }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    .sidebar li:hover, .sidebar li.active {
+      background: var(--accent);
+      color: #fff;
+    }
 
-.main-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
 
-/* Slide-in animation for cards */
-.dashboard-card {
-  animation: slideIn 0.5s ease-out;
-}
+    .tab-content {
+      display: none;
+    }
 
-@keyframes slideIn {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
+    .tab-content.active {
+      display: block;
+    }
 
-/* Pulse for buttons */
-.quick-actions button:hover {
-  animation: pulse 0.5s infinite;
-}
+    /* Enhanced Dashboard Styles */
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: linear-gradient(135deg, var(--bg-color), #e0e7ff);
+    }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
+    .header {
+      background: linear-gradient(135deg, var(--accent), #0056b3);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease-in;
+    }
 
-/* Fade for tabs */
-.tab-content {
-  animation: fadeIn 0.3s ease-in;
-}
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-.dashboard-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    .dashboard-card {
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .quick-actions button:hover {
+      animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-5px);    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .dashboard-card h3 {
@@ -800,21 +801,14 @@
         padding: 10px;
       }
     }
-    /* Blue Theme */
-.blue-theme {
-  --bg-color: #e3f2fd;
-  --text-color: #0d47a1;
-  --accent: #1976d2;
-  --box-bg: #ffffff;
-}
 
-/* Green Theme */
-.green-theme {
-  --bg-color: #e8f5e8;
-  --text-color: #1b5e20;
-  --accent: #388e3c;
-  --box-bg: #ffffff;
-}
+    .user-item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      display: block;
+    }
   </style>
 </head>
 
@@ -895,158 +889,176 @@
         <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
         <button onclick="studentSignup()">Signup</button>
         <p id="studentSignupMsg" class="success"></p>
-        <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
         <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
       </div>
     </div>
   </div>
 
   <!-- TEACHER PANEL -->
- <div id="dashboard" class="tab-content active">
-  <div class="dashboard-card">
-    <h3><i class="fas fa-tachometer-alt"></i> Welcome to Hera MCQ System</h3>
-    <p>Manage tests, view results, and track student progress efficiently.</p>
-  </div>
-
-  <div class="dashboard-card">
-    <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
-    <div class="stats-grid" id="dashboardStats">
-      <div class="stat-item">
-        <div class="number" id="totalTests">0</div>
-        <div>Total Tests</div>
-      </div>
-      <div class="stat-item">
-        <div class="number" id="totalStudents">0</div>
-        <div>Total Students</div>
-      </div>
-      <div class="stat-item">
-        <div class="number" id="totalResults">0</div>
-        <div>Total Submissions</div>
-      </div>
-      <div class="stat-item">
-        <div class="number" id="avgScore">0%</div>
-        <div>Average Score</div>
-      </div>
+  <div id="teacherPanel">
+    <div class="sidebar">
+      <ul>
+        <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
+        <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
+        <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
+        <li id="tab-results" onclick="showTab('results')">Results</li>
+        <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
+        <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
+        <li onclick="logout()">Logout</li>
+      </ul>
     </div>
-  </div>
+    <div class="main-content">
+      <select id="themeSelector" onchange="changeTheme(this.value)">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+      </select>
 
-  <div class="dashboard-card">
-    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-    <div class="quick-actions">
-      <button onclick="showTab('createTest')"><i class="fas fa-plus"></i> Create Test</button>
-      <button onclick="showTab('results')"><i class="fas fa-list"></i> View Results</button>
-      <button onclick="exportAllResults()"><i class="fas fa-download"></i> Export All</button>
-      <button onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Manage Approvals</button>
-    </div>
-  </div>
-
-  <div class="dashboard-card">
-    <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
-    <div class="notifications" id="notificationsList">
-      <div class="notification-item">Loading recent activity...</div>
-    </div>
-  </div>
-
-  <div class="dashboard-card">
-    <h3><i class="fas fa-chart-line"></i> Score Analytics</h3>
-   <div class="chart-container">
-  <canvas id="scoreChart"></canvas>
-</div>
-      <p>Chart will load here (requires Chart.js for full power)</p>
-    </div>
-  </div>
-</div>
-        <!-- Create Test Tab -->
-        <div id="createTest" class="tab-content">
-          <h3>Create Test</h3>
-          <select id="testClass">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <input id="testName" placeholder="Test Name">
-          <input id="testDuration" type="number" placeholder="Duration (minutes)">
-          <input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
-          <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
-          <input type="file" id="questionFile" accept=".csv">
-          <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+      <div id="dashboard" class="tab-content active">
+        <div class="dashboard-card">
+          <h3><i class="fas fa-tachometer-alt"></i> Welcome to Hera MCQ System</h3>
+          <p>Manage tests, view results, and track student progress efficiently.</p>
         </div>
 
-        <!-- Manage Tests Tab -->
-        <div id="manageTests" class="tab-content">
-          <h3>Manage Tests</h3>
-          <select id="manageClass" onchange="TestsForTeacher()">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <div id="testList"></div>
+        <div class="dashboard-card">
+          <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
+          <div class="stats-grid" id="dashboardStats">
+            <div class="stat-item">
+              <div class="number" id="totalTests">0</div>
+              <div>Total Tests</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="totalStudents">0</div>
+              <div>Total Students</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="totalResults">0</div>
+              <div>Total Submissions</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="avgScore">0%</div>
+              <div>Average Score</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Results Tab -->
-        <div id="results" class="tab-content">
-          <h3>Student Results</h3>
-          <select id="resultClassSelect" onchange="TestsForClass(this.value)">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <select id="resultTestSelect"></select>
-          <button onclick="Results()">Results</button>
-          <button onclick="exportResults()">Export CSV</button>
-          <div id="resultBox"></div>
+        <div class="dashboard-card">
+          <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+          <div class="quick-actions">
+            <button onclick="showTab('createTest')"><i class="fas fa-plus"></i> Create Test</button>
+            <button onclick="showTab('results')"><i class="fas fa-list"></i> View Results</button>
+            <button onclick="exportAllResults()"><i class="fas fa-download"></i> Export All</button>
+            <button onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Manage Approvals</button>
+          </div>
         </div>
 
-        <!-- Approvals Tab -->
-        <div id="approvals" class="tab-content">
-          <h3>Pending Teacher Signups</h3>
-          <div id="pendingSignupsList"></div>
+        <div class="dashboard-card">
+          <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
+          <div class="notifications" id="notificationsList">
+            <div class="notification-item">Loading recent activity...</div>
+          </div>
         </div>
 
-        <button id="themeToggle" onclick="toggleTheme()">Switch to Dark Theme</button>
+        <div class="dashboard-card">
+          <h3><i class="fas fa-chart-line"></i> Score Analytics</h3>
+          <div class="chart-container">
+            <canvas id="scoreChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Test Tab -->
+      <div id="createTest" class="tab-content">
+        <h3>Create Test</h3>
+        <select id="testClass">
+          <option value="">Select Class</option>
+          <option value="jr_kg">Jr. KG</option>
+          <option value="sr_kg">Sr. KG</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+          <option value="9">Class 9</option>
+          <option value="10">Class 10</option>
+        </select>
+        <input id="testName" placeholder="Test Name">
+        <input id="testDuration" type="number" placeholder="Duration (minutes)">
+        <input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
+        <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
+        <input type="file" id="questionFile" accept=".csv">
+        <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+      </div>
+
+      <!-- Manage Tests Tab -->
+      <div id="manageTests" class="tab-content">
+        <h3>Manage Tests</h3>
+        <select id="manageClass" onchange="TestsForTeacher()">
+          <option value="">Select Class</option>
+          <option value="jr_kg">Jr. KG</option>
+          <option value="sr_kg">Sr. KG</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+          <option value="9">Class 9</option>
+          <option value="10">Class 10</option>
+        </select>
+        <div id="testList"></div>
+      </div>
+
+      <!-- Results Tab -->
+      <div id="results" class="tab-content">
+        <h3>Student Results</h3>
+        <select id="resultClassSelect" onchange="TestsForClass(this.value)">
+          <option value="">Select Class</option>
+          <option value="jr_kg">Jr. KG</option>
+          <option value="sr_kg">Sr. KG</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+          <option value="9">Class 9</option>
+          <option value="10">Class 10</option>
+        </select>
+        <select id="resultTestSelect"></select>
+        <button onclick="Results()">Results</button>
+        <button onclick="exportResults()">Export CSV</button>
+        <div id="resultBox"></div>
+      </div>
+
+      <!-- Approvals Tab -->
+      <div id="approvals" class="tab-content">
+        <h3>Pending Teacher Signups</h3>
+        <div id="pendingSignupsList"></div>
+      </div>
+
+      <!-- Manage Users Tab -->
+      <div id="manageUsers" class="tab-content">
+        <h3>Manage Users</h3>
+        <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()">
+        <select id="userFilter" onchange="filterUsers()">
+          <option value="all">All Users</option>
+          <option value="teacher">Teachers</option>
+          <option value="student">Students</option>
+        </select>
+        <div id="userList"></div>
       </div>
     </div>
   </div>
-<div id="manageUsers" class="tab-content">
-  <h3>Manage Users</h3>
-  <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()">
-  <select id="userFilter" onchange="filterUsers()">
-    <option value="all">All Users</option>
-    <option value="teacher">Teachers</option>
-    <option value="student">Students</option>
-  </select>
-  <div id="userList"></div>
-</div>
+
   <!-- STUDENT PANEL -->
   <div class="box" id="studentPanel" style="display: none;">
     <h3>Student Test Portal</h3>
@@ -1065,16 +1077,14 @@
       <option value="9">Class 9</option>
       <option value="10">Class 10</option>
     </select>
-
     <select id="studentTestSelect">
       <option value="">Select Test</option>
     </select>
-
     <button onclick="startStudentTest()">Start Test</button>
     <button onclick="logout()" style="margin-top: 10px;">Logout</button>
   </div>
 
-  <!-- TEST AREA - CAT/CBT Style -->
+  <!-- TEST AREA -->
   <div id="testArea">
     <div class="test-header">
       <span id="testTitle"></span>
@@ -1087,7 +1097,7 @@
       </div>
       <div class="question-map">
         <div class="map-title">Question Map</div>
-        <div id="questionGrid" class="question-grid"></div>
+        <div id="questionGrid" class<div id="questionGrid" class="question-grid"></div>
         <div class="legend">
           <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
           <div><span style="background: #4caf50;"></span> Attempted</div>
@@ -1105,1134 +1115,1007 @@
     </div>
   </div>
 
-  <script>
-    // Firebase initialization (replace placeholders with your secure config)
-    try {
-      firebase.initializeApp({
-  apiKey: "AIzaSyBU8C7r1hQVSK0NWjL5dW779iBLf8Of5LI",
-  authDomain: "hera-mcqs-55022.firebaseapp.com",
-  databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
-  projectId: "hera-mcqs-55022",
-  storageBucket: "hera-mcqs-55022.firebasestorage.app",
-  messagingSenderId: "878791404574",
-  appId: "1:878791404574:web:042b1cee28c74ef409120f"
-});
-      console.log("Firebase initialized successfully.");
-    } catch (error) {
-      console.error("Firebase initialization failed:", error);
-      alert("Firebase failed to load. Check your connection and try again.");
-    }
-
-    const auth = firebase ? firebase.auth() : null;
-    let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
-    let timerInterval = null;
-    let remainingTime = 0;
-    let autoSaveInterval = null;
-    let currentTheme = 'light';
-    let currentQuestionIndex = 0;
-
-    // Theme Toggle
-    function toggleTheme() {
-      const body = document.body;
-      const btn = document.getElementById('themeToggle');
-      if (currentTheme === 'light') {
-        body.classList.add('dark-theme');
-        btn.innerText = 'Switch to Dark Theme';
-        currentTheme = 'dark';
-      } else {
-        body.classList.remove('dark-theme');
-        btn.innerText = 'Switch to Light Theme';
-        currentTheme = 'light';
-      }
-      localStorage.setItem('theme', currentTheme);
-    }
-
-    // Show Register/Login
-    function showRegister() {
-      document.getElementById("container").classList.add("active");
-    }
-
-    function showLogin() {
-      document.getElementById("container").classList.remove("active");
-    }
-function loadUsers() {
-  firebase.database().ref("users").once("value", snap => {
-    const list = document.getElementById("userList");
-    list.innerHTML = "";
-    snap.forEach(user => {
-      const data = user.val();
-      list.innerHTML += `
-        <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
-          <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
-          <button onclick="deleteUser('${user.key}')">Delete</button>
-        </div>
-      `;
+<script>
+  // Firebase initialization
+  try {
+    firebase.initializeApp({
+      apiKey: "AIzaSyBU8C7r1hQVSK0NWjL5dW779iBLf8Of5LI",
+      authDomain: "hera-mcqs-55022.firebaseapp.com",
+      databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
+      projectId: "hera-mcqs-55022",
+      storageBucket: "hera-mcqs-55022.firebasestorage.app",
+      messagingSenderId: "878791404574",
+      appId: "1:878791404574:web:042b1cee28c74ef409120f"
     });
-  });
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open('hera-cache').then(cache => {
-      return cache.addAll(['/', '/index.html', '/style.css']);
-    })
-  );
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
-function changeTheme(theme) {
-  document.body.className = theme + '-theme';
-  localStorage.setItem('theme', theme);
-}
-const messaging = firebase.messaging();
-
-// Request permission and get token
-function requestNotificationPermission() {
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY_HERE' })  // Paste your VAPID key
-        .then(token => console.log('FCM Token:', token))
-        .catch(err => console.error('FCM Token error:', err));
-    }
-  });
-}
-// Listen for messages
-messaging.onMessage(payload => {
-  console.log('Message received:', payload);
-  // Show in-app notification
-  showNotification(payload.notification.title, payload.notification.body);
-});
-
-function showNotification(title, body) {
-  const notification = document.createElement('div');
-  notification.className = 'notification-item';
-  notification.innerHTML = `<b>${title}</b>: ${body}`;
-  document.getElementById('notificationsList').prepend(notification);
-  setTimeout(() => notification.remove(), 5000);  // Auto-remove after 5s
-}
-
-// Call on login
-auth.onAuthStateChanged(user => {
-  if (user) requestNotificationPermission();
-  // ... existing code
-});
-// On load, apply saved theme
-window.onload = () => {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  changeTheme(savedTheme);
-  document.getElementById('themeSelector').value = savedTheme;
-  // ... existing code
-};
-function filterUsers() {
-  const search = document.getElementById("userSearch").value.toLowerCase();
-  const filter = document.getElementById("userFilter").value;
-  const items = document.querySelectorAll(".user-item");
-  items.forEach(item => {
-    const name = item.dataset.name.toLowerCase();
-    const email = item.dataset.email.toLowerCase();
-    const role = item.dataset.role;
-    const matchesSearch = name.includes(search) || email.includes(search);
-    const matchesFilter = filter === "all" || role === filter;
-    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
-  });
-}
-
-function deleteUser(uid) {
-  if (confirm("Delete this user?")) {
-    firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
+    console.log("Firebase initialized successfully.");
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    alert("Firebase failed to load. Check your connection and try again.");
   }
-}
 
-// Call loadUsers in showTab
-function showTab(tabName) {
-  // ... existing code ...
-  if (tabName === "manageUsers") loadUsers();
-}
-    function isTeacherLoggedIn() {
-      return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
+  const auth = firebase ? firebase.auth() : null;
+  let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
+  let timerInterval = null;
+  let remainingTime = 0;
+  let autoSaveInterval = null;
+  let currentTheme = 'light';
+  let currentQuestionIndex = 0;
+
+  // Theme Functions
+  function changeTheme(theme) {
+    document.body.className = theme + '-theme';
+    localStorage.setItem('theme', theme);
+  }
+
+  function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (currentTheme === 'light') {
+      body.classList.add('dark-theme');
+      btn.innerText = 'Switch to Dark Theme';
+      currentTheme = 'dark';
+    } else {
+      body.classList.remove('dark-theme');
+      btn.innerText = 'Switch to Light Theme';
+      currentTheme = 'light';
     }
+    localStorage.setItem('theme', currentTheme);
+  }
 
-    function showStudentRegister() {
-      document.querySelector("#studentContainer .container").classList.add("active");
+  // Show Register/Login
+  function showRegister() {
+    document.getElementById("container").classList.add("active");
+  }
+
+  function showLogin() {
+    document.getElementById("container").classList.remove("active");
+  }
+
+  function loadUsers() {
+    firebase.database().ref("users").once("value", snap => {
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      snap.forEach(user => {
+        const data = user.val();
+        list.innerHTML += `
+          <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
+            <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
+            <button onclick="deleteUser('${user.key}')">Delete</button>
+          </div>
+        `;
+      });
+    });
+  }
+
+  function filterUsers() {
+    const search = document.getElementById("userSearch").value.toLowerCase();
+    const filter = document.getElementById("userFilter").value;
+    const items = document.querySelectorAll(".user-item");
+    items.forEach(item => {
+      const name = item.dataset.name.toLowerCase();
+      const email = item.dataset.email.toLowerCase();
+      const role = item.dataset.role;
+      const matchesSearch = name.includes(search) || email.includes(search);
+      const matchesFilter = filter === "all" || role === filter;
+      item.style.display = matchesSearch && matchesFilter ? "block" : "none";
+    });
+  }
+
+  function deleteUser(uid) {
+    if (confirm("Delete this user?")) {
+      firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
     }
+  }
 
-    function hideAllSections() {
-      document.getElementById("teacherAuth").style.display = "none";
-      document.getElementById("studentContainer").style.display = "none";
-      document.getElementById("teacherPanel").style.display = "none";
-      document.getElementById("studentPanel").style.display = "none";
-      document.getElementById("testArea").style.display = "none";
-      document.querySelector(".section-toggle").style.display = "none";
+  function isTeacherLoggedIn() {
+    return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
+  }
+
+  function showStudentRegister() {
+    document.querySelector("#studentContainer .container").classList.add("active");
+  }
+
+  function hideAllSections() {
+    document.getElementById("teacherAuth").style.display = "none";
+    document.getElementById("studentContainer").style.display = "none";
+    document.getElementById("teacherPanel").style.display = "none";
+    document.getElementById("studentPanel").style.display = "none";
+    document.getElementById("testArea").style.display = "none";
+    document.querySelector(".section-toggle").style.display = "none";
+  }
+
+  function showTeacherSection() {
+    document.getElementById("teacherAuth").style.display = "flex";
+    document.getElementById("studentContainer").style.display = "none";
+    document.getElementById("toggleTeacher").classList.add("active");
+    document.getElementById("toggleStudent").classList.remove("active");
+  }
+
+  function showStudentSection() {
+    document.getElementById("teacherAuth").style.display = "none";
+    document.getElementById("studentContainer").style.display = "flex";
+    document.getElementById("toggleTeacher").classList.remove("active");
+    document.getElementById("toggleStudent").classList.add("active");
+  }
+
+  function disableUnloadWarning() {
+    window.onbeforeunload = null;
+  }
+
+  window.onbeforeunload = function () {
+    if (testArea.style.display === "block") {
+      return "Test is running. Leaving will submit the test.";
     }
+  };
 
-    function showTeacherSection() {
-      document.getElementById("teacherAuth").style.display = "flex";
-      document.getElementById("studentContainer").style.display = "none";
-      document.getElementById("toggleTeacher").classList.add("active");
-      document.getElementById("toggleStudent").classList.remove("active");
+  window.onload = () => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    changeTheme(savedTheme);
+    document.getElementById('themeSelector').value = savedTheme;
+    if (!auth.currentUser) {
+      hideAllSections();
+      document.querySelector('.section-toggle').style.display = "flex";
+      showStudentSection();
     }
+  };
 
-    function showStudentSection() {
-      document.getElementById("teacherAuth").style.display = "none";
-      document.getElementById("studentContainer").style.display = "flex";
-      document.getElementById("toggleTeacher").classList.remove("active");
-      document.getElementById("toggleStudent").classList.add("active");
+  // Tab Switching
+  function showTab(tabName) {
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    const sidebarItems = document.querySelectorAll('.sidebar li');
+    sidebarItems.forEach(item => item.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+    if (tabName === "dashboard") loadDashboardStats();
+    if (tabName === "manageUsers") loadUsers();
+  }
+
+  function resendVerification() {
+    if (auth.currentUser) {
+      auth.currentUser.sendEmailVerification()
+        .then(() => alert("Verification email sent!"))
+        .catch(e => alert("Error: " + e.message));
+    } else {
+      alert("Log in first.");
     }
+  }
 
-    function disableUnloadWarning() {
-      window.onbeforeunload = null;
+  // Login/Signup Functions
+  function teacherLogin() {
+    const email = tEmail.value.trim();
+    const pass = tPassword.value.trim();
+    if (!email || !pass) {
+      loginMsg.innerText = "Enter email and password.";
+      return;
     }
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => {})
+      .catch(e => {
+        console.error("Login error:", e);
+        loginMsg.innerText = e.message || "Login failed. Check credentials.";
+      });
+  }
 
-    window.onbeforeunload = function () {
-      if (testArea.style.display === "block") {
-        return "Test is running. Leaving will submit the test.";
-      }
-    };
+  function teacherSignup() {
+    const email = tEmailSignup.value.trim();
+    const pass = tPasswordSignup.value.trim();
+    const confirmPass = tConfirmPassword.value.trim();
+    if (!email || !pass || !confirmPass) {
+      signupMsg.innerText = "";
+      loginMsg.innerText = "Fill all fields.";
+      return;
+    }
+    if (pass !== confirmPass) {
+      signupMsg.innerText = "";
+      loginMsg.innerText = "Passwords do not match.";
+      return;
+    }
+    const btn = document.querySelector('.register-box button');
+    btn.innerHTML = '<div class="loading"></div> Signing up...';
+    btn.disabled = true;
 
-    window.onload = () => {
-      if (!auth.currentUser) {
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        user.sendEmailVerification()
+          .then(() => {
+            const signupData = {email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false};
+            firebase.database().ref("pendingSignups").push(signupData)
+              .then(() => {
+                signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
+                loginMsg.innerText = "";
+                tEmailSignup.value = "";
+                tPasswordSignup.value = "";
+                tConfirmPassword.value = "";
+                btn.innerHTML = 'Signup';
+                btn.disabled = false;
+              });
+          })
+          .catch(e => {
+            signupMsg.innerText = "Signup failed: " + e.message;
+            btn.innerHTML = 'Signup';
+            btn.disabled = false;
+          });
+      })
+      .catch(e => {
+        signupMsg.innerText = e.message;
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+      });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      hideAllSections();
+      document.querySelector(".section-toggle").style.display = "flex";
+      showStudentSection();
+      return;
+    }
+    if (!user.emailVerified) {
+      alert("Please verify your email before proceeding.");
+      auth.signOut();
+      return;
+    }
+    const uid = user.uid;
+
+    firebase.database()
+      .ref("users/" + uid + "/role")
+      .once("value")
+      .then(snapshot => {
+        const role = snapshot.val();
+
         hideAllSections();
-        document.querySelector('.section-toggle').style.display = "flex";
-        showStudentSection();
-      }
-    };
 
-    // Tab Switching
-    function showTab(tabName) {
-      const tabs = document.querySelectorAll('.tab-content');
-      tabs.forEach(tab => tab.classList.remove('active'));
-      const sidebarItems = document.querySelectorAll('.sidebar li');
-      sidebarItems.forEach(item => item.classList.remove('active'));
-      document.getElementById(tabName).classList.add('active');
-      document.getElementById('tab-' + tabName).classList.add('active');
-    }
-
-    function resendVerification() {
-      if (auth.currentUser) {
-        auth.currentUser.sendEmailVerification()
-          .then(() => alert("Verification email sent!"))
-          .catch(e => alert("Error: " + e.message));
-      } else {
-        alert("Log in first.");
-      }
-    }
-
-    /* LOGIN */
-    function teacherLogin() {
-      const email = tEmail.value.trim();
-      const pass = tPassword.value.trim();
-      if (!email || !pass) {
-        loginMsg.innerText = "Enter email and password.";
-        return;
-      }
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          // UI handled by auth.onAuthStateChanged
-        })
-        .catch(e => {
-          console.error("Login error:", e);
-          loginMsg.innerText = e.message || "Login failed. Check credentials.";
-        });
-    }
-function loadUsers() {
-  firebase.database().ref("users").once("value", snap => {
-    const list = document.getElementById("userList");
-    list.innerHTML = "";
-    snap.forEach(user => {
-      const data = user.val();
-      list.innerHTML += `
-        <div class="user-item" data-role="${data.role}" data-name="${data.name || data.email}" data-email="${data.email}">
-          <b>${data.name || data.email}</b> (${data.role}) - ${data.email}
-          <button onclick="deleteUser('${user.key}')">Delete</button>
-        </div>
-      `;
-    });
+        if (role === "teacher") {
+          localStorage.setItem(`isTeacher_${user.email}`, "true");
+          document.getElementById("teacherPanel").style.display = "flex";
+          loadPendingSignups();
+        } else {
+          localStorage.removeItem(`isTeacher_${user.email}`);
+          document.getElementById("studentPanel").style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.error("Role fetch error:", err);
+      });
   });
-}
 
-function filterUsers() {
-  const search = document.getElementById("userSearch").value.toLowerCase();
-  const filter = document.getElementById("userFilter").value;
-  const items = document.querySelectorAll(".user-item");
-  items.forEach(item => {
-    const name = item.dataset.name.toLowerCase();
-    const email = item.dataset.email.toLowerCase();
-    const role = item.dataset.role;
-    const matchesSearch = name.includes(search) || email.includes(search);
-    const matchesFilter = filter === "all" || role === filter;
-    item.style.display = matchesSearch && matchesFilter ? "block" : "none";
-  });
-}
-
-function deleteUser(uid) {
-  if (confirm("Delete this user?")) {
-    firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
+  function showStudentLogin() {
+    document.querySelector("#studentContainer .container").classList.remove("active");
   }
-}
 
-// Call loadUsers in showTab
-function showTab(tabName) {
-  // ... existing code ...
-  if (tabName === "manageUsers") loadUsers();
-}
-    /* SIGNUP */
-    function teacherSignup() {
-      const email = tEmailSignup.value.trim();
-      const pass = tPasswordSignup.value.trim();
-      const confirmPass = tConfirmPassword.value.trim();
-      if (!email || !pass || !confirmPass) {
-        signupMsg.innerText = "";
-        loginMsg.innerText = "Fill all fields.";
-        return;
-      }
-      if (pass !== confirmPass) {
-        signupMsg.innerText = "";
-        loginMsg.innerText = "Passwords do not match.";
-        return;
-      }
-      const btn = document.querySelector('.register-box button');
-      btn.innerHTML = '<div class="loading"></div> Signing up...';
-      btn.disabled = true;
+  function studentLogin() {
+    const email = studentEmail.value.trim();
+    const pass = studentPassword.value.trim();
+    if (!email || !pass) {
+      studentLoginMsg.innerText = "Enter email and password.";
+      return;
+    }
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => {})
+      .catch(e => {
+        console.error("Login error:", e);
+        studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
+      });
+  }
 
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          // Send verification email
+  function studentSignup() {
+    const name = studentName.value.trim();
+    const email = studentEmailSignup.value.trim();
+    const pass = studentPasswordSignup.value.trim();
+    const confirmPass = studentConfirmPassword.value.trim();
+    if (!name || !email || !pass || !confirmPass) {
+      studentSignupMsg.innerText = "Fill all fields.";
+      return;
+    }
+    if (pass !== confirmPass) {
+      studentSignupMsg.innerText = "Passwords do not match.";
+      return;
+    }
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        user.updateProfile({displayName: name}).then(() => {
+          firebase.database().ref("users/" + user.uid).set({
+            name: name,
+            email: email,
+            role: "student"
+          });
           user.sendEmailVerification()
             .then(() => {
-              // Store in pendingSignups as before, but add a note
-              const signupData = {email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false};
-              firebase.database().ref("pendingSignups").push(signupData)
-                .then(() => {
-                  signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
-                  loginMsg.innerText = "";
-                  tEmailSignup.value = "";
-                  tPasswordSignup.value = "";
-                  tConfirmPassword.value = "";
-                  btn.innerHTML = 'Signup';
-                  btn.disabled = false;
-                });
-            })
-            .catch(e => {
-              signupMsg.innerText = "Signup failed: " + e.message;
-              btn.innerHTML = 'Signup';
-              btn.disabled = false;
+              studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
+              studentName.value = "";
+              studentEmailSignup.value = "";
+              studentPasswordSignup.value = "";
+              studentConfirmPassword.value = "";
             });
-        })
-        .catch(e => {
-          signupMsg.innerText = e.message;
-          btn.innerHTML = 'Signup';
-          btn.disabled = false;
         });
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        hideAllSections();
-        document.querySelector(".section-toggle").style.display = "flex";
-        showStudentSection();
-        return;
-      }
-      if (!user.emailVerified) {
-        alert("Please verify your email before proceeding.");
-        auth.signOut();  // Force logout if not verified
-        return;
-      }
-      const uid = user.uid;
-
-      firebase.database()
-        .ref("users/" + uid + "/role")
-        .once("value")
-        .then(snapshot => {
-          const role = snapshot.val();
-
-          hideAllSections(); // 🔥 VERY IMPORTANT
-
-          if (role === "teacher") {
-            // Set localStorage for teacher role
-            localStorage.setItem(`isTeacher_${user.email}`, "true");
-            document.getElementById("teacherPanel").style.display = "flex";
-            loadPendingSignups();
-          } else {
-            // For students, ensure localStorage is not set
-            localStorage.removeItem(`isTeacher_${user.email}`);
-            document.getElementById("studentPanel").style.display = "block";
-          }
-        })
-        .catch(err => {
-          console.error("Role fetch error:", err);
-          // Optional: Handle error (e.g., show login again)
-        });
-    });
-
-    function applyAuthState(isTeacher, u) {
-      hideAllSections();
-      if (isTeacher) {
-        teacherPanel.style.display = "flex";
-        loadPendingSignups();
-      } else {
-        studentPanel.style.display = "block";
-      }
-      const savedTheme = localStorage.getItem("theme") || "light";
-      if (savedTheme === "dark") {
-        document.body.classList.add("dark-theme");
-        document.getElementById("themeToggle").innerText = "Switch to Light Theme";
-        currentTheme = "dark";
-      }
-    }
-function loadDashboardStats() {
-  // Total tests
-  firebase.database().ref("tests").once("value", snap => {
-    let totalTests = 0;
-    snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
-    document.getElementById("totalTests").textContent = totalTests;
-  });
-
-  // Total students
-  firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
-    document.getElementById("totalStudents").textContent = snap.numChildren();
-  });
-
-  // Results and chart
-  firebase.database().ref("results").once("value", snap => {
-    let totalResults = 0, totalScore = 0, totalPossible = 0;
-    const classScores = {};
-    snap.forEach(cls => {
-      const className = cls.key.replace("class_", "");
-      let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
-      cls.forEach(test => {
-        test.forEach(result => {
-          const d = result.val();
-          totalResults++;
-          totalScore += d.score;
-          totalPossible += d.total;
-          classTotalScore += d.score;
-          classTotalPossible += d.total;
-          classCount++;
-        });
+      })
+      .catch(e => {
+        studentSignupMsg.innerText = "Signup failed: " + e.message;
       });
-      if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
-    });
-    document.getElementById("totalResults").textContent = totalResults;
-    document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
+  }
 
-    // Chart
-    const ctx = document.getElementById('scoreChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: Object.keys(classScores),
-        datasets: [{
-          label: 'Average Score (%)',
-          data: Object.values(classScores),
-          backgroundColor: 'rgba(0, 123, 255, 0.6)',
-          borderColor: 'rgba(0, 123, 255, 1)',
-          borderWidth: 1
-        }]
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
-    });
-  });
-
-  // Notifications
-  firebase.database().ref("results").limitToLast(5).once("value", snap => {
-    const list = document.getElementById("notificationsList");
-    list.innerHTML = "";
-    snap.forEach(cls => {
-      cls.forEach(test => {
-        test.forEach(result => {
-          const d = result.val();
-          list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} in ${cls.key.replace("class_", "")} - Score: ${d.score}/${d.total}</div>`;
-        });
+  function TestsForClass(cls) {
+    resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
+    studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
+    firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
+      snap.forEach(t => {
+        let o = document.createElement("option");
+        o.value = o.text = t.key;
+        resultTestSelect.appendChild(o.cloneNode(true));
+        studentTestSelect.appendChild(o);
       });
     });
-    if (!snap.exists()) list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
-  });
-}
-// Add to showTab to refresh stats
-function showTab(tabName) {
-  // ... existing code ...
-  if (tabName === "dashboard") loadDashboardStats();
-}
+  }
 
-// New function for exporting all results
-function exportAllResults() {
-  firebase.database().ref("results").once("value", snap => {
-    let csv = "Class,Test,Student,Roll,Score,Total\n";
-    snap.forEach(cls => {
-      const className = cls.key.replace("class_", "");
-      cls.forEach(test => {
-        const testName = test.key;
-        test.forEach(result => {
-          const d = result.val();
-          csv += `${className},${testName},${d.name},${result.key},${d.score},${d.total}\n`;
-        });
-      });
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'all_results.csv';
-    a.click();
-  });
-}
-    function showStudentLogin() {
-      document.querySelector("#studentContainer .container").classList.remove("active");
+  function saveTest() {
+    if (!isTeacherLoggedIn()) {
+      alert("Access denied. Please log in as a teacher.");
+      return;
+    }
+    const cls = testClass.value;
+    let name = testName.value.trim();
+    name = name.replace(/[.#$[\$]/g, "_");
+    const raw = bulkQuestions.value.trim();
+    const duration = Number(testDuration.value);
+    const limit = Number(questionLimit.value);
+
+    if (!cls || !name || !duration || !limit || duration <= 0 || limit <= 0) {
+      alert("Fill all fields with valid values (duration and limit must be positive numbers).");
+      return;
     }
 
-    function studentLogin() {
-      const email = studentEmail.value.trim();
-      const pass = studentPassword.value.trim();
-      if (!email || !pass) {
-        studentLoginMsg.innerText = "Enter email and password.";
-        return;
-      }
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          // UI handled by auth.onAuthStateChanged
-        })
-        .catch(e => {
-          console.error("Login error:", e);
-          studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
-        });
-    }
+    let questions = [];
 
-    function studentSignup() {
-      const name = studentName.value.trim();
-      const email = studentEmailSignup.value.trim();
-      const pass = studentPasswordSignup.value.trim();
-      const confirmPass = studentConfirmPassword.value.trim();
-      if (!name || !email || !pass || !confirmPass) {
-        studentSignupMsg.innerText = "Fill all fields.";
-        return;
-      }
-      if (pass !== confirmPass) {
-        studentSignupMsg.innerText = "Passwords do not match.";
-        return;
-      }
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          user.updateProfile({displayName: name}).then(() => {
-            firebase.database().ref("users/" + user.uid).set({
-              name: name,
-              email: email,
-              role: "student"
-            });
-            user.sendEmailVerification()
-              .then(() => {
-                studentSignupMsg.innerText = "Signup successful! Check your email to verify your account.";
-                studentName.value = "";
-                studentEmailSignup.value = "";
-                studentPasswordSignup.value = "";
-                studentConfirmPassword.value = "";
-              });
-          });
-        })
-        .catch(e => {
-          studentSignupMsg.innerText = "Signup failed: " + e.message;
-        });
-    }
-
-    function ResultClasses() {
-      firebase.database().ref("results").once("value", snap => {
-        resultClassSelect.innerHTML = "<option value=''>Select Class</option>";
-        if (!snap.exists()) return;
-        snap.forEach(cls => {
-          let opt = document.createElement("option");
-          opt.value = cls.key.replace("class_", "");
-          opt.textContent = cls.key.replace("class_", "");
-          resultClassSelect.appendChild(opt);
-        });
-      });
-    }
-
-    function TestsForClass(cls) {
-      resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
-      studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
-      firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
-        snap.forEach(t => {
-          let o = document.createElement("option");
-          o.value = o.text = t.key;
-          resultTestSelect.appendChild(o.cloneNode(true));
-          studentTestSelect.appendChild(o);
-        });
-      });
-    }
-
-    /* SAVE TEST */
-    function saveTest() {
-      if (!isTeacherLoggedIn()) {
-        alert("Access denied. Please log in as a teacher.");
-        return;
-      }
-      const cls = testClass.value;
-      let name = testName.value.trim();  // Get the raw name
-
-      // Sanitize the name: Replace invalid characters with "_"
-      name = name.replace(/[.#$[\$]/g, "_");  // Replaces ., #, $, [, ] with _
-
-      const raw = bulkQuestions.value.trim();
-      const duration = Number(testDuration.value);
-      const limit = Number(questionLimit.value);
-
-      if (!cls || !name || !duration || !limit || duration <= 0 || limit <= 0) {
-        alert("Fill all fields with valid values (duration and limit must be positive numbers).");
-        return;
-      }
-
-      let questions = [];
-
-      // Handle bulk textarea input
-      if (raw) {
-        questions = raw.split("\n").map(l => {
-          const p = l.split("|");
-          if (p.length !== 6) {
-            alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
-            return null;
-          }
-          return {
-            q: p[0].trim(),
-            options: p.slice(1, 5).map(x => x.trim()),
-            answer: Number(p[5]) - 1
-          };
-        }).filter(q => q);
-      }
-
-      // Handle CSV file input
-      const fileInput = document.getElementById('questionFile');
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const csvText = e.target.result;
-          const csvLines = csvText.split("\n");
-          csvLines.forEach(line => {
-            const p = line.split(",");
-            if (p.length === 6) {
-              questions.push({
-                q: p[0].trim(),
-                options: p.slice(1, 5).map(x => x.trim()),
-                answer: Number(p[5]) - 1
-              });
-            }
-          });
-          // After parsing CSV, save the test
-          finalizeSaveTest(cls, name, duration, limit, questions);
+    if (raw) {
+      questions = raw.split("\n").map(l => {
+        const p = l.split("|");
+        if (p.length !== 6) {
+          alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
+          return null;
+        }
+        return {
+          q: p[0].trim(),
+          options: p.slice(1, 5).map(x => x.trim()),
+          answer: Number(p[5]) - 1
         };
-        reader.readAsText(file);
-        return; // Exit early, save will happen in onload
-      }
-
-      // If no file, proceed with textarea questions
-      finalizeSaveTest(cls, name, duration, limit, questions);
+      }).filter(q => q);
     }
 
-    function finalizeSaveTest(cls, name, duration, limit, questions) {
-      if (questions.length === 0) {
-        alert("No valid questions found.");
-        return;
-      }
-
-      firebase.database()
-        .ref(`tests/class_${cls}/${name}`)
-        .set({
-          duration: duration,
-          limit: Math.min(limit, questions.length),
-          questions: questions
-        })
-        .then(() => {
-          alert("Test Saved with duration");
-          testName.value = "";
-          bulkQuestions.value = "";
-          testDuration.value = "";
-          questionLimit.value = "";
-          document.getElementById('questionFile').value = ""; // Clear file input
-        })
-        .catch(e => {
-          console.error("Save test error:", e);
-          alert("Failed to save test: " + e.message);
-        });
-    }
-
-    function autoSaveAnswers() {
-      if (!currentStudent.roll || !currentTest) return;
-      firebase.database()
-        .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-        .set({
-          answers: studentAnswers,
-          marked: markedForReview,
-          timeLeft: remainingTime,
-          currentIndex: currentQuestionIndex,
-          updated: Date.now()
-        });
-    }
-
-    function shuffleArray(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    function startStudentTest() {
-      if (!auth.currentUser) {alert("Login required"); return;}
-      const cls = sClass.value;
-      const test = studentTestSelect.value;
-      const roll = auth.currentUser.uid;
-      const name = auth.currentUser.displayName || auth.currentUser.email;
-
-      if (!cls || !test) {
-        alert("Please select class and test");
-        return;
-      }
-
-      firebase.database()
-        .ref(`results/class_${cls}/${test}/${roll}`)
-        .once("value")
-        .then(rSnap => {
-          if (rSnap.exists()) {
-            alert("Test already submitted.\nTeacher must allow reattempt.");
-            return;
-          }
-
-          currentStudent = {name, roll, class: cls};
-          currentTest = test;
-
-          firebase.database()
-            .ref(`tests/class_${cls}/${test}`)
-            .once("value")
-            .then(snap => {
-              if (!snap.exists()) {
-                alert("Test not found");
-                return;
-              }
-
-              const data = snap.val();
-              let allQuestions = Object.values(data.questions || {});
-              shuffleArray(allQuestions);
-              const limit = data.limit || allQuestions.length;
-              currentQuestions = allQuestions.slice(0, limit);
-
-              studentAnswers = {};
-              markedForReview = {};
-              currentQuestionIndex = 0;
-
-              firebase.database()
-                .ref(`savedTests/${roll}/${test}`)
-                .once("value")
-                .then(saveSnap => {
-                  if (saveSnap.exists()) {
-                    const saved = saveSnap.val();
-                    studentAnswers = saved.answers || {};
-                    markedForReview = saved.marked || {};
-                    remainingTime = saved.timeLeft || (data.duration * 60);
-                    currentQuestionIndex = saved.currentIndex || 0;
-                  } else {
-                    remainingTime = data.duration * 60;
-                  }
-                  hideAllSections();
-                  document.getElementById("testArea").style.display = "flex";
-                  startTimer(Math.ceil(remainingTime / 60));
-                  renderTest();
-                  document.documentElement.requestFullscreen();
-                  document.addEventListener('contextmenu', e => e.preventDefault());
-                  document.addEventListener('fullscreenchange', () => {
-                    if (!document.fullscreenElement) alert('Exited fullscreen!');
-                  });
-                  document.addEventListener('visibilitychange', () => {
-                    if (document.hidden) alert('Tab switched!');
-                  });
-                  updateQuestionMap();
-                  clearInterval(autoSaveInterval);
-                  autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-                });
+    const fileInput = document.getElementById('questionFile');
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csvText = e.target.result;
+        const csvLines = csvText.split("\n");
+        csvLines.forEach(line => {
+          const p = line.split(",");
+          if (p.length === 6) {
+            questions.push({
+              q: p[0].trim(),
+              options: p.slice(1, 5).map(x => x.trim()),
+              answer: Number(p[5]) - 1
             });
-        })
-        .catch(e => {
-          console.error("Start test error:", e);
-          alert("Failed to start test: " + e.message);
+          }
         });
+        finalizeSaveTest(cls, name, duration, limit, questions);
+      };
+      reader.readAsText(file);
+      return;
     }
 
-    function renderTest() {
-      testTitle.innerText = currentTest;
-      studentPanel.style.display = "none";
-      testArea.style.display = "flex";
-      displayQuestion(currentQuestionIndex);
-      updateNavigationButtons();
+    finalizeSaveTest(cls, name, duration, limit, questions);
+  }
+
+  function finalizeSaveTest(cls, name, duration, limit, questions) {
+    if (questions.length === 0) {
+      alert("No valid questions found.");
+      return;
     }
 
-    function displayQuestion(index) {
-      const q = currentQuestions[index];
-      if (!q) {
-        console.error("Question not found at index:", index);
-        return;
-      }
-      // Basic sanitization for question text (remove potential script tags)
-      const sanitizedQ = q.q.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
-      const questionDisplay = document.getElementById('questionDisplay');
-      questionDisplay.innerHTML = `
-    <div class="question-header">
-      <i class="fas fa-question-circle"></i>
-      <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
-    </div>
-    <p class="question-text">${sanitizedQ}</p>
-    <div class="options-container">
-    ${q.options.map((opt, i) => `
-    <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
-      <label onclick="selectOption(${index}, ${i})">
-        <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
-        <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
-        <span class="option-text">${opt}</span>
-      </label>
-    </div>
-  `).join('')}
-    </div>
-  `;
-      progressBar.value = ((index + 1) / currentQuestions.length) * 100;
-      updateQuestionMap();
+    firebase.database()
+      .ref(`tests/class_${cls}/${name}`)
+      .set({
+        duration: duration,
+        limit: Math.min(limit, questions.length),
+        questions: questions
+      })
+      .then(() => {
+        alert("Test Saved with duration");
+        testName.value = "";
+        bulkQuestions.value = "";
+        testDuration.value = "";
+        questionLimit.value = "";
+        document.getElementById('questionFile').value = "";
+      })
+      .catch(e => {
+        console.error("Save test error:", e);
+        alert("Failed to save test: " + e.message);
+      });
+  }
+
+  function autoSaveAnswers() {
+    if (!currentStudent.roll || !currentTest) return;
+    firebase.database()
+      .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+      .set({
+        answers: studentAnswers,
+        marked: markedForReview,
+        timeLeft: remainingTime,
+        currentIndex: currentQuestionIndex,
+        updated: Date.now()
+      });
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function startStudentTest() {
+    if (!auth.currentUser) {alert("Login required"); return;}
+    const cls = sClass.value;
+    const test = studentTestSelect.value;
+    const roll = auth.currentUser.uid;
+    const name = auth.currentUser.displayName || auth.currentUser.email;
+
+    if (!cls || !test) {
+      alert("Please select class and test");
+      return;
     }
 
-    function selectOption(qIndex, optIndex) {
-      studentAnswers[qIndex] = optIndex;
-      displayQuestion(qIndex);
-    }
-
-    function markForReview() {
-      markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
-      updateQuestionMap();
-    }
-
-    function navigateQuestion(direction) {
-      currentQuestionIndex += direction;
-      displayQuestion(currentQuestionIndex);
-      updateNavigationButtons();
-    }
-
-    function updateNavigationButtons() {
-      document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
-      document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
-    }
-
-    function updateQuestionMap() {
-  const grid = document.getElementById('questionGrid');
-  grid.innerHTML = '';
-  currentQuestions.forEach((_, i) => {
-    const div = document.createElement('div');
-    div.className = 'q-num';
-    div.textContent = i + 1;
-    if (i === currentQuestionIndex) div.classList.add('current');
-    if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // Fixed: Added 'undefined'
-    else if (markedForReview[i]) div.classList.add('marked');
-    else div.classList.add('not-attempted');
-    div.onclick = () => {
-      currentQuestionIndex = i;
-      displayQuestion(i);
-      updateNavigationButtons();
-    };
-    grid.appendChild(div);
-  });
-}
-    function startTimer(minutes) {
-      remainingTime = minutes * 60;
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        if (remainingTime <= 0) {
-          clearInterval(timerInterval);
-          submitTest();
+    firebase.database()
+      .ref(`results/class_${cls}/${test}/${roll}`)
+      .once("value")
+      .then(rSnap => {
+        if (rSnap.exists()) {
+          alert("Test already submitted.\nTeacher must allow reattempt.");
           return;
         }
-        remainingTime--;
-        const mins = Math.floor(remainingTime / 60);
-        const secs = remainingTime % 60;
-        document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
-      }, 1000);
-    }
 
-    function updateTimerDisplay() {
-      const min = Math.floor(remainingTime / 60);
-      const sec = remainingTime % 60;
-      timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
-    }
+        currentStudent = {name, roll, class: cls};
+        currentTest = test;
 
-   function submitTest() {
-  clearInterval(timerInterval);
-  clearInterval(autoSaveInterval);
-  disableUnloadWarning();
-  let score = 0;
-  let detailedAnswers = {};
-  currentQuestions.forEach((q, i) => {
-    const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
-    const correctChoice = q.options[q.answer];
-    const isCorrect = studentAnswers[i] === q.answer;
-    if (isCorrect) score++;
-    detailedAnswers[i] = {
-      question: q.q,
-      studentAnswer: studentChoice,
-      correctAnswer: correctChoice,
-      isCorrect: isCorrect
-    };
-  });
+        firebase.database()
+          .ref(`tests/class_${cls}/${test}`)
+          .once("value")
+          .then(snap => {
+            if (!snap.exists()) {
+              alert("Test not found");
+              return;
+            }
 
-  // Fetch name and submit
-  firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
-    .then(nameSnap => {
-      const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
-      firebase.database()
-        .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-        .set({
-          name: studentName,
-          score: score,
-          total: currentQuestions.length,
-          answers: detailedAnswers,
-          submittedAt: new Date().toISOString()
-        })
-        .then(() => {
-          alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
-          // Send FCM notification (requires server key from Firebase Console > Project Settings > Cloud Messaging)
-          fetch('https://fcm.googleapis.com/fcm/send', {
-            method: 'POST',
-            headers: { 'Authorization': 'key=YOUR_SERVER_KEY', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: 'TEACHER_FCM_TOKEN',  // Replace with actual token
-              notification: { title: 'New Submission', body: `${studentName} submitted ${currentTest}` }
-            })
-          }).catch(e => console.error('FCM error:', e));
-          location.reload();
-        })
-        .catch(e => alert("Error submitting test: " + e.message));
-    })
-    .catch(e => {
-      console.error("Error fetching name:", e);
-      alert("Error submitting test: " + e.message);
-    });
-}
-    function Results() {
-      const cls = resultClassSelect.value;
-      const test = resultTestSelect.value;
-      if (!cls || !test) return alert("Select class and test");
-      firebase.database()
-        .ref(`results/class_${cls}/${test}`)
-        .once("value", snap => {
-          resultBox.innerHTML = "";
-          if (!snap.exists()) {
-            resultBox.innerHTML = "<p>No results</p>";
-            return;
-          }
-          snap.forEach(r => {
-            const d = r.val();
-            resultBox.innerHTML += `
-          <div style="border:1px solid #ccc;padding:6px;margin:6px">
-            <b>${d.name}</b> (Roll: ${r.key})<br>
-            Score: ${d.score}/${d.total}<br>
-            <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
-            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
-          </div>
-        `;
+            const data = snap.val();
+            let allQuestions = Object.values(data.questions || {});
+            shuffleArray(allQuestions);
+            const limit = data.limit || allQuestions.length;
+            currentQuestions = allQuestions.slice(0, limit);
+
+            studentAnswers = {};
+            markedForReview = {};
+            currentQuestionIndex = 0;
+
+            firebase.database()
+              .ref(`savedTests/${roll}/${test}`)
+              .once("value")
+              .then(saveSnap => {
+                if (saveSnap.exists()) {
+                  const saved = saveSnap.val();
+                  studentAnswers = saved.answers || {};
+                  markedForReview = saved.marked || {};
+                  remainingTime = saved.timeLeft || (data.duration * 60);
+                  currentQuestionIndex = saved.currentIndex || 0;
+                } else {
+                  remainingTime = data.duration * 60;
+                }
+                hideAllSections();
+                document.getElementById("testArea").style.display = "flex";
+                startTimer(Math.ceil(remainingTime / 60));
+                renderTest();
+                document.documentElement.requestFullscreen();
+                document.addEventListener('contextmenu', e => e.preventDefault());
+                document.addEventListener('fullscreenchange', () => {
+                  if (!document.fullscreenElement) alert('Exited fullscreen!');
+                });
+                document.addEventListener('visibilitychange', () => {
+                  if (document.hidden) alert('Tab switched!');
+                });
+                updateQuestionMap();
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+              });
           });
-        })
-        .catch(e => {
-          console.error("Results error:", e);
-          resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
-        });
-    }
+      })
+      .catch(e => {        console.error("Start test error:", e);
+        alert("Failed to start test: " + e.message);
+      });
+  }
 
-    function exportResults() {
-      const cls = resultClassSelect.value;
-      const test = resultTestSelect.value;
-      if (!cls || !test) return alert("Select class and test");
-      firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
-        let csv = "Name,Roll,Score,Total\n";
+  function renderTest() {
+    testTitle.innerText = currentTest;
+    studentPanel.style.display = "none";
+    testArea.style.display = "flex";
+    displayQuestion(currentQuestionIndex);
+    updateNavigationButtons();
+  }
+
+  function displayQuestion(index) {
+    const q = currentQuestions[index];
+    if (!q) {
+      console.error("Question not found at index:", index);
+      return;
+    }
+    const sanitizedQ = q.q.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
+    const questionDisplay = document.getElementById('questionDisplay');
+    questionDisplay.innerHTML = `
+      <div class="question-header">
+        <i class="fas fa-question-circle"></i>
+        <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
+      </div>
+      <p class="question-text">${sanitizedQ}</p>
+      <div class="options-container">
+        ${q.options.map((opt, i) => `
+          <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
+            <label onclick="selectOption(${index}, ${i})">
+              <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
+              <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
+              <span class="option-text">${opt}</span>
+            </label>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    progressBar.value = ((index + 1) / currentQuestions.length) * 100;
+    updateQuestionMap();
+  }
+
+  function selectOption(qIndex, optIndex) {
+    studentAnswers[qIndex] = optIndex;
+    displayQuestion(qIndex);
+  }
+
+  function markForReview() {
+    markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
+    updateQuestionMap();
+  }
+
+  function navigateQuestion(direction) {
+    currentQuestionIndex += direction;
+    displayQuestion(currentQuestionIndex);
+    updateNavigationButtons();
+  }
+
+  function updateNavigationButtons() {
+    document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+    document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
+  }
+
+  function updateQuestionMap() {
+    const grid = document.getElementById('questionGrid');
+    grid.innerHTML = '';
+    currentQuestions.forEach((_, i) => {
+      const div = document.createElement('div');
+      div.className = 'q-num';
+      div.textContent = i + 1;
+      if (i === currentQuestionIndex) div.classList.add('current');
+      if (studentAnswers[i] !== undefined) div.classList.add('attempted');
+      else if (markedForReview[i]) div.classList.add('marked');
+      else div.classList.add('not-attempted');
+      div.onclick = () => {
+        currentQuestionIndex = i;
+        displayQuestion(i);
+        updateNavigationButtons();
+      };
+      grid.appendChild(div);
+    });
+  }
+
+  function startTimer(minutes) {
+    remainingTime = minutes * 60;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (remainingTime <= 0) {
+        clearInterval(timerInterval);
+        submitTest();
+        return;
+      }
+      remainingTime--;
+      const mins = Math.floor(remainingTime / 60);
+      const secs = remainingTime % 60;
+      document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const min = Math.floor(remainingTime / 60);
+    const sec = remainingTime % 60;
+    timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  function submitTest() {
+    clearInterval(timerInterval);
+    clearInterval(autoSaveInterval);
+    disableUnloadWarning();
+    let score = 0;
+    let detailedAnswers = {};
+    currentQuestions.forEach((q, i) => {
+      const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+      const correctChoice = q.options[q.answer];
+      const isCorrect = studentAnswers[i] === q.answer;
+      if (isCorrect) score++;
+      detailedAnswers[i] = {
+        question: q.q,
+        studentAnswer: studentChoice,
+        correctAnswer: correctChoice,
+        isCorrect: isCorrect
+      };
+    });
+
+    firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
+      .then(nameSnap => {
+        const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
+        firebase.database()
+          .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
+          .set({
+            name: studentName,
+            score: score,
+            total: currentQuestions.length,
+            answers: detailedAnswers,
+            submittedAt: new Date().toISOString()
+          })
+          .then(() => {
+            alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
+            fetch('https://fcm.googleapis.com/fcm/send', {
+              method: 'POST',
+              headers: { 'Authorization': 'key=YOUR_SERVER_KEY', 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: 'TEACHER_FCM_TOKEN',
+                notification: { title: 'New Submission', body: `${studentName} submitted ${currentTest}` }
+              })
+            }).catch(e => console.error('FCM error:', e));
+            location.reload();
+          })
+          .catch(e => alert("Error submitting test: " + e.message));
+      })
+      .catch(e => {
+        console.error("Error fetching name:", e);
+        alert("Error submitting test: " + e.message);
+      });
+  }
+
+  function Results() {
+    const cls = resultClassSelect.value;
+    const test = resultTestSelect.value;
+    if (!cls || !test) return alert("Select class and test");
+    firebase.database()
+      .ref(`results/class_${cls}/${test}`)
+      .once("value", snap => {
+        resultBox.innerHTML = "";
+        if (!snap.exists()) {
+          resultBox.innerHTML = "<p>No results</p>";
+          return;
+        }
         snap.forEach(r => {
           const d = r.val();
-          csv += `${d.name},${r.key},${d.score},${d.total}\n`;
+          resultBox.innerHTML += `
+            <div style="border:1px solid #ccc;padding:6px;margin:6px">
+              <b>${d.name}</b> (Roll: ${r.key})<br>
+              Score: ${d.score}/${d.total}<br>
+              <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
+              <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
+            </div>
+          `;
         });
-        const blob = new Blob([csv], {type: 'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'results.csv';
-        a.click();
+      })
+      .catch(e => {
+        console.error("Results error:", e);
+        resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
       });
-    }
+  }
 
-    function viewDetails(cls, test, roll) {
-  firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
-    const d = snap.val();
-    let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
-    // Sort keys numerically to ensure order (0,1,2,... instead of random object order)
-    const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => parseInt(a) - parseInt(b));
-    sortedKeys.forEach(i => {
-      const ans = d.answers[i];
-      details += `Q${parseInt(i) + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
+  function exportResults() {
+    const cls = resultClassSelect.value;
+    const test = resultTestSelect.value;
+    if (!cls || !test) return alert("Select class and test");
+    firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
+      let csv = "Name,Roll,Score,Total\n";
+      snap.forEach(r => {
+        const d = r.val();
+        csv += `${d.name},${r.key},${d.score},${d.total}\n`;
+      });
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'results.csv';
+      a.click();
     });
-    // Log to console for full view (in case alert truncates)
-    console.log("Full Results Details:", details);
-    alert(details);  // For simplicity; consider a modal for better UX
-  });
-}
+  }
 
-    function allowReattempt(cls, test, roll) {
-      if (!confirm("Allow this student to reattempt the test?")) return;
-      firebase.database()
-        .ref(`results/class_${cls}/${test}/${roll}`)
-        .remove()
-        .then(() => {
-          alert("Reattempt allowed. Student can start test again.");
-          Results();
-        });
-    }
+  function viewDetails(cls, test, roll) {
+    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
+      const d = snap.val();
+      let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
+      const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => parseInt(a) - parseInt(b));
+      sortedKeys.forEach(i => {
+        const ans = d.answers[i];
+        details += `Q${parseInt(i) + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
+      });
+      console.log("Full Results Details:", details);
+      alert(details);
+    });
+  }
 
-    function TestsForTeacher() {
-      const cls = manageClass.value;
-      const testList = document.getElementById("testList");
-      testList.innerHTML = "";
-      if (!cls) return;
-      firebase.database()
-        .ref(`tests/class_${cls}`)
-        .once("value", snap => {
-          if (!snap.exists()) {
-            testList.innerHTML = "<p>No tests found.</p>";
-            return;
-          }
-          snap.forEach(t => {
-            testList.innerHTML += `
-          <div style="border:1px solid #ccc;padding:6px;margin:5px">
-            <b>${t.key}</b><br>
-            <button onclick="editTest('${cls}','${t.key}')">Edit</button>
-            <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
-          </div>
-        `;
-          });
-        });
-    }
+  function allowReattempt(cls, test, roll) {
+    if (!confirm("Allow this student to reattempt the test?")) return;
+    firebase.database()
+      .ref(`results/class_${cls}/${test}/${roll}`)
+      .remove()
+      .then(() => {
+        alert("Reattempt allowed. Student can start test again.");
+        Results();
+      });
+  }
 
-    // Password reset function
-    function resetPassword() {
-      const email = prompt("Enter your email:");
-      if (email) {
-        auth.sendPasswordResetEmail(email)
-          .then(() => alert("Password reset email sent!"))
-          .catch(e => alert("Error: " + e.message));
-      }
-    }
-
-    function editTest(cls, testName) {
-      if (!isTeacherLoggedIn()) {
-        alert("Access denied. Please log in as a teacher.");
-        return;
-      }
-      firebase.database()
-        .ref(`tests/class_${cls}/${testName}`)
-        .once("value", snap => {
-          if (!snap.exists()) {
-            alert("Test not found or access denied.");
-            console.error("Edit test failed: No data for", cls, testName);
-            return;
-          }
-          const data = snap.val();
-          testClass.value = cls;
-          testName.value = testName;
-          testDuration.value = data.duration || "";
-          questionLimit.value = data.limit || "";
-          bulkQuestions.value = Object.values(data.questions || {})
-            .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
-            .join("\n");
-        })
-        .catch(e => {
-          console.error("Edit test error:", e);
-          alert("Failed to load test: " + e.message);
-        });
-    }
-
-    function deleteTest(cls, testName) {
-      if (confirm("Delete this test?")) {
-        firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(() => alert("Deleted"));
-      }
-    }
-
-    function logout() {
-      if (auth.currentUser) {
-        localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
-      }
-      auth.signOut()
-        .then(() => {
-          currentStudent = {};
-          currentTest = "";
-          currentQuestions = [];
-          studentAnswers = {};
-          markedForReview = {};
-          clearInterval(timerInterval);
-          clearInterval(autoSaveInterval);
-          remainingTime = 0;
-          currentQuestionIndex = 0;
-          hideAllSections();
-          document.querySelector('.section-toggle').style.display = "flex";
-        })
-        .catch((error) => {
-          console.error("Logout failed:", error);
-          alert("Logout failed: " + error.message);
-        });
-    }
-
-    function loadPendingSignups() {
-      const list = document.getElementById("pendingSignupsList");
-      list.innerHTML = "<p>Loading...</p>";
-      firebase.database().ref("pendingSignups").once("value", snap => {
-        list.innerHTML = "";
+  function TestsForTeacher() {
+    const cls = manageClass.value;
+    const testList = document.getElementById("testList");
+    testList.innerHTML = "";
+    if (!cls) return;
+    firebase.database()
+      .ref(`tests/class_${cls}`)
+      .once("value", snap => {
         if (!snap.exists()) {
-          list.innerHTML = "<p>No pending signups.</p>";
+          testList.innerHTML = "<p>No tests found.</p>";
           return;
         }
-        snap.forEach(child => {
-          const data = child.val();
-          const key = child.key;
-          list.innerHTML += `
-        <div style="border:1px solid #ccc;padding:10px;margin:8px;border-radius:6px">
-          <b>${data.email}</b><br>
-          Status: ${data.status}<br><br>
-          <button onclick="approveTeacher('${key}','${data.email}','${data.password}')">Approve</button>
-          <button onclick="rejectTeacher('${key}')">Reject</button>
-        </div>
-      `;
+        snap.forEach(t => {
+          testList.innerHTML += `
+            <div style="border:1px solid #ccc;padding:6px;margin:5px">
+              <b>${t.key}</b><br>
+              <button onclick="editTest('${cls}','${t.key}')">Edit</button>
+              <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
+            </div>
+          `;
         });
       });
-    }
+  }
 
-    function approveTeacher(key, email, password) {
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCred => {
-          const uid = userCred.user.uid;
-          // Set the role in the database
-          firebase.database().ref("users/" + uid).set({
-            email: email,
-            role: "teacher",
-            approvedAt: Date.now()
+  function resetPassword() {
+    const email = prompt("Enter your email:");
+    if (email) {
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("Password reset email sent!"))
+        .catch(e => alert("Error: " + e.message));
+    }
+  }
+
+  function editTest(cls, testName) {
+    if (!isTeacherLoggedIn()) {
+      alert("Access denied. Please log in as a teacher.");
+      return;
+    }
+    firebase.database()
+      .ref(`tests/class_${cls}/${testName}`)
+      .once("value", snap => {
+        if (!snap.exists()) {
+          alert("Test not found or access denied.");
+          console.error("Edit test failed: No data for", cls, testName);
+          return;
+        }
+        const data = snap.val();
+        testClass.value = cls;
+        testName.value = testName;
+        testDuration.value = data.duration || "";
+        questionLimit.value = data.limit || "";
+        bulkQuestions.value = Object.values(data.questions || {})
+          .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
+          .join("\n");
+      })
+      .catch(e => {
+        console.error("Edit test error:", e);
+        alert("Failed to load test: " + e.message);
+      });
+  }
+
+  function deleteTest(cls, testName) {
+    if (confirm("Delete this test?")) {
+      firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(() => alert("Deleted"));
+    }
+  }
+
+  function logout() {
+    if (auth.currentUser) {
+      localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
+    }
+    auth.signOut()
+      .then(() => {
+        currentStudent = {};
+        currentTest = "";
+        currentQuestions = [];
+        studentAnswers = {};
+        markedForReview = {};
+        clearInterval(timerInterval);
+        clearInterval(autoSaveInterval);
+        remainingTime = 0;
+        currentQuestionIndex = 0;
+        hideAllSections();
+        document.querySelector('.section-toggle').style.display = "flex";
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        alert("Logout failed: " + error.message);
+      });
+  }
+
+  function loadPendingSignups() {
+    const list = document.getElementById("pendingSignupsList");
+    list.innerHTML = "<p>Loading...</p>";
+    firebase.database().ref("pendingSignups").once("value", snap => {
+      list.innerHTML = "";
+      if (!snap.exists()) {
+        list.innerHTML = "<p>No pending signups.</p>";
+        return;
+      }
+      snap.forEach(child => {
+        const data = child.val();
+        const key = child.key;
+        list.innerHTML += `
+          <div style="border:1px solid #ccc;padding:10px;margin:8px;border-radius:6px">
+            <b>${data.email}</b><br>
+            Status: ${data.status}<br><br>
+            <button onclick="approveTeacher('${key}','${data.email}','${data.password}')">Approve</button>
+            <button onclick="rejectTeacher('${key}')">Reject</button>
+          </div>
+        `;
+      });
+    });
+  }
+
+  function approveTeacher(key, email, password) {
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(userCred => {
+        const uid = userCred.user.uid;
+        firebase.database().ref("users/" + uid).set({
+          email: email,
+          role: "teacher",
+          approvedAt: Date.now()
+        });
+        firebase.database().ref("pendingSignups/" + key).remove();
+        alert("Teacher approved successfully");
+        loadPendingSignups();
+      })
+      .catch(err => alert(err.message));
+  }
+
+  function rejectTeacher(key) {
+    if (!confirm("Reject this signup?")) return;
+    firebase.database().ref("pendingSignups/" + key).remove();
+    loadPendingSignups();
+  }
+
+  function loadDashboardStats() {
+    firebase.database().ref("tests").once("value", snap => {
+      let totalTests = 0;
+      snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
+      document.getElementById("totalTests").textContent = totalTests;
+    });
+
+    firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
+      document.getElementById("totalStudents").textContent = snap.numChildren();
+    });
+
+    firebase.database().ref("results").once("value", snap => {
+      let totalResults = 0, totalScore = 0, totalPossible = 0;
+      const classScores = {};
+      snap.forEach(cls => {
+        const className = cls.key.replace("class_", "");
+        let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            totalResults++;
+            totalScore += d.score;
+            totalPossible += d.total;
+            classTotalScore += d.score;
+            classTotalPossible += d.total;
+            classCount++;
           });
-          // Remove from pending list
-          firebase.database().ref("pendingSignups/" + key).remove();
-          alert("Teacher approved successfully");
-          loadPendingSignups();
-        })
-        .catch(err => alert(err.message));
-    }
+        });
+        if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
+      });
+      document.getElementById("totalResults").textContent = totalResults;
+      document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
 
-    function rejectTeacher(key) {
-      if (!confirm("Reject this signup?")) return;
-      firebase.database().ref("pendingSignups/" + key).remove();
-      loadPendingSignups();
-    }
-  </script>
+      const ctx = document.getElementById('scoreChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(classScores),
+          datasets: [{
+            label: 'Average Score (%)',
+            data: Object.values(classScores),
+            backgroundColor: 'rgba(0, 123, 255, 0.6)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    });
+
+    firebase.database().ref("results").limitToLast(5).once("value", snap => {
+      const list = document.getElementById("notificationsList");
+      list.innerHTML = "";
+      snap.forEach(cls => {
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} in ${cls.key.replace("class_", "")} - Score: ${d.score}/${d.total}</div>`;
+          });
+        });
+      });
+      if (!snap.exists()) list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
+    });
+  }
+
+  function exportAllResults() {
+    firebase.database().ref("results").once("value", snap => {
+      let csv = "Class,Test,Student,Roll,Score,Total\n";
+      snap.forEach(cls => {
+        const className = cls.key.replace("class_", "");
+        cls.forEach(test => {
+          const testName = test.key;
+          test.forEach(result => {
+            const d = result.val();
+            csv += `${className},${testName},${d.name},${result.key},${d.score},${d.total}\n`;
+          });
+        });
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'all_results.csv';
+      a.click();
+    });
+  }
+
+  // FCM Functions
+  const messaging = firebase.messaging();
+
+  function requestNotificationPermission() {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY_HERE' })
+          .then(token => console.log('FCM Token:', token))
+          .catch(err => console.error('FCM Token error:', err));
+      }
+    });
+  }
+
+  messaging.onMessage(payload => {
+    console.log('Message received:', payload);
+    showNotification(payload.notification.title, payload.notification.body);
+  });
+
+  function showNotification(title, body) {
+    const notification = document.createElement('div');
+    notification.className = 'notification-item';
+    notification.innerHTML = `<b>${title}</b>: ${body}`;
+    document.getElementById('notificationsList').prepend(notification);
+    setTimeout(() => notification.remove(), 5000);
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) requestNotificationPermission();
+  });
+</script>
 </body>
 </html>
-
-
-
-
