@@ -887,7 +887,7 @@
         <input id="studentEmailSignup" type="email" placeholder="Email" required>
         <input id="studentPasswordSignup" type="password" placeholder="Password" required>
         <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-        <button onclick="()">Signup</button>
+        <button onclick="studentSignup()">Signup</button>
         <p id="Msg" class="success"></p>
         <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
       </div>
@@ -1097,7 +1097,7 @@
       </div>
       <div class="question-map">
         <div class="map-title">Question Map</div>
-        <div id="questionGrid" class<div id="questionGrid" class="question-grid"></div>
+       <div id="questionGrid" class="question-grid"></div>
         <div class="legend">
           <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
           <div><span style="background: #4caf50;"></span> Attempted</div>
@@ -1723,7 +1723,7 @@ function studentSignup() {
       div.className = 'q-num';
       div.textContent = i + 1;
       if (i === currentQuestionIndex) div.classList.add('current');
-      if (studentAnswers[i] !== undefined) div.classList.add('attempted');
+     if (studentAnswers[i] !== undefined) div.classList.add('attempted');
       else if (markedForReview[i]) div.classList.add('marked');
       else div.classList.add('not-attempted');
       div.onclick = () => {
@@ -1764,7 +1764,7 @@ function studentSignup() {
     let score = 0;
     let detailedAnswers = {};
     currentQuestions.forEach((q, i) => {
-      const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+     const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
       const correctChoice = q.options[q.answer];
       const isCorrect = studentAnswers[i] === q.answer;
       if (isCorrect) score++;
@@ -2137,6 +2137,7 @@ messaging.onMessage(payload => {
 </script>
 </body>
 </html>
+
 
 
 
