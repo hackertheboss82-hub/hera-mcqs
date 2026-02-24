@@ -1251,7 +1251,7 @@
       });
   }
 
-  function teacherSignup() {
+    function teacherSignup() {
     const email = tEmailSignup.value.trim();
     const pass = tPasswordSignup.value.trim();
     const confirmPass = tConfirmPassword.value.trim();
@@ -1272,7 +1272,12 @@
     auth.createUserWithEmailAndPassword(email, pass)
       .then((userCredential) => {
         const user = userCredential.user;
-        return user.sendEmailVerification().then(() => {
+        
+        // Force send verification email
+        return user.sendEmailVerification({
+          url: 'https://hera-mcqs-55022.firebaseapp.com'
+        }).then(() => {
+          // Also save pending request
           return firebase.database().ref("pendingSignups").push({
             email: email,
             uid: user.uid,
@@ -1283,7 +1288,7 @@
         });
       })
       .then(() => {
-        signupMsg.innerText = "Signup request submitted! Verify email and wait for approval.";
+        signupMsg.innerText = "Signup successful! Check your email to verify, then login.";
         btn.innerHTML = 'Signup';
         btn.disabled = false;
         tEmailSignup.value = "";
@@ -1292,12 +1297,12 @@
         auth.signOut();
       })
       .catch(e => {
-        signupMsg.innerText = e.message;
+        console.error("Signup error:", e);
+        signupMsg.innerText = "Error: " + e.message;
         btn.innerHTML = 'Signup';
         btn.disabled = false;
       });
   }
-
   function studentLogin() {
     const email = studentEmail.value.trim();
     const pass = studentPassword.value.trim();
@@ -1311,8 +1316,7 @@
         studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
       });
   }
-
-    function studentSignup() {
+  function studentSignup() {
     const name = studentName.value.trim();
     const email = studentEmailSignup.value.trim();
     const studentClass = document.getElementById('studentClassSignup').value;
@@ -1341,6 +1345,52 @@
     const btn = document.querySelector("#studentContainer .register-box button");
     btn.innerHTML = '<div class="loading"></div> Creating...';
     btn.disabled = true;
+    
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        
+        // Update display name
+        return user.updateProfile({ displayName: name }).then(() => {
+          // Send verification email
+          return user.sendEmailVerification({
+            url: 'https://hera-mcqs-55022.firebaseapp.com'
+          });
+        }).then(() => {
+          // Save to database
+          return firebase.database().ref("users/" + user.uid).set({
+            name: name,
+            email: email,
+            class: studentClass,
+            role: "student",
+            createdAt: new Date().toISOString()
+          });
+        });
+      })
+      .then(() => {
+        document.getElementById("studentSignupMsg").innerText = "Account created! Please check your email to verify before logging in.";
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+        document.getElementById("studentName").value = "";
+        document.getElementById("studentEmailSignup").value = "";
+        document.getElementById("studentClassSignup").value = "";
+        document.getElementById("studentPasswordSignup").value = "";
+        document.getElementById("studentConfirmPassword").value = "";
+        // Sign out until verified
+        auth.signOut();
+        setTimeout(() => showStudentLogin(), 3000);
+      })
+      .catch((e) => {
+        console.error("Signup error:", e);
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+        if (e.code === "auth/email-already-in-use") {
+          document.getElementById("studentSignupMsg").innerText = "Email already exists.";
+        } else {
+          document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
+        }
+      });
+  }
     
     auth.createUserWithEmailAndPassword(email, pass)
       .then((userCredential) => {
@@ -2059,4 +2109,5 @@
 </script>
 </body>
 </html>
+
 
