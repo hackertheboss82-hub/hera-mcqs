@@ -546,50 +546,98 @@
     }
 
     /* Tabbed Dashboard */
-    #teacherPanel {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+    /* Teacher Panel Layout Fix */
+#teacherPanel {
+  display: none;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
-    .sidebar {
-      width: 250px;
-      background: var(--box-bg);
-      border-right: 1px solid #ccc;
-      padding: 20px 0;
-    }
+#teacherPanel.active {
+  display: flex;
+}
 
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+.dashboard-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
 
-    .sidebar li {
-      padding: 15px 20px;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      transition: 0.3s;
-    }
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: var(--box-bg);
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
 
-    .sidebar li:hover, .sidebar li.active {
-      background: var(--accent);
-      color: #fff;
-    }
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-    .main-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
+.sidebar li {
+  padding: 15px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: 0.3s;
+  white-space: nowrap;
+}
 
-    .tab-content {
-      display: none;
-    }
+.sidebar li:hover, .sidebar li.active {
+  background: var(--accent);
+  color: #fff;
+}
 
-    .tab-content.active {
-      display: block;
-    }
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: var(--bg-color);
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+  background: var(--box-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-height: calc(100vh - 150px);
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #ccc;
+  }
+  .main-content {
+    padding: 10px;
+  }
+  .tab-content {
+    padding: 15px;
+    min-height: auto;
+  }
+}
 
     /* Enhanced Dashboard Styles */
     .dashboard-container {
@@ -849,24 +897,35 @@
         <p id="loginMsg" class="error"></p>
       </div>
       <!-- Register Form -->
-      <div class="form-box register-box">
-        <h2>Signup</h2>
-        <div class="input-box">
-          <input id="tEmailSignup" type="email" placeholder="Email" required>
-        </div>
-        <div class="input-box">
-          <input id="tPasswordSignup" type="password" placeholder="Password" required>
-        </div>
-        <div class="input-box">
-          <input id="tConfirmPassword" type="password" placeholder="Confirm Password" required>
-        </div>
-        <button onclick="teacherSignup()">Signup</button>
-        <p id="signupMsg" class="success"></p>
-        <br><br>
-        <button class="switch-btn" onclick="showLogin()">Back to Login</button>
-      </div>
-    </div>
-  </div>
+     <!-- Replace the student register form with this -->
+<div class="form-box register-box">
+  <h2>Signup</h2>
+  <input id="studentName" type="text" placeholder="Full Name" required>
+  <input id="studentEmailSignup" type="email" placeholder="Email" required>
+  
+  <!-- NEW: Class Selection -->
+  <select id="studentClassSignup" required>
+    <option value="">Select Class</option>
+    <option value="jr_kg">Jr. KG</option>
+    <option value="sr_kg">Sr. KG</option>
+    <option value="1">Class 1</option>
+    <option value="2">Class 2</option>
+    <option value="3">Class 3</option>
+    <option value="4">Class 4</option>
+    <option value="5">Class 5</option>
+    <option value="6">Class 6</option>
+    <option value="7">Class 7</option>
+    <option value="8">Class 8</option>
+    <option value="9">Class 9</option>
+    <option value="10">Class 10</option>
+  </select>
+  
+  <input id="studentPasswordSignup" type="password" placeholder="Password" required>
+  <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
+  <button onclick="studentSignup()">Signup</button>
+  <p id="studentSignupMsg" class="success"></p>
+  <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
+</div>
 
   <!-- STUDENT LOGIN/SIGNUP -->
   <div class="auth-section student-section" id="studentContainer" style="display: none;">
@@ -877,14 +936,15 @@
         <p>Login to take tests</p>
         <button class="switch-btn" onclick="showStudentRegister()">Go to Signup</button>
       </div>
-      <div class="form-box login-box">
-        <h2>Login</h2>
-        <input id="studentEmail" type="email" placeholder="Email" required>
-        <input id="studentPassword" type="password" placeholder="Password" required>
-        <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
-        <button onclick="studentLogin()">Login</button>
-        <p id="studentLoginMsg" class="error"></p>
-      </div>
+      <!-- Replace student login form -->
+<div class="form-box login-box">
+  <h2>Login</h2>
+  <input id="studentEmail" type="email" placeholder="Email" required>
+  <input id="studentPassword" type="password" placeholder="Password" required>
+  <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
+  <button onclick="studentLogin()">Login</button>
+  <p id="studentLoginMsg" class="error"></p>
+</div>
       <div class="form-box register-box">
         <h2>Signup</h2>
         <input id="studentName" type="text" placeholder="Full Name" required>
@@ -1050,19 +1110,60 @@
         <div id="pendingSignupsList"></div>
       </div>
 
-      <!-- Manage Users Tab -->
-      <div id="manageUsers" class="tab-content">
-        <h3>Manage Users</h3>
-        <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()">
-        <select id="userFilter" onchange="filterUsers()">
-          <option value="all">All Users</option>
-          <option value="teacher">Teachers</option>
-          <option value="student">Students</option>
-        </select>
-        <div id="userList"></div>
-      </div>
-    </div>
+     <!-- Manage Users Tab -->
+<div id="manageUsers" class="tab-content">
+  <h3>Manage Users</h3>
+  
+  <!-- Add User Section -->
+  <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <h4><i class="fas fa-user-plus"></i> Add New Student</h4>
+    <input id="newUserName" placeholder="Student Name" style="width: 45%;">
+    <input id="newUserEmail" type="email" placeholder="Email" style="width: 45%;">
+    <select id="newUserClass" style="width: 45%;">
+      <option value="">Select Class</option>
+      <option value="jr_kg">Jr. KG</option>
+      <option value="sr_kg">Sr. KG</option>
+      <option value="1">Class 1</option>
+      <option value="2">Class 2</option>
+      <option value="3">Class 3</option>
+      <option value="4">Class 4</option>
+      <option value="5">Class 5</option>
+      <option value="6">Class 6</option>
+      <option value="7">Class 7</option>
+      <option value="8">Class 8</option>
+      <option value="9">Class 9</option>
+      <option value="10">Class 10</option>
+    </select>
+    <input id="newUserPassword" type="password" placeholder="Password" style="width: 45%;">
+    <button onclick="addNewUser()" style="width: auto; margin-top: 10px;"><i class="fas fa-plus"></i> Add User</button>
+    <p id="addUserMsg"></p>
   </div>
+
+  <!-- Search and Filter -->
+  <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()" style="width: 100%;">
+  <select id="userFilter" onchange="filterUsers()" style="width: 100%;">
+    <option value="all">All Users</option>
+    <option value="teacher">Teachers</option>
+    <option value="student">Students</option>
+  </select>
+  <select id="classFilter" onchange="filterUsers()" style="width: 100%;">
+    <option value="">All Classes</option>
+    <option value="jr_kg">Jr. KG</option>
+    <option value="sr_kg">Sr. KG</option>
+    <option value="1">Class 1</option>
+    <option value="2">Class 2</option>
+    <option value="3">Class 3</option>
+    <option value="4">Class 4</option>
+    <option value="5">Class 5</option>
+    <option value="6">Class 6</option>
+    <option value="7">Class 7</option>
+    <option value="8">Class 8</option>
+    <option value="9">Class 9</option>
+    <option value="10">Class 10</option>
+  </select>
+  
+  <div id="userList" style="margin-top: 20px;"></div>
+</div>
 
   <!-- STUDENT PANEL -->
   <div class="box" id="studentPanel" style="display: none;">
@@ -1175,12 +1276,79 @@
   function showLogin() {
     document.getElementById("container").classList.remove("active");
   }
-
-  function loadUsers() {
-  if (!auth.currentUser || auth.currentUser.uid !== '8L7gh4mvQgZhiKxCgqfh5OtYn3w2') {
-    document.getElementById("userList").innerHTML = "<p>Access denied. Only admin can manage users.</p>";
+// Add New User (Admin)
+function addNewUser() {
+  const name = document.getElementById("newUserName").value.trim();
+  const email = document.getElementById("newUserEmail").value.trim();
+  const studentClass = document.getElementById("newUserClass").value;
+  const password = document.getElementById("newUserPassword").value.trim();
+  const msg = document.getElementById("addUserMsg");
+  
+  // Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    msg.innerHTML = "<span style='color: red;'>Please enter a valid email address.</span>";
     return;
   }
+  if (!name || !email || !studentClass || !password) {
+    msg.innerHTML = "<span style='color: red;'>Please fill all fields.</span>";
+    return;
+  }
+  if (password.length < 6) {
+    msg.innerHTML = "<span style='color: red;'>Password must be at least 6 characters.</span>";
+    return;
+  }
+  
+  msg.innerHTML = "<span>Creating user...</span>";
+  
+  auth.createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      return user.updateProfile({ displayName: name }).then(() => {
+        return firebase.database().ref("users/" + user.uid).set({
+          name: name,
+          email: email,
+          class: studentClass,
+          role: "student",
+          createdAt: new Date().toISOString(),
+          createdBy: auth.currentUser.uid
+        });
+      });
+    })
+    .then(() => {
+      msg.innerHTML = "<span style='color: green;'>User created successfully!</span>";
+      document.getElementById("newUserName").value = "";
+      document.getElementById("newUserEmail").value = "";
+      document.getElementById("newUserClass").value = "";
+      document.getElementById("newUserPassword").value = "";
+      loadUsers(); // Refresh list
+    })
+    .catch((e) => {
+      console.error("Add user error:", e);
+      if (e.code === "auth/email-already-in-use") {
+        msg.innerHTML = "<span style='color: red;'>Email already exists.</span>";
+      } else {
+        msg.innerHTML = "<span style='color: red;'>Error: " + e.message + "</span>";
+      }
+    });
+}
+
+// Edit User Class
+function editUserClass(uid, currentClass) {
+  const newClass = prompt("Enter new class for this student:\n(jr_kg, sr_kg, 1-10)", currentClass || "1");
+  if (newClass === null) return;
+  
+  if (!newClass || !['jr_kg', 'sr_kg', '1', '2', '3', '4', '5', '6', '7', '8
+ function loadUsers() {
+  // Check if admin (replace with your admin UID)
+  const adminUID = '8L7gh4mvQgZhiKxCgqfh5OtYn3w2'; // Change this to your admin UID
+  if (!auth.currentUser || auth.currentUser.uid !== adminUID) {
+    document.getElementById("userList").innerHTML = "<p style='color: red;'>Access denied. Only admin can manage users.</p>";
+    return;
+  }
+  
+  document.getElementById("userList").innerHTML = "<p>Loading users...</p>";
+  
   firebase.database().ref("users").once("value", snap => {
     const list = document.getElementById("userList");
     list.innerHTML = "";
@@ -1188,18 +1356,32 @@
       list.innerHTML = "<p>No users found.</p>";
       return;
     }
+    
+    let usersHTML = "";
     snap.forEach(user => {
       const data = user.val();
       const name = data.name || data.email || "Unknown";
       const email = data.email || "No email";
       const role = data.role || "Unknown";
-      list.innerHTML += `
-        <div class="user-item" data-role="${role}" data-name="${name}" data-email="${email}">
-          <b>${name}</b> (${role}) - ${email}
-          <button onclick="deleteUser('${user.key}')">Delete</button>
+      const studentClass = data.class || "Not assigned";
+      
+      usersHTML += `
+        <div class="user-item" data-role="${role}" data-name="${name.toLowerCase()}" data-email="${email.toLowerCase()}" data-class="${studentClass}">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b>${name}</b> <span style="background: ${role === 'teacher' ? '#e3f2fd' : '#e8f5e9'}; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${role}</span>
+              <br><small>${email}</small>
+              ${role === 'student' ? `<br><small>Class: <b>${studentClass}</b></small>` : ''}
+            </div>
+            <div>
+              ${role === 'student' ? `<button onclick="editUserClass('${user.key}', '${data.class || ''}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #ffc107;">Edit Class</button>` : ''}
+              <button onclick="deleteUser('${user.key}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #dc3545;">Delete</button>
+            </div>
+          </div>
         </div>
       `;
     });
+    list.innerHTML = usersHTML;
   }).catch(e => {
     console.error("Load users error:", e);
     document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
@@ -1207,18 +1389,24 @@
 }
 
   function filterUsers() {
-    const search = document.getElementById("userSearch").value.toLowerCase();
-    const filter = document.getElementById("userFilter").value;
-    const items = document.querySelectorAll(".user-item");
-    items.forEach(item => {
-      const name = item.dataset.name.toLowerCase();
-      const email = item.dataset.email.toLowerCase();
-      const role = item.dataset.role;
-      const matchesSearch = name.includes(search) || email.includes(search);
-      const matchesFilter = filter === "all" || role === filter;
-      item.style.display = matchesSearch && matchesFilter ? "block" : "none";
-    });
-  }
+  const search = document.getElementById("userSearch").value.toLowerCase();
+  const filter = document.getElementById("userFilter").value;
+  const classFilter = document.getElementById("classFilter").value;
+  const items = document.querySelectorAll(".user-item");
+  
+  items.forEach(item => {
+    const name = item.dataset.name;
+    const email = item.dataset.email;
+    const role = item.dataset.role;
+    const userClass = item.dataset.class;
+    
+    const matchesSearch = name.includes(search) || email.includes(search);
+    const matchesFilter = filter === "all" || role === filter;
+    const matchesClass = classFilter === "" || userClass === classFilter;
+    
+    item.style.display = matchesSearch && matchesFilter && matchesClass ? "block" : "none";
+  });
+}
 
   function deleteUser(uid) {
     if (confirm("Delete this user?")) {
@@ -1424,10 +1612,18 @@
 function studentSignup() {
   const name = studentName.value.trim();
   const email = studentEmailSignup.value.trim();
+  const studentClass = document.getElementById('studentClassSignup').value;
   const pass = studentPasswordSignup.value.trim();
   const confirmPass = studentConfirmPassword.value.trim();
   
-  if (!name || !email || !pass || !confirmPass) {
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    document.getElementById("studentSignupMsg").innerText = "Please enter a valid email address.";
+    return;
+  }
+  
+  if (!name || !email || !studentClass || !pass || !confirmPass) {
     document.getElementById("studentSignupMsg").innerText = "Fill all fields.";
     return;
   }
@@ -1440,7 +1636,6 @@ function studentSignup() {
     return;
   }
   
-  // Show loading
   const btn = document.querySelector("#studentContainer .register-box button");
   btn.innerHTML = '<div class="loading"></div> Creating...';
   btn.disabled = true;
@@ -1448,32 +1643,26 @@ function studentSignup() {
   auth.createUserWithEmailAndPassword(email, pass)
     .then((userCredential) => {
       const user = userCredential.user;
-      
-      // Update display name
       return user.updateProfile({ displayName: name }).then(() => {
-        // Save user to database
         return firebase.database().ref("users/" + user.uid).set({
           name: name,
           email: email,
+          class: studentClass,
           role: "student",
           createdAt: new Date().toISOString()
         });
-      }).then(() => {
-        // Send verification email
-        return user.sendEmailVerification();
       });
     })
     .then(() => {
-      document.getElementById("studentSignupMsg").innerText = "Account created! Check your email to verify.";
+      document.getElementById("studentSignupMsg").innerText = "Account created! You can now login.";
       btn.innerHTML = 'Signup';
       btn.disabled = false;
-      // Clear form
       document.getElementById("studentName").value = "";
       document.getElementById("studentEmailSignup").value = "";
+      document.getElementById("studentClassSignup").value = "";
       document.getElementById("studentPasswordSignup").value = "";
       document.getElementById("studentConfirmPassword").value = "";
-      // Sign out until verified
-      auth.signOut();
+      setTimeout(() => showStudentLogin(), 2000);
     })
     .catch((e) => {
       console.error("Signup error:", e);
@@ -2158,6 +2347,7 @@ function loadDashboardStats() {
 </script>
 </body>
 </html>
+
 
 
 
