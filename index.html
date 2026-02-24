@@ -13,13 +13,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
- <!-- <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script> -->
-  <!-- <link rel="manifest" href="manifest.json"> -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
   <style>
     body {
       font-family: 'Roboto', Arial;
@@ -29,11 +22,13 @@
       margin: 0;
       padding: 0;
     }
-.success {
-  color: green;
-  margin-top: 10px;
-  font-weight: bold;
-}
+
+    .success {
+      color: green;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
     .box {
       width: 360px;
       margin: 40px auto;
@@ -63,10 +58,6 @@
 
     .error {
       color: red;
-    }
-
-    . {
-      color: green;
     }
 
     /* Theme Variables */
@@ -268,11 +259,6 @@
       border-left: 4px solid var(--accent);
     }
 
-    .options {
-      display: flex;
-      flex-direction: column;
-    }
-
     .option {
       margin: 10px 0;
       padding: 12px 16px;
@@ -384,28 +370,6 @@
       color: #666;
     }
 
-    .q-num::after {
-      content: attr(title);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: #fff;
-      padding: 5px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s;
-      white-space: nowrap;
-    }
-
-    .q-num:hover::after {
-      opacity: 1;
-      visibility: visible;
-    }
-
     .legend {
       margin-top: 20px;
       font-size: 12px;
@@ -456,79 +420,6 @@
       cursor: not-allowed;
     }
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .section-toggle {
-        flex-wrap: wrap;
-        gap: 10px;
-        padding: 10px;
-      }
-
-      .section-toggle button {
-        min-width: 120px;
-        font-size: 12px;
-        padding: 8px 15px;
-      }
-
-      .container {
-        width: 95%;
-        height: auto;
-        margin: 10px auto;
-      }
-
-      .form-box {
-        width: 100%;
-        position: static;
-        padding: 20px;
-      }
-
-      .orange-panel, .panel-text {
-        display: none;
-      }
-
-      .test-body {
-        flex-direction: column;
-      }
-
-      .question-area {
-        padding: 20px;
-        flex: none;
-      }
-
-      .question-map {
-        border-left: none;
-        border-top: 1px solid #ccc;
-        max-height: 200px;
-        flex: none;
-      }
-
-      .question-grid {
-        grid-template-columns: repeat(6, 1fr);
-      }
-
-      .test-footer {
-        padding: 10px;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .footer-buttons {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 5px;
-      }
-
-      .footer-buttons button {
-        margin: 5px;
-        padding: 8px 12px;
-        font-size: 14px;
-        flex: 1;
-        min-width: 80px;
-      }
-    }
-
     /* Loading Spinner */
     .loading {
       display: inline-block;
@@ -545,106 +436,77 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Tabbed Dashboard */
-    /* Teacher Panel Layout Fix */
-#teacherPanel {
-  display: none;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-#teacherPanel.active {
-  display: flex;
-}
-
-.dashboard-container {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.sidebar {
-  width: 250px;
-  min-width: 250px;
-  background: var(--box-bg);
-  border-right: 1px solid #ccc;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar li {
-  padding: 15px 20px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: 0.3s;
-  white-space: nowrap;
-}
-
-.sidebar li:hover, .sidebar li.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: var(--bg-color);
-}
-
-.tab-content {
-  display: none;
-  padding: 20px;
-  background: var(--box-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  min-height: calc(100vh - 150px);
-}
-
-.tab-content.active {
-  display: block;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-    min-width: 100%;
-    max-height: 200px;
-    border-right: none;
-    border-bottom: 1px solid #ccc;
-  }
-  .main-content {
-    padding: 10px;
-  }
-  .tab-content {
-    padding: 15px;
-    min-height: auto;
-  }
-}
-
-    /* Enhanced Dashboard Styles */
-    .dashboard-container {
-      display: flex;
+    /* Teacher Panel Layout */
+    #teacherPanel {
+      display: none;
       flex-direction: column;
       height: 100vh;
-      background: linear-gradient(135deg, var(--bg-color), #e0e7ff);
+      overflow: hidden;
+    }
+
+    #teacherPanel.active {
+      display: flex;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      min-width: 250px;
+      background: var(--box-bg);
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar li {
+      padding: 15px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    .sidebar li:hover, .sidebar li.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: var(--bg-color);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px;
+      background: var(--box-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      min-height: calc(100vh - 150px);
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .header {
@@ -655,126 +517,71 @@
       font-size: 28px;
       font-weight: bold;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      animation: fadeIn 0.5s ease-in;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
     }
 
-    .dashboard-card {
-      animation: slideIn 0.5s ease-out;
+    .stat-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      color: var(--text-color);
     }
 
-    @keyframes slideIn {
-      from { transform: translateX(-20px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    .stat-item .number {
+      font-size: 24px;
+      color: var(--accent);
     }
 
-    .quick-actions button:hover {
-      animation: pulse 0.5s infinite;
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+    .quick-actions button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
     }
 
-    .dashboard-card:hover {
-      transform: translateY(-5px);    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
+    .notifications {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
 
-.dashboard-card h3 {
-  color: var(--accent);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-}
+    .notification-item {
+      background: #fff3cd;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      border-left: 4px solid #ffc107;
+    }
 
-.dashboard-card h3 i {
-  margin-right: 10px;
-}
+        .chart-container {
+      margin-top: 20px;
+      height: 200px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+    }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.stat-item {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-  color: var(--text-color);
-}
-
-.stat-item .number {
-  font-size: 24px;
-  color: var(--accent);
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.quick-actions button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.quick-actions button:hover {
-  opacity: 0.8;
-}
-
-.notifications {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 15px;
-}
-
-.notification-item {
-  background: #fff3cd;
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 6px;
-  border-left: 4px solid #ffc107;
-}
-
-.chart-container {
-  margin-top: 20px;
-  height: 200px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-    /* Improved Header & Portal Toggle */
     .section-toggle {
       display: flex;
       justify-content: center;
@@ -816,42 +623,6 @@
       min-height: calc(100vh - 80px);
       margin: 0;
       padding: 20px;
-      animation: fadeIn 0.5s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .container {
-      box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
-    }
-
-    button {
-      background: linear-gradient(135deg, var(--accent), #0056b3);
-    }
-
-    @media (max-width: 768px) {
-      .auth-section {
-        margin: 20px 0;
-      }
-
-      .container {
-        width: 95%;
-        height: auto;
-        padding: 20px;
-      }
-
-      .form-box {
-        width: 100%;
-        padding: 20px;
-      }
-
-      button {
-        font-size: 14px;
-        padding: 10px;
-      }
     }
 
     .user-item {
@@ -860,6 +631,25 @@
       margin: 5px 0;
       border-radius: 6px;
       display: block;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container { flex-direction: column; }
+      .sidebar { width: 100%; min-width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid #ccc; }
+      .main-content { padding: 10px; }
+      .tab-content { padding: 15px; min-height: auto; }
+      .section-toggle { flex-wrap: wrap; gap: 10px; padding: 10px; }
+      .section-toggle button { min-width: 120px; font-size: 12px; padding: 8px 15px; }
+      .container { width: 95%; height: auto; margin: 10px auto; }
+      .form-box { width: 100%; position: static; padding: 20px; }
+      .orange-panel, .panel-text { display: none; }
+      .test-body { flex-direction: column; }
+      .question-area { padding: 20px; flex: none; }
+      .question-map { border-left: none; border-top: 1px solid #ccc; max-height: 200px; flex: none; }
+      .question-grid { grid-template-columns: repeat(6, 1fr); }
+      .test-footer { padding: 10px; flex-direction: column; gap: 10px; }
+      .footer-buttons { display: flex; justify-content: center; width: 100%; flex-wrap: wrap; gap: 5px; }
+      .footer-buttons button { margin: 5px; padding: 8px 12px; font-size: 14px; flex: 1; min-width: 80px; }
     }
   </style>
 </head>
@@ -873,9 +663,7 @@
   <!-- TEACHER LOGIN/SIGNUP -->
   <div class="auth-section teacher-section" id="teacherAuth" style="display: flex;">
     <div class="container" id="container">
-      <!-- Orange Panel -->
       <div class="orange-panel"></div>
-      <!-- Text Panel -->
       <div class="panel-text">
         <h1>Welcome Back!</h1>
         <p>Login to continue</p>
@@ -897,35 +685,23 @@
         <p id="loginMsg" class="error"></p>
       </div>
       <!-- Register Form -->
-     <!-- Replace the student register form with this -->
-<div class="form-box register-box">
-  <h2>Signup</h2>
-  <input id="studentName" type="text" placeholder="Full Name" required>
-  <input id="studentEmailSignup" type="email" placeholder="Email" required>
-  
-  <!-- NEW: Class Selection -->
-  <select id="studentClassSignup" required>
-    <option value="">Select Class</option>
-    <option value="jr_kg">Jr. KG</option>
-    <option value="sr_kg">Sr. KG</option>
-    <option value="1">Class 1</option>
-    <option value="2">Class 2</option>
-    <option value="3">Class 3</option>
-    <option value="4">Class 4</option>
-    <option value="5">Class 5</option>
-    <option value="6">Class 6</option>
-    <option value="7">Class 7</option>
-    <option value="8">Class 8</option>
-    <option value="9">Class 9</option>
-    <option value="10">Class 10</option>
-  </select>
-  
-  <input id="studentPasswordSignup" type="password" placeholder="Password" required>
-  <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-  <button onclick="studentSignup()">Signup</button>
-  <p id="studentSignupMsg" class="success"></p>
-  <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
-</div>
+      <div class="form-box register-box">
+        <h2>Signup</h2>
+        <div class="input-box">
+          <input id="tEmailSignup" type="email" placeholder="Email" required>
+        </div>
+        <div class="input-box">
+          <input id="tPasswordSignup" type="password" placeholder="Password" required>
+        </div>
+        <div class="input-box">
+          <input id="tConfirmPassword" type="password" placeholder="Confirm Password" required>
+        </div>
+        <button onclick="teacherSignup()">Signup</button>
+        <p id="signupMsg" class="success"></p>
+        <button class="switch-btn" onclick="showLogin()">Back to Login</button>
+      </div>
+    </div>
+  </div>
 
   <!-- STUDENT LOGIN/SIGNUP -->
   <div class="auth-section student-section" id="studentContainer" style="display: none;">
@@ -936,19 +712,35 @@
         <p>Login to take tests</p>
         <button class="switch-btn" onclick="showStudentRegister()">Go to Signup</button>
       </div>
-      <!-- Replace student login form -->
-<div class="form-box login-box">
-  <h2>Login</h2>
-  <input id="studentEmail" type="email" placeholder="Email" required>
-  <input id="studentPassword" type="password" placeholder="Password" required>
-  <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
-  <button onclick="studentLogin()">Login</button>
-  <p id="studentLoginMsg" class="error"></p>
-</div>
+      <!-- Student Login -->
+      <div class="form-box login-box">
+        <h2>Login</h2>
+        <input id="studentEmail" type="email" placeholder="Email" required>
+        <input id="studentPassword" type="password" placeholder="Password" required>
+        <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
+        <button onclick="studentLogin()">Login</button>
+        <p id="studentLoginMsg" class="error"></p>
+      </div>
+      <!-- Student Register -->
       <div class="form-box register-box">
         <h2>Signup</h2>
         <input id="studentName" type="text" placeholder="Full Name" required>
         <input id="studentEmailSignup" type="email" placeholder="Email" required>
+        <select id="studentClassSignup" required>
+          <option value="">Select Class</option>
+          <option value="jr_kg">Jr. KG</option>
+          <option value="sr_kg">Sr. KG</option>
+          <option value="1">Class 1</option>
+          <option value="2">Class 2</option>
+          <option value="3">Class 3</option>
+          <option value="4">Class 4</option>
+          <option value="5">Class 5</option>
+          <option value="6">Class 6</option>
+          <option value="7">Class 7</option>
+          <option value="8">Class 8</option>
+          <option value="9">Class 9</option>
+          <option value="10">Class 10</option>
+        </select>
         <input id="studentPasswordSignup" type="password" placeholder="Password" required>
         <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
         <button onclick="studentSignup()">Signup</button>
@@ -960,210 +752,180 @@
 
   <!-- TEACHER PANEL -->
   <div id="teacherPanel">
-  <div class="header">Hera MCQ System</div>
-    <div class="sidebar">
-      <ul>
-        <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
-        <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
-        <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
-        <li id="tab-results" onclick="showTab('results')">Results</li>
-        <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
-        <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
-        <li onclick="logout()">Logout</li>
-      </ul>
-    </div>
-    <div class="main-content">
-      <select id="themeSelector" onchange="changeTheme(this.value)">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="blue">Blue</option>
-        <option value="green">Green</option>
-      </select>
+    <div class="header">Hera MCQ System</div>
+    <div class="dashboard-container">
+      <div class="sidebar">
+        <ul>
+          <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
+          <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
+          <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
+          <li id="tab-results" onclick="showTab('results')">Results</li>
+          <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
+          <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
+          <li onclick="logout()">Logout</li>
+        </ul>
+      </div>
+      <div class="main-content">
+        <select id="themeSelector" onchange="changeTheme(this.value)" style="width: auto; margin-bottom: 15px;">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+        </select>
 
-      <div id="dashboard" class="tab-content active">
-        <div class="dashboard-card">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
           <h3><i class="fas fa-tachometer-alt"></i> Welcome to Hera MCQ System</h3>
-          <p>Manage tests, view results, and track student progress efficiently.</p>
-        </div>
-
-        <div class="dashboard-card">
-          <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
-          <div class="stats-grid" id="dashboardStats">
-            <div class="stat-item">
-              <div class="number" id="totalTests">0</div>
-              <div>Total Tests</div>
-            </div>
-            <div class="stat-item">
-              <div class="number" id="totalStudents">0</div>
-              <div>Total Students</div>
-            </div>
-            <div class="stat-item">
-              <div class="number" id="totalResults">0</div>
-              <div>Total Submissions</div>
-            </div>
-            <div class="stat-item">
-              <div class="number" id="avgScore">0%</div>
-              <div>Average Score</div>
-            </div>
+          <div class="stats-grid">
+            <div class="stat-item"><div class="number" id="totalTests">0</div><div>Total Tests</div></div>
+            <div class="stat-item"><div class="number" id="totalStudents">0</div><div>Total Students</div></div>
+            <div class="stat-item"><div class="number" id="totalResults">0</div><div>Total Submissions</div></div>
+            <div class="stat-item"><div class="number" id="avgScore">0%</div><div>Average Score</div></div>
           </div>
-        </div>
-
-        <div class="dashboard-card">
-          <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-          <div class="quick-actions">
+          <div class="quick-actions" style="margin-top: 20px;">
             <button onclick="showTab('createTest')"><i class="fas fa-plus"></i> Create Test</button>
             <button onclick="showTab('results')"><i class="fas fa-list"></i> View Results</button>
             <button onclick="exportAllResults()"><i class="fas fa-download"></i> Export All</button>
             <button onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Manage Approvals</button>
           </div>
-        </div>
-
-        <div class="dashboard-card">
-          <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
-          <div class="notifications" id="notificationsList">
-            <div class="notification-item">Loading recent activity...</div>
+          <div class="notifications" style="margin-top: 20px;">
+            <h4>Recent Notifications</h4>
+            <div id="notificationsList"><div class="notification-item">Loading...</div></div>
           </div>
-        </div>
-
-        <div class="dashboard-card">
-          <h3><i class="fas fa-chart-line"></i> Score Analytics</h3>
-          <div class="chart-container">
+          <div class="chart-container" style="margin-top: 20px;">
             <canvas id="scoreChart"></canvas>
           </div>
         </div>
-      </div>
 
-      <!-- Create Test Tab -->
-      <div id="createTest" class="tab-content">
-        <h3>Create Test</h3>
-        <select id="testClass">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <input id="testName" placeholder="Test Name">
-        <input id="testDuration" type="number" placeholder="Duration (minutes)">
-        <input id="questionLimit" type="number" placeholder="Questions to show (e.g. 30)">
-        <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
-        <input type="file" id="questionFile" accept=".csv">
-        <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
-      </div>
+        <!-- Create Test Tab -->
+        <div id="createTest" class="tab-content">
+          <h3>Create Test</h3>
+          <select id="testClass">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <input id="testName" placeholder="Test Name">
+          <input id="testDuration" type="number" placeholder="Duration (minutes)">
+          <input id="questionLimit" type="number" placeholder="Questions to show">
+          <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
+          <input type="file" id="questionFile" accept=".csv">
+          <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+        </div>
 
-      <!-- Manage Tests Tab -->
-      <div id="manageTests" class="tab-content">
-        <h3>Manage Tests</h3>
-        <select id="manageClass" onchange="TestsForTeacher()">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <div id="testList"></div>
-      </div>
+        <!-- Manage Tests Tab -->
+        <div id="manageTests" class="tab-content">
+          <h3>Manage Tests</h3>
+          <select id="manageClass" onchange="TestsForTeacher()">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <div id="testList"></div>
+        </div>
 
-      <!-- Results Tab -->
-      <div id="results" class="tab-content">
-        <h3>Student Results</h3>
-        <select id="resultClassSelect" onchange="TestsForClass(this.value)">
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <select id="resultTestSelect"></select>
-        <button onclick="Results()">Results</button>
-        <button onclick="exportResults()">Export CSV</button>
-        <div id="resultBox"></div>
-      </div>
+        <!-- Results Tab -->
+        <div id="results" class="tab-content">
+          <h3>Student Results</h3>
+          <select id="resultClassSelect" onchange="TestsForClass(this.value)">
+            <option value="">Select Class</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <select id="resultTestSelect"></select>
+          <button onclick="Results()">Results</button>
+          <button onclick="exportResults()">Export CSV</button>
+          <div id="resultBox"></div>
+        </div>
 
-      <!-- Approvals Tab -->
-      <div id="approvals" class="tab-content">
-        <h3>Pending Teacher Signups</h3>
-        <div id="pendingSignupsList"></div>
-      </div>
+        <!-- Approvals Tab -->
+        <div id="approvals" class="tab-content">
+          <h3>Pending Teacher Signups</h3>
+          <div id="pendingSignupsList"></div>
+        </div>
 
-     <!-- Manage Users Tab -->
-<div id="manageUsers" class="tab-content">
-  <h3>Manage Users</h3>
-  
-  <!-- Add User Section -->
-  <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-    <h4><i class="fas fa-user-plus"></i> Add New Student</h4>
-    <input id="newUserName" placeholder="Student Name" style="width: 45%;">
-    <input id="newUserEmail" type="email" placeholder="Email" style="width: 45%;">
-    <select id="newUserClass" style="width: 45%;">
-      <option value="">Select Class</option>
-      <option value="jr_kg">Jr. KG</option>
-      <option value="sr_kg">Sr. KG</option>
-      <option value="1">Class 1</option>
-      <option value="2">Class 2</option>
-      <option value="3">Class 3</option>
-      <option value="4">Class 4</option>
-      <option value="5">Class 5</option>
-      <option value="6">Class 6</option>
-      <option value="7">Class 7</option>
-      <option value="8">Class 8</option>
-      <option value="9">Class 9</option>
-      <option value="10">Class 10</option>
-    </select>
-    <input id="newUserPassword" type="password" placeholder="Password" style="width: 45%;">
-    <button onclick="addNewUser()" style="width: auto; margin-top: 10px;"><i class="fas fa-plus"></i> Add User</button>
-    <p id="addUserMsg"></p>
+        <!-- Manage Users Tab -->
+        <div id="manageUsers" class="tab-content">
+          <h3>Manage Users</h3>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4><i class="fas fa-user-plus"></i> Add New Student</h4>
+            <input id="newUserName" placeholder="Student Name" style="width: 45%;">
+            <input id="newUserEmail" type="email" placeholder="Email" style="width: 45%;">
+            <select id="newUserClass" style="width: 45%;">
+              <option value="">Select Class</option>
+              <option value="jr_kg">Jr. KG</option>
+              <option value="sr_kg">Sr. KG</option>
+              <option value="1">Class 1</option>
+              <option value="2">Class 2</option>
+              <option value="3">Class 3</option>
+              <option value="4">Class 4</option>
+              <option value="5">Class 5</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+            </select>
+            <input id="newUserPassword" type="password" placeholder="Password" style="width: 45%;">
+            <button onclick="addNewUser()" style="width: auto; margin-top: 10px;"><i class="fas fa-plus"></i> Add User</button>
+            <p id="addUserMsg"></p>
+          </div>
+          <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()" style="width: 100%;">
+          <select id="userFilter" onchange="filterUsers()" style="width: 100%;">
+            <option value="all">All Users</option>
+            <option value="teacher">Teachers</option>
+            <option value="student">Students</option>
+          </select>
+                   <select id="classFilter" onchange="filterUsers()" style="width: 100%;">
+            <option value="">All Classes</option>
+            <option value="jr_kg">Jr. KG</option>
+            <option value="sr_kg">Sr. KG</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+          <div id="userList" style="margin-top: 20px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <!-- Search and Filter -->
-  <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()" style="width: 100%;">
-  <select id="userFilter" onchange="filterUsers()" style="width: 100%;">
-    <option value="all">All Users</option>
-    <option value="teacher">Teachers</option>
-    <option value="student">Students</option>
-  </select>
-  <select id="classFilter" onchange="filterUsers()" style="width: 100%;">
-    <option value="">All Classes</option>
-    <option value="jr_kg">Jr. KG</option>
-    <option value="sr_kg">Sr. KG</option>
-    <option value="1">Class 1</option>
-    <option value="2">Class 2</option>
-    <option value="3">Class 3</option>
-    <option value="4">Class 4</option>
-    <option value="5">Class 5</option>
-    <option value="6">Class 6</option>
-    <option value="7">Class 7</option>
-    <option value="8">Class 8</option>
-    <option value="9">Class 9</option>
-    <option value="10">Class 10</option>
-  </select>
-  
-  <div id="userList" style="margin-top: 20px;"></div>
-</div>
 
   <!-- STUDENT PANEL -->
   <div class="box" id="studentPanel" style="display: none;">
@@ -1203,7 +965,7 @@
       </div>
       <div class="question-map">
         <div class="map-title">Question Map</div>
-       <div id="questionGrid" class="question-grid"></div>
+        <div id="questionGrid" class="question-grid"></div>
         <div class="legend">
           <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
           <div><span style="background: #4caf50;"></span> Attempted</div>
@@ -1239,7 +1001,7 @@
     alert("Firebase failed to load. Check your connection and try again.");
   }
 
-  const auth = firebase ? firebase.auth() : null;
+  const auth = firebase.auth();
   let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
   let timerInterval = null;
   let remainingTime = 0;
@@ -1253,21 +1015,6 @@
     localStorage.setItem('theme', theme);
   }
 
-  function toggleTheme() {
-    const body = document.body;
-    const btn = document.getElementById('themeToggle');
-    if (currentTheme === 'light') {
-      body.classList.add('dark-theme');
-      btn.innerText = 'Switch to Dark Theme';
-      currentTheme = 'dark';
-    } else {
-      body.classList.remove('dark-theme');
-      btn.innerText = 'Switch to Light Theme';
-      currentTheme = 'light';
-    }
-    localStorage.setItem('theme', currentTheme);
-  }
-
   // Show Register/Login
   function showRegister() {
     document.getElementById("container").classList.add("active");
@@ -1276,150 +1023,171 @@
   function showLogin() {
     document.getElementById("container").classList.remove("active");
   }
-// Add New User (Admin)
-function addNewUser() {
-  const name = document.getElementById("newUserName").value.trim();
-  const email = document.getElementById("newUserEmail").value.trim();
-  const studentClass = document.getElementById("newUserClass").value;
-  const password = document.getElementById("newUserPassword").value.trim();
-  const msg = document.getElementById("addUserMsg");
-  
-  // Validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    msg.innerHTML = "<span style='color: red;'>Please enter a valid email address.</span>";
-    return;
-  }
-  if (!name || !email || !studentClass || !password) {
-    msg.innerHTML = "<span style='color: red;'>Please fill all fields.</span>";
-    return;
-  }
-  if (password.length < 6) {
-    msg.innerHTML = "<span style='color: red;'>Password must be at least 6 characters.</span>";
-    return;
-  }
-  
-  msg.innerHTML = "<span>Creating user...</span>";
-  
-  auth.createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      return user.updateProfile({ displayName: name }).then(() => {
-        return firebase.database().ref("users/" + user.uid).set({
-          name: name,
-          email: email,
-          class: studentClass,
-          role: "student",
-          createdAt: new Date().toISOString(),
-          createdBy: auth.currentUser.uid
-        });
-      });
-    })
-    .then(() => {
-      msg.innerHTML = "<span style='color: green;'>User created successfully!</span>";
-      document.getElementById("newUserName").value = "";
-      document.getElementById("newUserEmail").value = "";
-      document.getElementById("newUserClass").value = "";
-      document.getElementById("newUserPassword").value = "";
-      loadUsers(); // Refresh list
-    })
-    .catch((e) => {
-      console.error("Add user error:", e);
-      if (e.code === "auth/email-already-in-use") {
-        msg.innerHTML = "<span style='color: red;'>Email already exists.</span>";
-      } else {
-        msg.innerHTML = "<span style='color: red;'>Error: " + e.message + "</span>";
-      }
-    });
-}
-
-// Edit User Class
-function editUserClass(uid, currentClass) {
-  const newClass = prompt("Enter new class for this student:\n(jr_kg, sr_kg, 1-10)", currentClass || "1");
-  if (newClass === null) return;
-  
-  if (!newClass || !['jr_kg', 'sr_kg', '1', '2', '3', '4', '5', '6', '7', '8
- function loadUsers() {
-  // Check if admin (replace with your admin UID)
-  const adminUID = '8L7gh4mvQgZhiKxCgqfh5OtYn3w2'; // Change this to your admin UID
-  if (!auth.currentUser || auth.currentUser.uid !== adminUID) {
-    document.getElementById("userList").innerHTML = "<p style='color: red;'>Access denied. Only admin can manage users.</p>";
-    return;
-  }
-  
-  document.getElementById("userList").innerHTML = "<p>Loading users...</p>";
-  
-  firebase.database().ref("users").once("value", snap => {
-    const list = document.getElementById("userList");
-    list.innerHTML = "";
-    if (!snap.exists()) {
-      list.innerHTML = "<p>No users found.</p>";
-      return;
-    }
-    
-    let usersHTML = "";
-    snap.forEach(user => {
-      const data = user.val();
-      const name = data.name || data.email || "Unknown";
-      const email = data.email || "No email";
-      const role = data.role || "Unknown";
-      const studentClass = data.class || "Not assigned";
-      
-      usersHTML += `
-        <div class="user-item" data-role="${role}" data-name="${name.toLowerCase()}" data-email="${email.toLowerCase()}" data-class="${studentClass}">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <b>${name}</b> <span style="background: ${role === 'teacher' ? '#e3f2fd' : '#e8f5e9'}; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${role}</span>
-              <br><small>${email}</small>
-              ${role === 'student' ? `<br><small>Class: <b>${studentClass}</b></small>` : ''}
-            </div>
-            <div>
-              ${role === 'student' ? `<button onclick="editUserClass('${user.key}', '${data.class || ''}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #ffc107;">Edit Class</button>` : ''}
-              <button onclick="deleteUser('${user.key}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #dc3545;">Delete</button>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-    list.innerHTML = usersHTML;
-  }).catch(e => {
-    console.error("Load users error:", e);
-    document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
-  });
-}
-
-  function filterUsers() {
-  const search = document.getElementById("userSearch").value.toLowerCase();
-  const filter = document.getElementById("userFilter").value;
-  const classFilter = document.getElementById("classFilter").value;
-  const items = document.querySelectorAll(".user-item");
-  
-  items.forEach(item => {
-    const name = item.dataset.name;
-    const email = item.dataset.email;
-    const role = item.dataset.role;
-    const userClass = item.dataset.class;
-    
-    const matchesSearch = name.includes(search) || email.includes(search);
-    const matchesFilter = filter === "all" || role === filter;
-    const matchesClass = classFilter === "" || userClass === classFilter;
-    
-    item.style.display = matchesSearch && matchesFilter && matchesClass ? "block" : "none";
-  });
-}
-
-  function deleteUser(uid) {
-    if (confirm("Delete this user?")) {
-      firebase.database().ref("users/" + uid).remove().then(() => loadUsers());
-    }
-  }
-
-  function isTeacherLoggedIn() {
-    return auth.currentUser && localStorage.getItem(`isTeacher_${auth.currentUser.email}`) === "true";
-  }
 
   function showStudentRegister() {
     document.querySelector("#studentContainer .container").classList.add("active");
+  }
+
+  function showStudentLogin() {
+    document.querySelector("#studentContainer .container").classList.remove("active");
+  }
+
+  // Add New User (Admin)
+  function addNewUser() {
+    const name = document.getElementById("newUserName").value.trim();
+    const email = document.getElementById("newUserEmail").value.trim();
+    const studentClass = document.getElementById("newUserClass").value;
+    const password = document.getElementById("newUserPassword").value.trim();
+    const msg = document.getElementById("addUserMsg");
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      msg.innerHTML = "<span style='color: red;'>Please enter a valid email address.</span>";
+      return;
+    }
+    if (!name || !email || !studentClass || !password) {
+      msg.innerHTML = "<span style='color: red;'>Please fill all fields.</span>";
+      return;
+    }
+    if (password.length < 6) {
+      msg.innerHTML = "<span style='color: red;'>Password must be at least 6 characters.</span>";
+      return;
+    }
+    
+    msg.innerHTML = "<span>Creating user...</span>";
+    
+    auth.createUserWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        return user.updateProfile({ displayName: name }).then(() => {
+          return firebase.database().ref("users/" + user.uid).set({
+            name: name,
+            email: email,
+            class: studentClass,
+            role: "student",
+            createdAt: new Date().toISOString(),
+            createdBy: auth.currentUser.uid
+          });
+        });
+      })
+      .then(() => {
+        msg.innerHTML = "<span style='color: green;'>User created successfully!</span>";
+        document.getElementById("newUserName").value = "";
+        document.getElementById("newUserEmail").value = "";
+        document.getElementById("newUserClass").value = "";
+        document.getElementById("newUserPassword").value = "";
+        loadUsers();
+      })
+      .catch((e) => {
+        console.error("Add user error:", e);
+        if (e.code === "auth/email-already-in-use") {
+          msg.innerHTML = "<span style='color: red;'>Email already exists.</span>";
+        } else {
+          msg.innerHTML = "<span style='color: red;'>Error: " + e.message + "</span>";
+        }
+      });
+  }
+
+  // Edit User Class
+  function editUserClass(uid, currentClass) {
+    const newClass = prompt("Enter new class for this student:\n(jr_kg, sr_kg, 1-10)", currentClass || "1");
+    if (newClass === null) return;
+    
+    const validClasses = ['jr_kg', 'sr_kg', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+    if (!validClasses.includes(newClass)) {
+      alert("Invalid class. Please enter: jr_kg, sr_kg, or 1-10");
+      return;
+    }
+    
+    firebase.database().ref("users/" + uid).update({ class: newClass })
+      .then(() => {
+        alert("Class updated successfully!");
+        loadUsers();
+      })
+      .catch(e => alert("Error updating class: " + e.message));
+  }
+
+  // Load Users
+  function loadUsers() {
+    const adminUID = '8L7gh4mvQgZhiKxCgqfh5OtYn3w2';
+    if (!auth.currentUser || auth.currentUser.uid !== adminUID) {
+      document.getElementById("userList").innerHTML = "<p style='color: red;'>Access denied. Only admin can manage users.</p>";
+      return;
+    }
+    
+    document.getElementById("userList").innerHTML = "<p>Loading users...</p>";
+    
+    firebase.database().ref("users").once("value", snap => {
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      if (!snap.exists()) {
+        list.innerHTML = "<p>No users found.</p>";
+        return;
+      }
+      
+      let usersHTML = "";
+      snap.forEach(user => {
+        const data = user.val();
+        const name = data.name || data.email || "Unknown";
+        const email = data.email || "No email";
+        const role = data.role || "Unknown";
+        const studentClass = data.class || "Not assigned";
+        
+        usersHTML += `
+          <div class="user-item" data-role="${role}" data-name="${name.toLowerCase()}" data-email="${email.toLowerCase()}" data-class="${studentClass}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <b>${name}</b> <span style="background: ${role === 'teacher' ? '#e3f2fd' : '#e8f5e9'}; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${role}</span>
+                <br><small>${email}</small>
+                ${role === 'student' ? `<br><small>Class: <b>${studentClass}</b></small>` : ''}
+              </div>
+              <div>
+                ${role === 'student' ? `<button onclick="editUserClass('${user.key}', '${data.class || ''}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #ffc107;">Edit Class</button>` : ''}
+                <button onclick="deleteUser('${user.key}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #dc3545;">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      list.innerHTML = usersHTML;
+    }).catch(e => {
+      console.error("Load users error:", e);
+      document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
+    });
+  }
+
+  // Filter Users
+  function filterUsers() {
+    const search = document.getElementById("userSearch").value.toLowerCase();
+    const filter = document.getElementById("userFilter").value;
+    const classFilter = document.getElementById("classFilter").value;
+    const items = document.querySelectorAll(".user-item");
+    
+    items.forEach(item => {
+      const name = item.dataset.name;
+      const email = item.dataset.email;
+      const role = item.dataset.role;
+      const userClass = item.dataset.class;
+      
+      const matchesSearch = name.includes(search) || email.includes(search);
+      const matchesFilter = filter === "all" || role === filter;
+      const matchesClass = classFilter === "" || userClass === classFilter;
+      
+      item.style.display = matchesSearch && matchesFilter && matchesClass ? "block" : "none";
+    });
+  }
+
+  // Delete User
+  function deleteUser(uid) {
+    if (confirm("Delete this user? This will also remove their results.")) {
+      // Delete from Firebase Auth
+      firebase.database().ref("users/" + uid).remove()
+        .then(() => {
+          alert("User deleted successfully!");
+          loadUsers();
+        })
+        .catch(e => alert("Error deleting user: " + e.message));
+    }
   }
 
   function hideAllSections() {
@@ -1431,28 +1199,19 @@ function editUserClass(uid, currentClass) {
     document.querySelector(".section-toggle").style.display = "none";
   }
 
- function showTeacherSection() {
-  document.getElementById("teacherAuth").style.display = "flex";
-  document.getElementById("studentContainer").style.display = "none";
-  document.getElementById("toggleTeacher").classList.add("active");
-  document.getElementById("toggleStudent").classList.remove("active");
-}
-  function showStudentSection() {
-  document.getElementById("teacherAuth").style.display = "none";
-  document.getElementById("studentContainer").style.display = "flex";
-  document.getElementById("toggleTeacher").classList.remove("active");
-  document.getElementById("toggleStudent").classList.add("active");
-}
-
-  function disableUnloadWarning() {
-    window.onbeforeunload = null;
+  function showTeacherSection() {
+    document.getElementById("teacherAuth").style.display = "flex";
+    document.getElementById("studentContainer").style.display = "none";
+    document.getElementById("toggleTeacher").classList.add("active");
+    document.getElementById("toggleStudent").classList.remove("active");
   }
 
-  window.onbeforeunload = function () {
-    if (testArea.style.display === "block") {
-      return "Test is running. Leaving will submit the test.";
-    }
-  };
+  function showStudentSection() {
+    document.getElementById("teacherAuth").style.display = "none";
+    document.getElementById("studentContainer").style.display = "flex";
+    document.getElementById("toggleTeacher").classList.remove("active");
+    document.getElementById("toggleStudent").classList.add("active");
+  }
 
   window.onload = () => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1477,17 +1236,7 @@ function editUserClass(uid, currentClass) {
     if (tabName === "manageUsers") loadUsers();
   }
 
-  function resendVerification() {
-    if (auth.currentUser) {
-      auth.currentUser.sendEmailVerification()
-        .then(() => alert("Verification email sent!"))
-        .catch(e => alert("Error: " + e.message));
-    } else {
-      alert("Log in first.");
-    }
-  }
-
-  // Login/Signup Functions
+  // Auth Functions
   function teacherLogin() {
     const email = tEmail.value.trim();
     const pass = tPassword.value.trim();
@@ -1496,105 +1245,59 @@ function editUserClass(uid, currentClass) {
       return;
     }
     auth.signInWithEmailAndPassword(email, pass)
-      .then(() => {})
       .catch(e => {
         console.error("Login error:", e);
         loginMsg.innerText = e.message || "Login failed. Check credentials.";
       });
   }
 
- function teacherSignup() {
-  const email = tEmailSignup.value.trim();
-  const pass = tPasswordSignup.value.trim();
-  const confirmPass = tConfirmPassword.value.trim();
-  if (!email || !pass || !confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Fill all fields.";
-    return;
-  }
-  if (pass !== confirmPass) {
-    signupMsg.innerText = "";
-    loginMsg.innerText = "Passwords do not match.";
-    return;
-  }
-  const btn = document.querySelector('.register-box button');
-  btn.innerHTML = '<div class="loading"></div> Signing up...';
-  btn.disabled = true;
+  function teacherSignup() {
+    const email = tEmailSignup.value.trim();
+    const pass = tPasswordSignup.value.trim();
+    const confirmPass = tConfirmPassword.value.trim();
+    
+    if (!email || !pass || !confirmPass) {
+      signupMsg.innerText = "Fill all fields.";
+      return;
+    }
+    if (pass !== confirmPass) {
+      signupMsg.innerText = "Passwords do not match.";
+      return;
+    }
+    
+    const btn = document.querySelector('.register-box button');
+    btn.innerHTML = '<div class="loading"></div> Signing up...';
+    btn.disabled = true;
 
-  // Create account directly (Firebase handles password securely)
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      // Send verification email
-      return user.sendEmailVerification().then(() => {
-        // Store pending request WITHOUT password
-        return firebase.database().ref("pendingSignups").push({
-          email: email,
-          uid: user.uid,
-          role: "teacher",
-          status: "pending",
-          createdAt: new Date().toISOString()
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        return user.sendEmailVerification().then(() => {
+          return firebase.database().ref("pendingSignups").push({
+            email: email,
+            uid: user.uid,
+            role: "teacher",
+            status: "pending",
+            createdAt: new Date().toISOString()
+          });
         });
+      })
+      .then(() => {
+        signupMsg.innerText = "Signup request submitted! Verify email and wait for approval.";
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+        tEmailSignup.value = "";
+        tPasswordSignup.value = "";
+        tConfirmPassword.value = "";
+        auth.signOut();
+      })
+      .catch(e => {
+        signupMsg.innerText = e.message;
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
       });
-    })
-    .then(() => {
-      signupMsg.innerText = "Signup request submitted! Verify email and wait for approval.";
-      loginMsg.innerText = "";
-      tEmailSignup.value = "";
-      tPasswordSignup.value = "";
-      tConfirmPassword.value = "";
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
-      // Sign out until approved
-      auth.signOut();
-    })
-    .catch(e => {
-      signupMsg.innerText = e.message;
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
-    });
-}
- auth.onAuthStateChanged(user => {
-  if (!user) {
-    hideAllSections();
-    document.querySelector(".section-toggle").style.display = "flex";
-    showStudentSection();
-    return;
   }
-  if (!user.emailVerified) {
-    alert("Please verify your email before proceeding.");
-    auth.signOut();
-    return;
-  }
-  const uid = user.uid;
 
-  firebase.database()
-    .ref("users/" + uid + "/role")
-    .once("value")
-    .then(snapshot => {
-      const role = snapshot.val();
-      console.log("User role:", role);  // Debug log
-      hideAllSections();
-
-      if (role === "teacher") {
-        localStorage.setItem(`isTeacher_${user.email}`, "true");
-        document.getElementById("teacherPanel").style.display = "flex";
-        loadPendingSignups();
-      } else {
-        localStorage.removeItem(`isTeacher_${user.email}`);
-        document.getElementById("studentPanel").style.display = "block";
-      }
-    })
-    .catch(err => {
-      console.error("Role fetch error:", err);
-      // Default to student if error
-      hideAllSections();
-      document.getElementById("studentPanel").style.display = "block";
-    });
-});
-  function showStudentLogin() {
-  document.querySelector("#studentContainer .container").classList.remove("active");
-}
   function studentLogin() {
     const email = studentEmail.value.trim();
     const pass = studentPassword.value.trim();
@@ -1603,81 +1306,118 @@ function editUserClass(uid, currentClass) {
       return;
     }
     auth.signInWithEmailAndPassword(email, pass)
-      .then(() => {})
       .catch(e => {
         console.error("Login error:", e);
         studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
       });
   }
-function studentSignup() {
-  const name = studentName.value.trim();
-  const email = studentEmailSignup.value.trim();
-  const studentClass = document.getElementById('studentClassSignup').value;
-  const pass = studentPasswordSignup.value.trim();
-  const confirmPass = studentConfirmPassword.value.trim();
-  
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    document.getElementById("studentSignupMsg").innerText = "Please enter a valid email address.";
-    return;
-  }
-  
-  if (!name || !email || !studentClass || !pass || !confirmPass) {
-    document.getElementById("studentSignupMsg").innerText = "Fill all fields.";
-    return;
-  }
-  if (pass !== confirmPass) {
-    document.getElementById("studentSignupMsg").innerText = "Passwords do not match.";
-    return;
-  }
-  if (pass.length < 6) {
-    document.getElementById("studentSignupMsg").innerText = "Password must be at least 6 characters.";
-    return;
-  }
-  
-  const btn = document.querySelector("#studentContainer .register-box button");
-  btn.innerHTML = '<div class="loading"></div> Creating...';
-  btn.disabled = true;
-  
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      return user.updateProfile({ displayName: name }).then(() => {
-        return firebase.database().ref("users/" + user.uid).set({
-          name: name,
-          email: email,
-          class: studentClass,
-          role: "student",
-          createdAt: new Date().toISOString()
+
+    function studentSignup() {
+    const name = studentName.value.trim();
+    const email = studentEmailSignup.value.trim();
+    const studentClass = document.getElementById('studentClassSignup').value;
+    const pass = studentPasswordSignup.value.trim();
+    const confirmPass = studentConfirmPassword.value.trim();
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      document.getElementById("studentSignupMsg").innerText = "Please enter a valid email address.";
+      return;
+    }
+    
+    if (!name || !email || !studentClass || !pass || !confirmPass) {
+      document.getElementById("studentSignupMsg").innerText = "Fill all fields.";
+      return;
+    }
+    if (pass !== confirmPass) {
+      document.getElementById("studentSignupMsg").innerText = "Passwords do not match.";
+      return;
+    }
+    if (pass.length < 6) {
+      document.getElementById("studentSignupMsg").innerText = "Password must be at least 6 characters.";
+      return;
+    }
+    
+    const btn = document.querySelector("#studentContainer .register-box button");
+    btn.innerHTML = '<div class="loading"></div> Creating...';
+    btn.disabled = true;
+    
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        return user.updateProfile({ displayName: name }).then(() => {
+          return firebase.database().ref("users/" + user.uid).set({
+            name: name,
+            email: email,
+            class: studentClass,
+            role: "student",
+            createdAt: new Date().toISOString()
+          });
         });
+      })
+      .then(() => {
+        document.getElementById("studentSignupMsg").innerText = "Account created! You can now login.";
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+        document.getElementById("studentName").value = "";
+        document.getElementById("studentEmailSignup").value = "";
+        document.getElementById("studentClassSignup").value = "";
+        document.getElementById("studentPasswordSignup").value = "";
+        document.getElementById("studentConfirmPassword").value = "";
+        setTimeout(() => showStudentLogin(), 2000);
+      })
+      .catch((e) => {
+        console.error("Signup error:", e);
+        btn.innerHTML = 'Signup';
+        btn.disabled = false;
+        if (e.code === "auth/email-already-in-use") {
+          document.getElementById("studentSignupMsg").innerText = "Email already exists.";
+        } else {
+          document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
+        }
       });
-    })
-    .then(() => {
-      document.getElementById("studentSignupMsg").innerText = "Account created! You can now login.";
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
-      document.getElementById("studentName").value = "";
-      document.getElementById("studentEmailSignup").value = "";
-      document.getElementById("studentClassSignup").value = "";
-      document.getElementById("studentPasswordSignup").value = "";
-      document.getElementById("studentConfirmPassword").value = "";
-      setTimeout(() => showStudentLogin(), 2000);
-    })
-    .catch((e) => {
-      console.error("Signup error:", e);
-      btn.innerHTML = 'Signup';
-      btn.disabled = false;
-      if (e.code === "auth/email-already-in-use") {
-        document.getElementById("studentSignupMsg").innerText = "Email already exists.";
-      } else {
-        document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
-      }
-    });
-}
+  }
+
+  // Auth State Changed
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      hideAllSections();
+      document.querySelector(".section-toggle").style.display = "flex";
+      showStudentSection();
+      return;
+    }
+    if (!user.emailVerified) {
+      alert("Please verify your email before proceeding.");
+      auth.signOut();
+      return;
+    }
+    
+    const uid = user.uid;
+    firebase.database().ref("users/" + uid + "/role").once("value")
+      .then(snapshot => {
+        const role = snapshot.val();
+        hideAllSections();
+        if (role === "teacher") {
+          localStorage.setItem(`isTeacher_${user.email}`, "true");
+          document.getElementById("teacherPanel").style.display = "flex";
+          loadPendingSignups();
+        } else {
+          localStorage.removeItem(`isTeacher_${user.email}`);
+          document.getElementById("studentPanel").style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.error("Role fetch error:", err);
+        hideAllSections();
+        document.getElementById("studentPanel").style.display = "block";
+      });
+  });
+
+  // Tests for Class
   function TestsForClass(cls) {
     resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
     studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
+    if (!cls) return;
     firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
       snap.forEach(t => {
         let o = document.createElement("option");
@@ -1688,11 +1428,8 @@ function studentSignup() {
     });
   }
 
+  // Save Test
   function saveTest() {
-    if (!isTeacherLoggedIn()) {
-      alert("Access denied. Please log in as a teacher.");
-      return;
-    }
     const cls = testClass.value;
     let name = testName.value.trim();
     name = name.replace(/[.#$[\$]/g, "_");
@@ -1701,19 +1438,15 @@ function studentSignup() {
     const limit = Number(questionLimit.value);
 
     if (!cls || !name || !duration || !limit || duration <= 0 || limit <= 0) {
-      alert("Fill all fields with valid values (duration and limit must be positive numbers).");
+      alert("Fill all fields with valid values.");
       return;
     }
 
     let questions = [];
-
     if (raw) {
       questions = raw.split("\n").map(l => {
         const p = l.split("|");
-        if (p.length !== 6) {
-          alert("Invalid question format. Ensure each line is: Question | A | B | C | D | CorrectIndex");
-          return null;
-        }
+        if (p.length !== 6) return null;
         return {
           q: p[0].trim(),
           options: p.slice(1, 5).map(x => x.trim()),
@@ -1728,8 +1461,7 @@ function studentSignup() {
       const reader = new FileReader();
       reader.onload = function(e) {
         const csvText = e.target.result;
-        const csvLines = csvText.split("\n");
-        csvLines.forEach(line => {
+        csvText.split("\n").forEach(line => {
           const p = line.split(",");
           if (p.length === 6) {
             questions.push({
@@ -1753,129 +1485,114 @@ function studentSignup() {
       alert("No valid questions found.");
       return;
     }
-
-    firebase.database()
-      .ref(`tests/class_${cls}/${name}`)
-      .set({
-        duration: duration,
-        limit: Math.min(limit, questions.length),
-        questions: questions
-      })
-      .then(() => {
-        alert("Test Saved with duration");
-        testName.value = "";
-        bulkQuestions.value = "";
-        testDuration.value = "";
-        questionLimit.value = "";
-        document.getElementById('questionFile').value = "";
-      })
-      .catch(e => {
-        console.error("Save test error:", e);
-        alert("Failed to save test: " + e.message);
-      });
+    firebase.database().ref(`tests/class_${cls}/${name}`).set({
+      duration: duration,
+      limit: Math.min(limit, questions.length),
+      questions: questions
+    }).then(() => {
+      alert("Test Saved successfully!");
+      testName.value = "";
+      bulkQuestions.value = "";
+      testDuration.value = "";
+      questionLimit.value = "";
+      document.getElementById('questionFile').value = "";
+    }).catch(e => {
+      console.error("Save test error:", e);
+      alert("Failed to save test: " + e.message);
+    });
   }
 
+  // Auto Save Answers
   function autoSaveAnswers() {
     if (!currentStudent.roll || !currentTest) return;
-    firebase.database()
-      .ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-      .set({
-        answers: studentAnswers,
-        marked: markedForReview,
-        timeLeft: remainingTime,
-        currentIndex: currentQuestionIndex,
-        updated: Date.now()
-      });
+    firebase.database().ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`).set({
+      answers: studentAnswers,
+      marked: markedForReview,
+      timeLeft: remainingTime,
+      currentIndex: currentQuestionIndex,
+      updated: Date.now()
+    });
   }
 
+  // Shuffle Array
   function shuffleArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
   }
 
+  // Start Student Test
   function startStudentTest() {
-  if (!auth.currentUser) {alert("Login required"); return;}
-  const cls = sClass.value;
-  const test = studentTestSelect.value;
-  const roll = auth.currentUser.uid;
-  const name = auth.currentUser.displayName || auth.currentUser.email;
+    if (!auth.currentUser) { alert("Login required"); return; }
+    const cls = sClass.value;
+    const test = studentTestSelect.value;
+    const roll = auth.currentUser.uid;
+    const name = auth.currentUser.displayName || auth.currentUser.email;
 
-  if (!cls || !test) {
-    alert("Please select class and test");
-    return;
+    if (!cls || !test) {
+      alert("Please select class and test");
+      return;
+    }
+
+    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value")
+      .then(rSnap => {
+        if (rSnap.exists()) {
+          alert("Test already submitted. Teacher must allow reattempt.");
+          return;
+        }
+
+        currentStudent = { name, roll, class: cls };
+        currentTest = test;
+
+        firebase.database().ref(`tests/class_${cls}/${test}`).once("value")
+          .then(snap => {
+            if (!snap.exists()) {
+              alert("Test not found");
+              return;
+            }
+
+            const data = snap.val();
+            let allQuestions = Object.values(data.questions || {});
+            shuffleArray(allQuestions);
+            const limit = data.limit || allQuestions.length;
+            currentQuestions = allQuestions.slice(0, limit);
+
+            studentAnswers = {};
+            markedForReview = {};
+            currentQuestionIndex = 0;
+
+            firebase.database().ref(`savedTests/${roll}/${test}`).once("value")
+              .then(saveSnap => {
+                if (saveSnap.exists()) {
+                  const saved = saveSnap.val();
+                  studentAnswers = saved.answers || {};
+                  markedForReview = saved.marked || {};
+                  remainingTime = saved.timeLeft || (data.duration * 60);
+                  currentQuestionIndex = saved.currentIndex || 0;
+                } else {
+                  remainingTime = data.duration * 60;
+                }
+                hideAllSections();
+                document.getElementById("testArea").style.display = "flex";
+                startTimer(Math.ceil(remainingTime / 60));
+                renderTest();
+                document.documentElement.requestFullscreen();
+                document.addEventListener('contextmenu', e => e.preventDefault());
+                updateQuestionMap();
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+              });
+          });
+      })
+      .catch(e => {
+        console.error("Start test error:", e);
+        alert("Failed to start test: " + e.message);
+      });
   }
 
-  firebase.database()
-    .ref(`results/class_${cls}/${test}/${roll}`)
-    .once("value")
-    .then(rSnap => {
-      if (rSnap.exists()) {
-        alert("Test already submitted.\nTeacher must allow reattempt.");
-        return;
-      }
-
-      currentStudent = {name, roll, class: cls};
-      currentTest = test;
-
-      firebase.database()
-        .ref(`tests/class_${cls}/${test}`)
-        .once("value")
-        .then(snap => {
-          if (!snap.exists()) {
-            alert("Test not found");
-            return;
-          }
-
-          const data = snap.val();
-          let allQuestions = Object.values(data.questions || {});
-          shuffleArray(allQuestions);
-          const limit = data.limit || allQuestions.length;
-          currentQuestions = allQuestions.slice(0, limit);
-
-          studentAnswers = {};
-          markedForReview = {};
-          currentQuestionIndex = 0;
-
-          firebase.database()
-            .ref(`savedTests/${roll}/${test}`)
-            .once("value")
-            .then(saveSnap => {
-              if (saveSnap.exists()) {
-                const saved = saveSnap.val();
-                studentAnswers = saved.answers || {};
-                markedForReview = saved.marked || {};
-                remainingTime = saved.timeLeft || (data.duration * 60);
-                currentQuestionIndex = saved.currentIndex || 0;
-              } else {
-                remainingTime = data.duration * 60;
-              }
-              hideAllSections();
-              document.getElementById("testArea").style.display = "flex";
-              startTimer(Math.ceil(remainingTime / 60));
-              renderTest();
-              document.documentElement.requestFullscreen();
-              document.addEventListener('contextmenu', e => e.preventDefault());
-              document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) alert('Exited fullscreen!');
-              });
-              document.addEventListener('visibilitychange', () => {
-                if (document.hidden) alert('Tab switched!');
-              });
-              updateQuestionMap();
-              clearInterval(autoSaveInterval);
-              autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-            });
-        });
-    })
-    .catch(e => {
-      console.error("Start test error:", e);
-      alert("Failed to start test: " + e.message);
-    });
-}
-
+  // Render Test
   function renderTest() {
     testTitle.innerText = currentTest;
     studentPanel.style.display = "none";
@@ -1884,12 +1601,10 @@ function studentSignup() {
     updateNavigationButtons();
   }
 
+  // Display Question
   function displayQuestion(index) {
     const q = currentQuestions[index];
-    if (!q) {
-      console.error("Question not found at index:", index);
-      return;
-    }
+    if (!q) return;
     const sanitizedQ = q.q.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
     const questionDisplay = document.getElementById('questionDisplay');
     questionDisplay.innerHTML = `
@@ -1914,47 +1629,52 @@ function studentSignup() {
     updateQuestionMap();
   }
 
+  // Select Option
   function selectOption(qIndex, optIndex) {
     studentAnswers[qIndex] = optIndex;
     displayQuestion(qIndex);
   }
 
+  // Mark for Review
   function markForReview() {
     markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
     updateQuestionMap();
   }
 
+  // Navigate Question
   function navigateQuestion(direction) {
     currentQuestionIndex += direction;
     displayQuestion(currentQuestionIndex);
     updateNavigationButtons();
   }
 
+  // Update Navigation Buttons
   function updateNavigationButtons() {
     document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
     document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
   }
 
+    // Update Question Map
   function updateQuestionMap() {
-  const grid = document.getElementById('questionGrid');
-  grid.innerHTML = '';
-  currentQuestions.forEach((_, i) => {
-    const div = document.createElement('div');
-    div.className = 'q-num';
-    div.textContent = i + 1;
-    if (i === currentQuestionIndex) div.classList.add('current');
-    if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // ✅ Fixed
-    else if (markedForReview[i]) div.classList.add('marked');
-    else div.classList.add('not-attempted');
-    div.onclick = () => {
-      currentQuestionIndex = i;
-      displayQuestion(i);
-      updateNavigationButtons();
-    };
-    grid.appendChild(div);
-  });
-}
-
+    const grid = document.getElementById('questionGrid');
+    grid.innerHTML = '';
+    currentQuestions.forEach((_, i) => {
+      const div = document.createElement('div');
+      div.className = 'q-num';
+      div.textContent = i + 1;
+      if (i === currentQuestionIndex) div.classList.add('current');
+      if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // ✅ Fixed
+      else if (markedForReview[i]) div.classList.add('marked');
+      else div.classList.add('not-attempted');
+      div.onclick = () => {
+        currentQuestionIndex = i;
+        displayQuestion(i);
+        updateNavigationButtons();
+      };
+      grid.appendChild(div);
+    });
+  }
+  // Start Timer
   function startTimer(minutes) {
     remainingTime = minutes * 60;
     clearInterval(timerInterval);
@@ -1971,20 +1691,14 @@ function studentSignup() {
     }, 1000);
   }
 
-  function updateTimerDisplay() {
-    const min = Math.floor(remainingTime / 60);
-    const sec = remainingTime % 60;
-    timerBox.innerText = `Time Left: ${min}:${sec.toString().padStart(2, '0')}`;
-  }
-
+  // Submit Test
   function submitTest() {
     clearInterval(timerInterval);
     clearInterval(autoSaveInterval);
-    disableUnloadWarning();
     let score = 0;
     let detailedAnswers = {};
     currentQuestions.forEach((q, i) => {
-     const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
+      const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
       const correctChoice = q.options[q.answer];
       const isCorrect = studentAnswers[i] === q.answer;
       if (isCorrect) score++;
@@ -1999,28 +1713,16 @@ function studentSignup() {
     firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
       .then(nameSnap => {
         const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
-        firebase.database()
-          .ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`)
-          .set({
-            name: studentName,
-            score: score,
-            total: currentQuestions.length,
-            answers: detailedAnswers,
-            submittedAt: new Date().toISOString()
-          })
-          .then(() => {
-            alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
-            fetch('https://fcm.googleapis.com/fcm/send', {
-              method: 'POST',
-              headers: { 'Authorization': 'key=YOUR_SERVER_KEY', 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                to: 'TEACHER_FCM_TOKEN',
-                notification: { title: 'New Submission', body: `${studentName} submitted ${currentTest}` }
-              })
-            }).catch(e => console.error('FCM error:', e));
-            location.reload();
-          })
-          .catch(e => alert("Error submitting test: " + e.message));
+        firebase.database().ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`).set({
+          name: studentName,
+          score: score,
+          total: currentQuestions.length,
+          answers: detailedAnswers,
+          submittedAt: new Date().toISOString()
+        }).then(() => {
+          alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
+          location.reload();
+        }).catch(e => alert("Error submitting test: " + e.message));
       })
       .catch(e => {
         console.error("Error fetching name:", e);
@@ -2028,36 +1730,35 @@ function studentSignup() {
       });
   }
 
+  // Results
   function Results() {
     const cls = resultClassSelect.value;
     const test = resultTestSelect.value;
     if (!cls || !test) return alert("Select class and test");
-    firebase.database()
-      .ref(`results/class_${cls}/${test}`)
-      .once("value", snap => {
-        resultBox.innerHTML = "";
-        if (!snap.exists()) {
-          resultBox.innerHTML = "<p>No results</p>";
-          return;
-        }
-        snap.forEach(r => {
-          const d = r.val();
-          resultBox.innerHTML += `
-            <div style="border:1px solid #ccc;padding:6px;margin:6px">
-              <b>${d.name}</b> (Roll: ${r.key})<br>
-              Score: ${d.score}/${d.total}<br>
-              <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
-              <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
-            </div>
-          `;
-        });
-      })
-      .catch(e => {
-        console.error("Results error:", e);
-        resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
+    firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
+      resultBox.innerHTML = "";
+      if (!snap.exists()) {
+        resultBox.innerHTML = "<p>No results</p>";
+        return;
+      }
+      snap.forEach(r => {
+        const d = r.val();
+        resultBox.innerHTML += `
+          <div style="border:1px solid #ccc;padding:6px;margin:6px">
+            <b>${d.name}</b> (Roll: ${r.key})<br>
+            Score: ${d.score}/${d.total}<br>
+            <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
+            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
+          </div>
+        `;
       });
+    }).catch(e => {
+      console.error("Results error:", e);
+      resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
+    });
   }
 
+  // Export Results
   function exportResults() {
     const cls = resultClassSelect.value;
     const test = resultTestSelect.value;
@@ -2068,7 +1769,7 @@ function studentSignup() {
         const d = r.val();
         csv += `${d.name},${r.key},${d.score},${d.total}\n`;
       });
-      const blob = new Blob([csv], {type: 'text/csv'});
+      const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -2077,6 +1778,7 @@ function studentSignup() {
     });
   }
 
+  // View Details
   function viewDetails(cls, test, roll) {
     firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
       const d = snap.val();
@@ -2086,46 +1788,44 @@ function studentSignup() {
         const ans = d.answers[i];
         details += `Q${parseInt(i) + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
       });
-      console.log("Full Results Details:", details);
       alert(details);
     });
   }
 
+  // Allow Reattempt
   function allowReattempt(cls, test, roll) {
     if (!confirm("Allow this student to reattempt the test?")) return;
-    firebase.database()
-      .ref(`results/class_${cls}/${test}/${roll}`)
-      .remove()
+    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).remove()
       .then(() => {
         alert("Reattempt allowed. Student can start test again.");
         Results();
       });
   }
 
+  // Tests for Teacher
   function TestsForTeacher() {
     const cls = manageClass.value;
     const testList = document.getElementById("testList");
     testList.innerHTML = "";
     if (!cls) return;
-    firebase.database()
-      .ref(`tests/class_${cls}`)
-      .once("value", snap => {
-        if (!snap.exists()) {
-          testList.innerHTML = "<p>No tests found.</p>";
-          return;
-        }
-        snap.forEach(t => {
-          testList.innerHTML += `
-            <div style="border:1px solid #ccc;padding:6px;margin:5px">
-              <b>${t.key}</b><br>
-              <button onclick="editTest('${cls}','${t.key}')">Edit</button>
-              <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
-            </div>
-          `;
-        });
+    firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
+      if (!snap.exists()) {
+        testList.innerHTML = "<p>No tests found.</p>";
+        return;
+      }
+      snap.forEach(t => {
+        testList.innerHTML += `
+          <div style="border:1px solid #ccc;padding:6px;margin:5px">
+            <b>${t.key}</b><br>
+            <button onclick="editTest('${cls}','${t.key}')">Edit</button>
+            <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
+          </div>
+        `;
       });
+    });
   }
 
+  // Reset Password
   function resetPassword() {
     const email = prompt("Enter your email:");
     if (email) {
@@ -2135,40 +1835,40 @@ function studentSignup() {
     }
   }
 
+  // Edit Test
   function editTest(cls, testName) {
-    if (!isTeacherLoggedIn()) {
-      alert("Access denied. Please log in as a teacher.");
-      return;
-    }
-    firebase.database()
-      .ref(`tests/class_${cls}/${testName}`)
-      .once("value", snap => {
-        if (!snap.exists()) {
-          alert("Test not found or access denied.");
-          console.error("Edit test failed: No data for", cls, testName);
-          return;
-        }
-        const data = snap.val();
-        testClass.value = cls;
-        testName.value = testName;
-        testDuration.value = data.duration || "";
-        questionLimit.value = data.limit || "";
-        bulkQuestions.value = Object.values(data.questions || {})
-          .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
-          .join("\n");
-      })
-      .catch(e => {
-        console.error("Edit test error:", e);
-        alert("Failed to load test: " + e.message);
-      });
+    firebase.database().ref(`tests/class_${cls}/${testName}`).once("value", snap => {
+      if (!snap.exists()) {
+        alert("Test not found.");
+        return;
+      }
+      const data = snap.val();
+      testClass.value = cls;
+      document.getElementById('testName').value = testName;
+      testDuration.value = data.duration || "";
+      questionLimit.value = data.limit || "";
+      bulkQuestions.value = Object.values(data.questions || {})
+        .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
+        .join("\n");
+      showTab('createTest');
+    }).catch(e => {
+      console.error("Edit test error:", e);
+      alert("Failed to load test: " + e.message);
+    });
   }
 
+  // Delete Test
   function deleteTest(cls, testName) {
     if (confirm("Delete this test?")) {
-      firebase.database().ref(`tests/class_${cls}/${testName}`).remove().then(() => alert("Deleted"));
+      firebase.database().ref(`tests/class_${cls}/${testName}`).remove()
+        .then(() => {
+          alert("Test deleted successfully!");
+          TestsForTeacher();
+        });
     }
   }
 
+  // Logout
   function logout() {
     if (auth.currentUser) {
       localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
@@ -2193,6 +1893,7 @@ function studentSignup() {
       });
   }
 
+  // Load Pending Signups
   function loadPendingSignups() {
     const list = document.getElementById("pendingSignupsList");
     list.innerHTML = "<p>Loading...</p>";
@@ -2209,7 +1910,7 @@ function studentSignup() {
           <div style="border:1px solid #ccc;padding:10px;margin:8px;border-radius:6px">
             <b>${data.email}</b><br>
             Status: ${data.status}<br><br>
-            <button onclick="approveTeacher('${key}','${data.email}','${data.password}')">Approve</button>
+            <button onclick="approveTeacher('${key}','${data.uid}')">Approve</button>
             <button onclick="rejectTeacher('${key}')">Reject</button>
           </div>
         `;
@@ -2217,110 +1918,110 @@ function studentSignup() {
     });
   }
 
-  function approveTeacher(key, email, password) {
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(userCred => {
-        const uid = userCred.user.uid;
-        firebase.database().ref("users/" + uid).set({
-          email: email,
-          role: "teacher",
-          approvedAt: Date.now()
-        });
-        firebase.database().ref("pendingSignups/" + key).remove();
-        alert("Teacher approved successfully");
-        loadPendingSignups();
-      })
-      .catch(err => alert(err.message));
+  // Approve Teacher
+  function approveTeacher(key, uid) {
+    firebase.database().ref("users/" + uid).update({
+      role: "teacher",
+      approvedAt: Date.now()
+    }).then(() => {
+      firebase.database().ref("pendingSignups/" + key).remove();
+      alert("Teacher approved successfully!");
+      loadPendingSignups();
+    }).catch(err => alert(err.message));
   }
 
+  // Reject Teacher
   function rejectTeacher(key) {
     if (!confirm("Reject this signup?")) return;
     firebase.database().ref("pendingSignups/" + key).remove();
     loadPendingSignups();
   }
 
-function loadDashboardStats() {
-  // Show loading
-  document.getElementById("totalTests").textContent = "...";
-  document.getElementById("totalStudents").textContent = "...";
-  document.getElementById("totalResults").textContent = "...";
-  document.getElementById("avgScore").textContent = "...";
-
-  firebase.database().ref("tests").once("value", snap => {
-    let totalTests = 0;
-    snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
-    document.getElementById("totalTests").textContent = totalTests;
-  }).catch(e => {
-    document.getElementById("totalTests").textContent = "Error";
-  });
-
-  firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
-    document.getElementById("totalStudents").textContent = snap.numChildren();
-  }).catch(e => {
-    document.getElementById("totalStudents").textContent = "Error";
-  });
-
-  firebase.database().ref("results").once("value", snap => {
-    let totalResults = 0, totalScore = 0, totalPossible = 0;
-    const classScores = {};
-    snap.forEach(cls => {
-      const className = cls.key.replace("class_", "");
-      let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
-      cls.forEach(test => {
-        test.forEach(result => {
-          const d = result.val();
-          totalResults++;
-          totalScore += d.score;
-          totalPossible += d.total;
-          classTotalScore += d.score;
-          classTotalPossible += d.total;
-          classCount++;
-        });
-      });
-      if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
-    });
-    document.getElementById("totalResults").textContent = totalResults;
-    document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
-
-    // Update chart if exists
-    const ctx = document.getElementById('scoreChart');
-    if (ctx) {
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(classScores),
-          datasets: [{
-            label: 'Average Score (%)',
-            data: Object.values(classScores),
-            backgroundColor: 'rgba(0, 123, 255, 0.6)',
-            borderColor: 'rgba(0, 123, 255, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
-      });
+  // Resend Verification
+  function resendVerification() {
+    if (auth.currentUser) {
+      auth.currentUser.sendEmailVerification()
+        .then(() => alert("Verification email sent!"))
+        .catch(e => alert("Error: " + e.message));
+    } else {
+      alert("Log in first.");
     }
-  }).catch(e => {
-    document.getElementById("totalResults").textContent = "Error";
-    document.getElementById("avgScore").textContent = "Error";
-  });
+  }
 
-  firebase.database().ref("results").limitToLast(5).once("value", snap => {
-    const list = document.getElementById("notificationsList");
-    list.innerHTML = "";
-    snap.forEach(cls => {
-      cls.forEach(test => {
-        test.forEach(result => {
-          const d = result.val();
-          list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} - Score: ${d.score}/${d.total}</div>`;
+  // Load Dashboard Stats
+  function loadDashboardStats() {
+    document.getElementById("totalTests").textContent = "...";
+    document.getElementById("totalStudents").textContent = "...";
+    document.getElementById("totalResults").textContent = "...";
+    document.getElementById("avgScore").textContent = "...";
+
+    firebase.database().ref("tests").once("value", snap => {
+      let totalTests = 0;
+      snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
+      document.getElementById("totalTests").textContent = totalTests;
+    });
+
+    firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
+      document.getElementById("totalStudents").textContent = snap.numChildren();
+    });
+
+    firebase.database().ref("results").once("value", snap => {
+      let totalResults = 0, totalScore = 0, totalPossible = 0;
+      const classScores = {};
+      snap.forEach(cls => {
+        const className = cls.key.replace("class_", "");
+        let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            totalResults++;
+            totalScore += d.score;
+            totalPossible += d.total;
+            classTotalScore += d.score;
+            classTotalPossible += d.total;
+            classCount++;
+          });
+        });
+        if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
+      });
+      document.getElementById("totalResults").textContent = totalResults;
+      document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
+
+      const ctx = document.getElementById('scoreChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(classScores),
+            datasets: [{
+              label: 'Average Score (%)',
+              data: Object.values(classScores),
+              backgroundColor: 'rgba(0, 123, 255, 0.6)',
+              borderColor: 'rgba(0, 123, 255, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+      }
+    });
+
+    firebase.database().ref("results").limitToLast(5).once("value", snap => {
+      const list = document.getElementById("notificationsList");
+      list.innerHTML = "";
+      snap.forEach(cls => {
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} - Score: ${d.score}/${d.total}</div>`;
+          });
         });
       });
+      if (!snap.exists() || list.innerHTML === "") list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
     });
-    if (!snap.exists() || list.innerHTML === "") list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
-  }).catch(e => {
-    document.getElementById("notificationsList").innerHTML = "<div class='notification-item'>Error loading notifications.</div>";
-  });
-}
+  }
+
+  // Export All Results
   function exportAllResults() {
     firebase.database().ref("results").once("value", snap => {
       let csv = "Class,Test,Student,Roll,Score,Total\n";
@@ -2342,21 +2043,6 @@ function loadDashboardStats() {
       a.click();
     });
   }
-
-  // Notifications disabled - no service worker needed
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
