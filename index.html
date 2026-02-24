@@ -29,7 +29,11 @@
       margin: 0;
       padding: 0;
     }
-
+.success {
+  color: green;
+  margin-top: 10px;
+  font-weight: bold;
+}
     .box {
       width: 360px;
       margin: 40px auto;
@@ -896,6 +900,7 @@
 
   <!-- TEACHER PANEL -->
   <div id="teacherPanel">
+  <div class="header">Hera MCQ System</div>
     <div class="sidebar">
       <ul>
         <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
@@ -1238,19 +1243,18 @@
     document.querySelector(".section-toggle").style.display = "none";
   }
 
-  function showTeacherSection() {
-    document.getElementById("teacherAuth").style.display = "flex";
-    document.getElementById("studentContainer").style.display = "none";
-    document.getElementById("toggleTeacher").classList.add("active");
-    document.getElementById("toggleStudent").classList.remove("active");
-  }
-
+ function showTeacherSection() {
+  document.getElementById("teacherAuth").style.display = "flex";
+  document.getElementById("studentContainer").style.display = "none";
+  document.getElementById("toggleTeacher").classList.add("active");
+  document.getElementById("toggleStudent").classList.remove("active");
+}
   function showStudentSection() {
-    document.getElementById("teacherAuth").style.display = "none";
-    document.getElementById("studentContainer").style.display = "flex";
-    document.getElementById("toggleTeacher").classList.remove("active");
-    document.getElementById("toggleStudent").classList.add("active");
-  }
+  document.getElementById("teacherAuth").style.display = "none";
+  document.getElementById("studentContainer").style.display = "flex";
+  document.getElementById("toggleTeacher").classList.remove("active");
+  document.getElementById("toggleStudent").classList.add("active");
+}
 
   function disableUnloadWarning() {
     window.onbeforeunload = null;
@@ -1311,54 +1315,57 @@
       });
   }
 
-  function teacherSignup() {
-    const email = tEmailSignup.value.trim();
-    const pass = tPasswordSignup.value.trim();
-    const confirmPass = tConfirmPassword.value.trim();
-    if (!email || !pass || !confirmPass) {
-      signupMsg.innerText = "";
-      loginMsg.innerText = "Fill all fields.";
-      return;
-    }
-    if (pass !== confirmPass) {
-      signupMsg.innerText = "";
-      loginMsg.innerText = "Passwords do not match.";
-      return;
-    }
-    const btn = document.querySelector('.register-box button');
-    btn.innerHTML = '<div class="loading"></div> Signing up...';
-    btn.disabled = true;
-
-    auth.createUserWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        user.sendEmailVerification()
-          .then(() => {
-            const signupData = {email, password: pass, role: "teacher", status: "pending", createdAt: new Date().toISOString(), verified: false};
-            firebase.database().ref("pendingSignups").push(signupData)
-              .then(() => {
-                signupMsg.innerText = "Signup request submitted! Check your email to verify before approval.";
-                loginMsg.innerText = "";
-                tEmailSignup.value = "";
-                tPasswordSignup.value = "";
-                tConfirmPassword.value = "";
-                btn.innerHTML = 'Signup';
-                btn.disabled = false;
-              });
-          })
-          .catch(e => {
-            signupMsg.innerText = "Signup failed: " + e.message;
-            btn.innerHTML = 'Signup';
-            btn.disabled = false;
-          });
-      })
-      .catch(e => {
-        signupMsg.innerText = e.message;
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-      });
+ function teacherSignup() {
+  const email = tEmailSignup.value.trim();
+  const pass = tPasswordSignup.value.trim();
+  const confirmPass = tConfirmPassword.value.trim();
+  if (!email || !pass || !confirmPass) {
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Fill all fields.";
+    return;
   }
+  if (pass !== confirmPass) {
+    signupMsg.innerText = "";
+    loginMsg.innerText = "Passwords do not match.";
+    return;
+  }
+  const btn = document.querySelector('.register-box button');
+  btn.innerHTML = '<div class="loading"></div> Signing up...';
+  btn.disabled = true;
 
+  // Create account directly (Firebase handles password securely)
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      // Send verification email
+      return user.sendEmailVerification().then(() => {
+        // Store pending request WITHOUT password
+        return firebase.database().ref("pendingSignups").push({
+          email: email,
+          uid: user.uid,
+          role: "teacher",
+          status: "pending",
+          createdAt: new Date().toISOString()
+        });
+      });
+    })
+    .then(() => {
+      signupMsg.innerText = "Signup request submitted! Verify email and wait for approval.";
+      loginMsg.innerText = "";
+      tEmailSignup.value = "";
+      tPasswordSignup.value = "";
+      tConfirmPassword.value = "";
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
+      // Sign out until approved
+      auth.signOut();
+    })
+    .catch(e => {
+      signupMsg.innerText = e.message;
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
+    });
+}
  auth.onAuthStateChanged(user => {
   if (!user) {
     hideAllSections();
@@ -1398,9 +1405,8 @@
     });
 });
   function showStudentLogin() {
-    document.querySelector("#studentContainer .container").classList.remove("active");
-  }
-
+  document.querySelector("#studentContainer .container").classList.remove("active");
+}
   function studentLogin() {
     const email = studentEmail.value.trim();
     const pass = studentPassword.value.trim();
@@ -1435,17 +1441,23 @@ function studentSignup() {
   }
   
   // Show loading
-  document.getElementById("studentSignupMsg").innerText = "Creating account...";
+  const btn = document.querySelector("#studentContainer .register-box button");
+  btn.innerHTML = '<div class="loading"></div> Creating...';
+  btn.disabled = true;
   
   auth.createUserWithEmailAndPassword(email, pass)
     .then((userCredential) => {
       const user = userCredential.user;
       
-      // Save user to database
-      return firebase.database().ref("users/" + user.uid).set({
-        name: name,
-        email: email,
-        role: "student"
+      // Update display name
+      return user.updateProfile({ displayName: name }).then(() => {
+        // Save user to database
+        return firebase.database().ref("users/" + user.uid).set({
+          name: name,
+          email: email,
+          role: "student",
+          createdAt: new Date().toISOString()
+        });
       }).then(() => {
         // Send verification email
         return user.sendEmailVerification();
@@ -1453,16 +1465,22 @@ function studentSignup() {
     })
     .then(() => {
       document.getElementById("studentSignupMsg").innerText = "Account created! Check your email to verify.";
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
       // Clear form
       document.getElementById("studentName").value = "";
       document.getElementById("studentEmailSignup").value = "";
       document.getElementById("studentPasswordSignup").value = "";
       document.getElementById("studentConfirmPassword").value = "";
+      // Sign out until verified
+      auth.signOut();
     })
     .catch((e) => {
       console.error("Signup error:", e);
+      btn.innerHTML = 'Signup';
+      btn.disabled = false;
       if (e.code === "auth/email-already-in-use") {
-        document.getElementById("studentSignupMsg").innerText = "Email already exists. Use a different email.";
+        document.getElementById("studentSignupMsg").innerText = "Email already exists.";
       } else {
         document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
       }
@@ -1729,24 +1747,24 @@ function studentSignup() {
   }
 
   function updateQuestionMap() {
-    const grid = document.getElementById('questionGrid');
-    grid.innerHTML = '';
-    currentQuestions.forEach((_, i) => {
-      const div = document.createElement('div');
-      div.className = 'q-num';
-      div.textContent = i + 1;
-      if (i === currentQuestionIndex) div.classList.add('current');
-      if (studentAnswers[i] !== undefined) div.classList.add('attempted');
-      else if (markedForReview[i]) div.classList.add('marked');
-      else div.classList.add('not-attempted');
-      div.onclick = () => {
-        currentQuestionIndex = i;
-        displayQuestion(i);
-        updateNavigationButtons();
-      };
-      grid.appendChild(div);
-    });
-  }
+  const grid = document.getElementById('questionGrid');
+  grid.innerHTML = '';
+  currentQuestions.forEach((_, i) => {
+    const div = document.createElement('div');
+    div.className = 'q-num';
+    div.textContent = i + 1;
+    if (i === currentQuestionIndex) div.classList.add('current');
+    if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // ✅ Fixed
+    else if (markedForReview[i]) div.classList.add('marked');
+    else div.classList.add('not-attempted');
+    div.onclick = () => {
+      currentQuestionIndex = i;
+      displayQuestion(i);
+      updateNavigationButtons();
+    };
+    grid.appendChild(div);
+  });
+}
 
   function startTimer(minutes) {
     remainingTime = minutes * 60;
@@ -2032,40 +2050,52 @@ function studentSignup() {
     loadPendingSignups();
   }
 
-  function loadDashboardStats() {
-    firebase.database().ref("tests").once("value", snap => {
-      let totalTests = 0;
-      snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
-      document.getElementById("totalTests").textContent = totalTests;
-    });
+function loadDashboardStats() {
+  // Show loading
+  document.getElementById("totalTests").textContent = "...";
+  document.getElementById("totalStudents").textContent = "...";
+  document.getElementById("totalResults").textContent = "...";
+  document.getElementById("avgScore").textContent = "...";
 
-    firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
-      document.getElementById("totalStudents").textContent = snap.numChildren();
-    });
+  firebase.database().ref("tests").once("value", snap => {
+    let totalTests = 0;
+    snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
+    document.getElementById("totalTests").textContent = totalTests;
+  }).catch(e => {
+    document.getElementById("totalTests").textContent = "Error";
+  });
 
-    firebase.database().ref("results").once("value", snap => {
-      let totalResults = 0, totalScore = 0, totalPossible = 0;
-      const classScores = {};
-      snap.forEach(cls => {
-        const className = cls.key.replace("class_", "");
-        let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
-        cls.forEach(test => {
-          test.forEach(result => {
-            const d = result.val();
-            totalResults++;
-            totalScore += d.score;
-            totalPossible += d.total;
-            classTotalScore += d.score;
-            classTotalPossible += d.total;
-            classCount++;
-          });
+  firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
+    document.getElementById("totalStudents").textContent = snap.numChildren();
+  }).catch(e => {
+    document.getElementById("totalStudents").textContent = "Error";
+  });
+
+  firebase.database().ref("results").once("value", snap => {
+    let totalResults = 0, totalScore = 0, totalPossible = 0;
+    const classScores = {};
+    snap.forEach(cls => {
+      const className = cls.key.replace("class_", "");
+      let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
+      cls.forEach(test => {
+        test.forEach(result => {
+          const d = result.val();
+          totalResults++;
+          totalScore += d.score;
+          totalPossible += d.total;
+          classTotalScore += d.score;
+          classTotalPossible += d.total;
+          classCount++;
         });
-        if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
       });
-      document.getElementById("totalResults").textContent = totalResults;
-      document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
+      if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
+    });
+    document.getElementById("totalResults").textContent = totalResults;
+    document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
 
-      const ctx = document.getElementById('scoreChart').getContext('2d');
+    // Update chart if exists
+    const ctx = document.getElementById('scoreChart');
+    if (ctx) {
       new Chart(ctx, {
         type: 'bar',
         data: {
@@ -2080,23 +2110,28 @@ function studentSignup() {
         },
         options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
       });
-    });
+    }
+  }).catch(e => {
+    document.getElementById("totalResults").textContent = "Error";
+    document.getElementById("avgScore").textContent = "Error";
+  });
 
-    firebase.database().ref("results").limitToLast(5).once("value", snap => {
-      const list = document.getElementById("notificationsList");
-      list.innerHTML = "";
-      snap.forEach(cls => {
-        cls.forEach(test => {
-          test.forEach(result => {
-            const d = result.val();
-            list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} in ${cls.key.replace("class_", "")} - Score: ${d.score}/${d.total}</div>`;
-          });
+  firebase.database().ref("results").limitToLast(5).once("value", snap => {
+    const list = document.getElementById("notificationsList");
+    list.innerHTML = "";
+    snap.forEach(cls => {
+      cls.forEach(test => {
+        test.forEach(result => {
+          const d = result.val();
+          list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} - Score: ${d.score}/${d.total}</div>`;
         });
       });
-      if (!snap.exists()) list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
     });
-  }
-
+    if (!snap.exists() || list.innerHTML === "") list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
+  }).catch(e => {
+    document.getElementById("notificationsList").innerHTML = "<div class='notification-item'>Error loading notifications.</div>";
+  });
+}
   function exportAllResults() {
     firebase.database().ref("results").once("value", snap => {
       let csv = "Class,Test,Student,Roll,Score,Total\n";
@@ -2123,6 +2158,7 @@ function studentSignup() {
 </script>
 </body>
 </html>
+
 
 
 
