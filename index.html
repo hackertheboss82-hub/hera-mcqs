@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <title>Hera MCQ System</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -14,124 +15,237 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: 'Roboto', Arial;
-      background: var(--bg-color);
-      color: var(--text-color);
-      transition: 0.3s;
-      margin: 0;
-      padding: 0;
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
 
-    .success {
-      color: green;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    .box {
-      width: 360px;
-      margin: 40px auto;
-      padding: 20px;
-      background: var(--box-bg);
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      color: var(--text-color);
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: #f0f0f0;
-      color: var(--text-color);
-      border: 1px solid #ccc;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    #teacherPanel, #testArea {
-      display: none;
-    }
-
-    .error {
-      color: red;
-    }
-
-    /* Theme Variables */
+    /* ── Theme Variables ── */
     :root {
       --bg-color: #f4f6f8;
       --text-color: #333;
       --accent: #007bff;
+      --accent-dark: #0056b3;
       --box-bg: #fff;
+      --border-color: #dee2e6;
+      --input-bg: #f8f9fa;
+      --shadow: 0 2px 10px rgba(0,0,0,.08);
     }
 
     .dark-theme {
-      --bg-color: #1e1e2f;
-      --text-color: #fff;
-      --accent: #0056b3;
-      --box-bg: #111;
+      --bg-color: #1a1a2e;
+      --text-color: #e0e0e0;
+      --accent: #4e8eff;
+      --accent-dark: #2563eb;
+      --box-bg: #16213e;
+      --border-color: #2d2d4a;
+      --input-bg: #0f3460;
+      --shadow: 0 2px 10px rgba(0,0,0,.4);
     }
 
     .blue-theme {
       --bg-color: #e3f2fd;
       --text-color: #0d47a1;
       --accent: #1976d2;
+      --accent-dark: #1565c0;
       --box-bg: #ffffff;
+      --border-color: #bbdefb;
+      --input-bg: #e8f4fd;
+      --shadow: 0 2px 10px rgba(25,118,210,.12);
     }
 
     .green-theme {
-      --bg-color: #e8f5e8;
+      --bg-color: #e8f5e9;
       --text-color: #1b5e20;
       --accent: #388e3c;
+      --accent-dark: #2e7d32;
       --box-bg: #ffffff;
+      --border-color: #c8e6c9;
+      --input-bg: #f1f8f1;
+      --shadow: 0 2px 10px rgba(56,142,60,.12);
     }
 
-    /* Animated Login/Signup Styles */
+    /* ── Base ── */
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.3s, color 0.3s;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* ── Toast Notifications ── */
+    #toastContainer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      animation: slideIn 0.3s ease, fadeOut 0.4s ease 3s forwards;
+      max-width: 320px;
+    }
+
+    .toast.success { background: #28a745; }
+    .toast.error   { background: #dc3545; }
+    .toast.info    { background: #17a2b8; }
+    .toast.warning { background: #ffc107; color: #333; }
+
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to   { opacity: 0; pointer-events: none; }
+    }
+
+    /* ── Loading Spinner ── */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Section Toggle ── */
+    .section-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 18px 20px;
+      background: var(--box-bg);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .section-toggle button {
+      min-width: 160px;
+      padding: 10px 24px;
+      border-radius: 25px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.25s;
+      border: 2px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .section-toggle button.active,
+    .section-toggle button:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Auth Section ── */
+    .auth-section {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 72px);
+      padding: 20px;
+    }
+
     .container {
       position: relative;
-      width: 800px;
-      max-width: 95%;
-      height: 450px;
+      width: 820px;
+      max-width: 100%;
+      height: 460px;
       background: var(--box-bg);
-      border-radius: 15px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 0 30px rgba(0, 120, 255, 0.5);
+      box-shadow: 0 8px 40px rgba(0,120,255,.2);
     }
 
-    .orange-panel {
+    /* Decorative sliding panel */
+    .slide-panel {
       position: absolute;
       width: 50%;
       height: 100%;
       right: 0;
-      background: linear-gradient(135deg, var(--accent), #0056b3);
-      transition: .8s ease;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      transition: transform .7s cubic-bezier(.77,0,.18,1);
       z-index: 1;
     }
 
-    .container.active .orange-panel {
+    .container.active .slide-panel {
       transform: translateX(-100%);
     }
 
+    .panel-text {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+      z-index: 2;
+      transition: transform .7s cubic-bezier(.77,0,.18,1);
+    }
+
+    .panel-text h1 { margin: 0 0 8px; font-size: 26px; }
+    .panel-text p  { margin: 0 0 20px; opacity: .85; font-size: 14px; }
+
+    .container.active .panel-text {
+      transform: translateX(-100%);
+    }
+
+    /* Form boxes */
     .form-box {
       position: absolute;
       width: 50%;
       height: 100%;
-      padding: 40px;
-      color: var(--text-color);
-      z-index: 2;
+      padding: 36px 32px;
+      overflow-y: auto;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .login-box {
-      left: 0;
+    .form-box h2 {
+      margin: 0 0 20px;
+      font-size: 22px;
+      color: var(--text-color);
     }
+
+    .login-box { left: 0; }
 
     .register-box {
       right: 0;
       opacity: 0;
       pointer-events: none;
+      transition: opacity .4s;
     }
 
     .container.active .register-box {
@@ -144,75 +258,483 @@
       pointer-events: none;
     }
 
-    .input-box input {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      outline: none;
-      border-radius: 5px;
-      background: #f0f0f0;
+    /* ── Form Inputs ── */
+    .input-group {
+      position: relative;
+      margin-bottom: 12px;
     }
 
-    button {
+    .form-box input,
+    .form-box select {
       width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 5px;
-      background: var(--accent);
+      padding: 11px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
       color: var(--text-color);
-      font-size: 16px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+
+    .form-box input:focus,
+    .form-box select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,123,255,.15);
+    }
+
+    .forgot-link {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      display: block;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 20px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.3s;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all .25s;
+      text-decoration: none;
     }
 
-    button:hover {
-      opacity: 0.8;
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      width: 100%;
+      margin-top: 10px;
     }
 
-    .switch-btn {
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0,123,255,.35);
+    }
+
+    .btn-outline {
       background: transparent;
-      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      border: 1.5px solid var(--border-color);
+      width: 100%;
+      margin-top: 8px;
     }
 
-    .panel-text {
-      position: absolute;
-      width: 50%;
-      height: 100%;
-      right: 0;
+    .btn-outline:hover { background: var(--input-bg); }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .form-msg {
+      font-size: 12px;
+      margin-top: 8px;
+      min-height: 18px;
+      font-weight: 500;
+    }
+
+    .form-msg.error   { color: #dc3545; }
+    .form-msg.success { color: #28a745; }
+
+    /* ── Teacher Panel ── */
+    #teacherPanel {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #teacherPanel.active { display: flex; }
+
+    .panel-header {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      padding: 16px 24px;
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      flex-shrink: 0;
+    }
+
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-header select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      background: rgba(255,255,255,.2);
+      color: #fff;
+    }
+
+    .panel-header select option { color: #333; background: #fff; }
+
+    .dashboard-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--box-bg);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: var(--text-color);
-      text-align: center;
-      padding: 20px;
-      z-index: 3;
-      transition: .8s ease;
+      flex-shrink: 0;
     }
 
-    .container.active .panel-text {
-      transform: translateX(-100%);
+    .sidebar ul {
+      list-style: none;
+      padding: 8px 0;
+      margin: 0;
     }
 
-    /* Professional Test Area Styling */
-    #testArea {
+    .sidebar li {
+      padding: 13px 20px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all .2s;
+      font-size: 14px;
+      font-weight: 500;
       display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .sidebar li:hover { background: rgba(0,123,255,.06); border-left-color: var(--accent); }
+    .sidebar li.active { background: rgba(0,123,255,.1); border-left-color: var(--accent); color: var(--accent); }
+    .sidebar li.logout-btn { color: #dc3545; margin-top: auto; }
+    .sidebar li.logout-btn:hover { background: rgba(220,53,69,.07); }
+
+    /* ── Main Content ── */
+    .main-content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      background: var(--bg-color);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 24px;
+      background: var(--box-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.25s ease;
+    }
+
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-content h3 {
+      margin: 0 0 20px;
+      font-size: 20px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Dashboard Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-item {
+      background: var(--input-bg);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-item .number {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-item .label { font-size: 13px; color: #888; margin-top: 4px; }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .quick-actions .btn {
+      width: auto;
+      background: var(--accent);
+      color: #fff;
+      padding: 9px 16px;
+      font-size: 13px;
+    }
+
+    .quick-actions .btn:hover { opacity: .85; }
+
+    .notifications-box { margin-bottom: 20px; }
+    .notifications-box h4 { margin: 0 0 10px; font-size: 15px; }
+
+    .notification-item {
+      background: #fff8e1;
+      padding: 10px 14px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border-left: 4px solid #ffc107;
+      font-size: 13px;
+    }
+
+    .dark-theme .notification-item { background: #2a2a00; }
+
+    .chart-container { margin-top: 20px; max-height: 280px; }
+
+    /* ── Form Controls in Teacher Panel ── */
+    .teacher-form input,
+    .teacher-form select,
+    .teacher-form textarea {
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .teacher-form input:focus,
+    .teacher-form select:focus,
+    .teacher-form textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,123,255,.12);
+    }
+
+    .teacher-form textarea { resize: vertical; min-height: 120px; }
+
+    .teacher-form .btn-primary {
+      width: auto;
+      margin-top: 0;
+      padding: 10px 24px;
+    }
+
+    /* Inline form row */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── Test Cards ── */
+    .test-card {
+      border: 1px solid var(--border-color);
+      padding: 14px 16px;
+      margin: 8px 0;
+      border-radius: 10px;
+      background: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .test-card-title { font-weight: 600; font-size: 15px; }
+    .test-card-meta  { font-size: 12px; color: #888; margin-top: 3px; }
+
+    .test-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* ── User Cards ── */
+    .user-card {
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      margin: 8px 0;
+      border-radius: 10px;
+      background: var(--input-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-teacher { background: #d1ecf1; color: #0c5460; }
+    .badge-student { background: #d4edda; color: #155724; }
+
+    /* ── Small Buttons ── */
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      transition: opacity .2s;
+    }
+
+    .btn-sm:hover { opacity: .82; }
+    .btn-edit    { background: #ffc107; color: #333; }
+    .btn-delete  { background: #dc3545; color: #fff; }
+    .btn-approve { background: #28a745; color: #fff; }
+    .btn-info    { background: #17a2b8; color: #fff; }
+    .btn-warn    { background: #fd7e14; color: #fff; }
+
+    /* ── Results ── */
+    .result-card {
+      border: 1px solid var(--border-color);
+      padding: 14px 16px;
+      margin: 8px 0;
+      border-radius: 10px;
+      background: var(--input-bg);
+    }
+
+    .result-card .score-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .score-high   { background: #d4edda; color: #155724; }
+    .score-medium { background: #fff3cd; color: #856404; }
+    .score-low    { background: #f8d7da; color: #721c24; }
+
+    /* ── Student Panel ── */
+    .student-dashboard {
+      max-width: 520px;
+      margin: 40px auto;
+      padding: 28px;
+      background: var(--box-bg);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .student-dashboard h3 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    .student-info {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    .student-dashboard select,
+    .student-dashboard input {
+      width: 100%;
+      padding: 11px 14px;
+      margin-bottom: 12px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .student-dashboard select:focus { border-color: var(--accent); }
+
+    /* ── Test Area ── */
+    #testArea {
+      display: none;
       flex-direction: column;
       height: 100vh;
       background: var(--bg-color);
       color: var(--text-color);
     }
 
+    #testArea.active { display: flex; }
+
     .test-header {
-      background: linear-gradient(135deg, var(--accent), #0056b3);
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       color: #fff;
-      padding: 15px 30px;
+      padding: 12px 24px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      gap: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      flex-shrink: 0;
+    }
+
+    .test-header-title { font-weight: 700; font-size: 16px; flex: 1; }
+
+    .test-header progress {
+      flex: 2;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: none;
+      background: rgba(255,255,255,.25);
+    }
+
+    .test-header progress::-webkit-progress-bar   { background: rgba(255,255,255,.25); border-radius:4px; }
+    .test-header progress::-webkit-progress-value { background: #fff; border-radius:4px; }
+    .test-header progress::-moz-progress-bar      { background: #fff; border-radius:4px; }
+
+    .timer-box {
+      font-size: 15px;
+      font-weight: 700;
+      background: rgba(255,255,255,.18);
+      padding: 5px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .timer-box.warning { background: rgba(255,59,48,.5); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .6; }
     }
 
     .test-body {
@@ -221,1294 +743,955 @@
       overflow: hidden;
     }
 
+    /* ── Question Area ── */
     .question-area {
       flex: 3;
-      padding: 40px;
+      padding: 32px 40px;
       overflow-y: auto;
       background: var(--box-bg);
-      font-family: 'Roboto', sans-serif;
     }
 
     .question-header {
       display: flex;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .question-header i {
       color: var(--accent);
+      font-size: 22px;
       margin-right: 10px;
-      font-size: 24px;
     }
 
-    .question-display h4 {
-      font-size: 20px;
+    .question-header h4 {
+      font-size: 15px;
       font-weight: 500;
-      color: var(--text-color);
       margin: 0;
+      color: #888;
     }
 
     .question-text {
-      font-size: 18px;
-      line-height: 1.6;
-      margin-bottom: 25px;
+      font-size: 17px;
+      line-height: 1.7;
+      margin-bottom: 24px;
       color: var(--text-color);
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
+      padding: 16px 20px;
+      background: var(--input-bg);
+      border-radius: 10px;
       border-left: 4px solid var(--accent);
     }
 
+    .options-container { display: flex; flex-direction: column; gap: 10px; }
+
     .option {
-      margin: 10px 0;
-      padding: 12px 16px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
+      padding: 13px 18px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      background: linear-gradient(135deg, #f9f9f9, #ffffff);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      width: fit-content;
-      max-width: 100%;
-      margin-left: auto;
-      margin-right: auto;
+      transition: all .2s;
+      background: var(--box-bg);
     }
 
-    .option:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .option.selected {
-      background: linear-gradient(135deg, var(--accent), #007bff);
-      color: #fff;
-      border-color: var(--accent);
-    }
+    .option:hover { border-color: var(--accent); background: rgba(0,123,255,.04); transform: translateX(3px); }
+    .option.selected { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; border-color: var(--accent); }
+    .option.selected .option-letter { color: rgba(255,255,255,.8); }
 
     .option label {
       display: flex;
       align-items: center;
-      width: 100%;
+      cursor: pointer;
+      margin: 0;
+      gap: 12px;
     }
 
-    .option input[type="radio"] {
-      margin-right: 12px;
-    }
+    .option input[type="radio"] { display: none; }
 
     .option-letter {
-      font-weight: bold;
-      margin-right: 8px;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 15px;
+      min-width: 20px;
     }
 
-    .option-text {
-      flex: 1;
-    }
+    .option-text { flex: 1; font-size: 15px; }
 
-    .options-container {
-      margin-top: 20px;
-    }
-
+    /* ── Question Map ── */
     .question-map {
       flex: 1;
       padding: 20px;
       background: var(--box-bg);
-      border-left: 1px solid #ccc;
+      border-left: 1px solid var(--border-color);
       overflow-y: auto;
+      min-width: 200px;
     }
 
-    .map-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+    .map-title { font-weight: 700; margin-bottom: 12px; font-size: 14px; }
 
     .question-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .q-num {
-      width: 45px;
-      height: 45px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid #ddd;
+      border: 2px solid var(--border-color);
       border-radius: 50%;
       cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: bold;
-      position: relative;
+      font-weight: 700;
+      font-size: 13px;
+      transition: transform .15s, box-shadow .15s;
     }
 
-    .q-num:hover {
-      transform: scale(1.1);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
+    .q-num:hover { transform: scale(1.12); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 
-    .q-num.current {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-    }
+    .q-num.current       { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 0 10px rgba(0,123,255,.4); }
+    .q-num.attempted     { background: #28a745; color: #fff; border-color: #28a745; }
+    .q-num.marked        { background: #fd7e14; color: #fff; border-color: #fd7e14; }
+    .q-num.marked-attempted { background: #fd7e14; color: #fff; border-color: #28a745; outline: 2px solid #28a745; }
+    .q-num.not-attempted { background: var(--input-bg); color: #888; }
 
-    .q-num.attempted {
-      background: #4caf50;
-      color: #fff;
-      border-color: #4caf50;
-    }
+    .legend { margin-top: 20px; }
+    .legend-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
 
-    .q-num.marked {
-      background: #ff9800;
-      color: #fff;
-      border-color: #ff9800;
-    }
-
-    .q-num.not-attempted {
-      background: #f0f0f0;
-      color: #666;
-    }
-
-    .legend {
-      margin-top: 20px;
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 5px 0;
       font-size: 12px;
     }
 
-    .legend div {
-      margin: 5px 0;
-      display: flex;
-      align-items: center;
+    .legend-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
-    .legend span {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-      border-radius: 3px;
-    }
-
+    /* ── Test Footer ── */
     .test-footer {
       background: var(--box-bg);
-      padding: 15px 30px;
-      border-top: 1px solid #ddd;
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 -2px 6px rgba(0,0,0,.06);
+      flex-shrink: 0;
     }
 
-    .footer-buttons button {
-      margin: 0 10px;
-      padding: 12px 20px;
-      background: linear-gradient(135deg, var(--accent), #007bff);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.3s ease;
-    }
+    .footer-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 
-    .footer-buttons button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-    }
+    .footer-buttons .btn { width: auto; }
+    .btn-nav    { background: var(--input-bg); color: var(--text-color); border: 1.5px solid var(--border-color); }
+    .btn-nav:hover:not(:disabled) { border-color: var(--accent); }
+    .btn-mark   { background: #fff3cd; color: #856404; border: 1.5px solid #ffc107; }
+    .btn-submit { background: linear-gradient(135deg, #28a745, #1e7e34); color: #fff; }
+    .btn-submit:hover { box-shadow: 0 4px 12px rgba(40,167,69,.35); transform: translateY(-1px); }
 
-    .footer-buttons button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    /* Loading Spinner */
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Teacher Panel Layout */
-    #teacherPanel {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #teacherPanel.active {
-      display: flex;
-    }
-
-    .dashboard-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .sidebar {
-      width: 250px;
-      min-width: 250px;
-      background: var(--box-bg);
-      border-right: 1px solid #ccc;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .sidebar li {
-      padding: 15px 20px;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      transition: 0.3s;
-      white-space: nowrap;
-    }
-
-    .sidebar li:hover, .sidebar li.active {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      background: var(--bg-color);
-    }
-
-    .tab-content {
-      display: none;
-      padding: 20px;
-      background: var(--box-bg);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      min-height: calc(100vh - 150px);
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .header {
-      background: linear-gradient(135deg, var(--accent), #0056b3);
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .stat-item {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: bold;
-      color: var(--text-color);
-    }
-
-    .stat-item .number {
-      font-size: 24px;
-      color: var(--accent);
-    }
-
-    .quick-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .quick-actions button {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .notifications {
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 15px;
-    }
-
-    .notification-item {
-      background: #fff3cd;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 6px;
-      border-left: 4px solid #ffc107;
-    }
-
-        .chart-container {
-      margin-top: 20px;
-      height: 200px;
-      background: #f8f9fa;
-      border-radius: 8px;
+    /* ── Detail Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 9998;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #666;
-    }
-
-    .section-toggle {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
       padding: 20px;
-      background: var(--box-bg);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
     }
 
-    .section-toggle button {
+    .modal-box {
+      background: var(--box-bg);
+      border-radius: 14px;
+      padding: 28px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 { margin: 0; font-size: 18px; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #888;
       width: auto;
-      min-width: 160px;
+      padding: 2px 8px;
       margin: 0;
-      border-radius: 25px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 14px;
     }
 
-    .section-toggle button.active {
-      background: var(--accent);
-      color: #fff;
+    .modal-close:hover { color: #dc3545; }
+
+    .answer-item {
+      padding: 12px;
+      border-radius: 8px;
+      margin: 8px 0;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
     }
 
-    .section-toggle button:not(.active) {
-      background: transparent;
-      color: var(--text-color);
-      border: 1px solid var(--accent);
-    }
+    .answer-item.correct   { border-left: 4px solid #28a745; background: #f0fff4; }
+    .answer-item.incorrect { border-left: 4px solid #dc3545; background: #fff5f5; }
+    .answer-item.skipped   { border-left: 4px solid #aaa;    background: var(--input-bg); }
+    .dark-theme .answer-item.correct   { background: #0d2b17; }
+    .dark-theme .answer-item.incorrect { background: #2b0d0d; }
 
-    .auth-section {
-      display: none;
-      justify-content: center;
+    /* ── Approve card ── */
+    .approve-card {
+      border: 1px solid var(--border-color);
+      padding: 14px 16px;
+      margin: 8px 0;
+      border-radius: 10px;
+      background: var(--input-bg);
+      display: flex;
       align-items: center;
-      min-height: calc(100vh - 80px);
-      margin: 0;
-      padding: 20px;
+      justify-content: space-between;
     }
 
-    .user-item {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 6px;
-      display: block;
-    }
-
+    /* ── Responsive ── */
     @media (max-width: 768px) {
       .dashboard-container { flex-direction: column; }
-      .sidebar { width: 100%; min-width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid #ccc; }
-      .main-content { padding: 10px; }
-      .tab-content { padding: 15px; min-height: auto; }
-      .section-toggle { flex-wrap: wrap; gap: 10px; padding: 10px; }
-      .section-toggle button { min-width: 120px; font-size: 12px; padding: 8px 15px; }
-      .container { width: 95%; height: auto; margin: 10px auto; }
-      .form-box { width: 100%; position: static; padding: 20px; }
-      .orange-panel, .panel-text { display: none; }
+
+      .sidebar {
+        width: 100%;
+        min-width: 100%;
+        max-height: 180px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .sidebar ul { display: flex; flex-direction: row; padding: 0; }
+      .sidebar li { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; padding: 12px 16px; }
+      .sidebar li.active { border-bottom-color: var(--accent); border-left-color: transparent; }
+
+      .main-content { padding: 12px; }
+      .tab-content  { padding: 16px; }
+
+      .section-toggle { gap: 10px; padding: 12px; flex-wrap: wrap; }
+      .section-toggle button { min-width: 120px; font-size: 12px; padding: 8px 16px; }
+
+      .container { width: 100%; height: auto; }
+      .slide-panel, .panel-text { display: none; }
+      .form-box { position: static; width: 100%; padding: 24px 20px; opacity: 1 !important; pointer-events: auto !important; }
+      .register-box { display: none; }
+      .container.active .register-box { display: flex; }
+      .container.active .login-box    { display: none; }
+
       .test-body { flex-direction: column; }
-      .question-area { padding: 20px; flex: none; }
-      .question-map { border-left: none; border-top: 1px solid #ccc; max-height: 200px; flex: none; }
-      .question-grid { grid-template-columns: repeat(6, 1fr); }
-      .test-footer { padding: 10px; flex-direction: column; gap: 10px; }
-      .footer-buttons { display: flex; justify-content: center; width: 100%; flex-wrap: wrap; gap: 5px; }
-      .footer-buttons button { margin: 5px; padding: 8px 12px; font-size: 14px; flex: 1; min-width: 80px; }
+      .question-area  { padding: 20px; flex: none; }
+      .question-map   { border-left: none; border-top: 1px solid var(--border-color); max-height: 220px; flex: none; min-width: unset; }
+      .question-grid  { grid-template-columns: repeat(7, 1fr); }
+      .test-footer    { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+      .footer-buttons { justify-content: center; width: 100%; }
+
+      .form-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 
 <body>
-  <div class="section-toggle">
-    <button id="toggleTeacher" class="active" onclick="showTeacherSection()">Teacher Portal</button>
-    <button id="toggleStudent" onclick="showStudentSection()">Student Portal</button>
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Section Toggle -->
+  <div class="section-toggle" id="sectionToggle">
+    <button id="toggleTeacher" onclick="showTeacherSection()">
+      <i class="fas fa-chalkboard-teacher"></i> Teacher Portal
+    </button>
+    <button id="toggleStudent" class="active" onclick="showStudentSection()">
+      <i class="fas fa-user-graduate"></i> Student Portal
+    </button>
   </div>
 
-  <!-- TEACHER LOGIN/SIGNUP -->
-  <div class="auth-section teacher-section" id="teacherAuth" style="display: flex;">
-    <div class="container" id="container">
-      <div class="orange-panel"></div>
+  <!-- ══════════════════════════════
+       TEACHER LOGIN / SIGNUP
+  ═══════════════════════════════ -->
+  <div class="auth-section" id="teacherAuth">
+    <div class="container" id="teacherContainer">
+      <div class="slide-panel"></div>
       <div class="panel-text">
+        <i class="fas fa-graduation-cap" style="font-size:48px;margin-bottom:12px;opacity:.9"></i>
         <h1>Welcome Back!</h1>
-        <p>Login to continue</p>
-        <br>
-        <button class="switch-btn" onclick="showRegister()">Go to Signup</button>
+        <p>Sign in to manage your tests &amp; students</p>
+        <button class="btn btn-outline" style="border-color:rgba(255,255,255,.6);color:#fff;width:auto;margin-top:0" onclick="showTeacherRegister()">Create Account</button>
       </div>
-      <!-- Login Form -->
+      <!-- Login -->
       <div class="form-box login-box">
-        <h2>Login</h2>
-        <div class="input-box">
-          <input id="tEmail" type="email" placeholder="Email" required>
-        </div>
-        <div class="input-box">
-          <input id="tPassword" type="password" placeholder="Password" required>
-          <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
-        </div>
-        <button onclick="teacherLogin()">Login</button>
-        <button onclick="resendVerification()">Resend Verification</button>
-        <p id="loginMsg" class="error"></p>
+        <h2><i class="fas fa-sign-in-alt" style="color:var(--accent)"></i> Teacher Login</h2>
+        <form onsubmit="teacherLogin();return false;" autocomplete="on">
+          <div class="input-group">
+            <input id="tEmail" type="email" placeholder="Email address" autocomplete="email">
+          </div>
+          <div class="input-group">
+            <input id="tPassword" type="password" placeholder="Password" autocomplete="current-password">
+            <a href="#" class="forgot-link" onclick="resetPassword(event)">Forgot password?</a>
+          </div>
+          <button class="btn btn-primary" id="teacherLoginBtn" type="submit">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </form>
+        <button class="btn btn-outline" onclick="resendVerification()" style="margin-top:8px;">
+          <i class="fas fa-envelope"></i> Resend Verification
+        </button>
+        <div id="loginMsg" class="form-msg"></div>
       </div>
-      <!-- Register Form -->
+      <!-- Register -->
       <div class="form-box register-box">
-        <h2>Signup</h2>
-        <div class="input-box">
-          <input id="tEmailSignup" type="email" placeholder="Email" required>
-        </div>
-        <div class="input-box">
-          <input id="tPasswordSignup" type="password" placeholder="Password" required>
-        </div>
-        <div class="input-box">
-          <input id="tConfirmPassword" type="password" placeholder="Confirm Password" required>
-        </div>
-        <button onclick="teacherSignup()">Signup</button>
-        <p id="signupMsg" class="success"></p>
-        <button class="switch-btn" onclick="showLogin()">Back to Login</button>
+        <h2><i class="fas fa-user-plus" style="color:var(--accent)"></i> Teacher Signup</h2>
+        <form onsubmit="teacherSignup();return false;" autocomplete="on">
+          <div class="input-group">
+            <input id="tEmailSignup" type="email" placeholder="Email address" autocomplete="email">
+          </div>
+          <div class="input-group">
+            <input id="tPasswordSignup" type="password" placeholder="Password (min 6 chars)" autocomplete="new-password">
+          </div>
+          <div class="input-group">
+            <input id="tConfirmPassword" type="password" placeholder="Confirm Password" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary" id="teacherSignupBtn" type="submit">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
+        </form>
+        <button class="btn btn-outline" onclick="showTeacherLogin()" style="margin-top:8px;">
+          <i class="fas fa-arrow-left"></i> Back to Login
+        </button>
+        <div id="signupMsg" class="form-msg"></div>
       </div>
     </div>
   </div>
 
-  <!-- STUDENT LOGIN/SIGNUP -->
-  <div class="auth-section student-section" id="studentContainer" style="display: none;">
-    <div class="container">
-      <div class="orange-panel"></div>
+  <!-- ══════════════════════════════
+       STUDENT LOGIN / SIGNUP
+  ═══════════════════════════════ -->
+  <div class="auth-section" id="studentAuthSection" style="display:flex;">
+    <div class="container" id="studentContainer">
+      <div class="slide-panel"></div>
       <div class="panel-text">
+        <i class="fas fa-book-open" style="font-size:48px;margin-bottom:12px;opacity:.9"></i>
         <h1>Student Portal</h1>
-        <p>Login to take tests</p>
-        <button class="switch-btn" onclick="showStudentRegister()">Go to Signup</button>
+        <p>Take tests assigned by your teacher</p>
+        <button class="btn btn-outline" style="border-color:rgba(255,255,255,.6);color:#fff;width:auto;margin-top:0" onclick="showStudentRegister()">Register Now</button>
       </div>
       <!-- Student Login -->
       <div class="form-box login-box">
-        <h2>Login</h2>
-        <input id="studentEmail" type="email" placeholder="Email" required>
-        <input id="studentPassword" type="password" placeholder="Password" required>
-        <a href="#" onclick="resetPassword()" style="display: block; margin-top: 10px; color: #007bff;">Forgot Password?</a>
-        <button onclick="studentLogin()">Login</button>
-        <p id="studentLoginMsg" class="error"></p>
+        <h2><i class="fas fa-sign-in-alt" style="color:var(--accent)"></i> Student Login</h2>
+        <form onsubmit="studentLogin();return false;" autocomplete="on">
+          <div class="input-group">
+            <input id="studentEmail" type="email" placeholder="Email address" autocomplete="email">
+          </div>
+          <div class="input-group">
+            <input id="studentPassword" type="password" placeholder="Password" autocomplete="current-password">
+            <a href="#" class="forgot-link" onclick="resetPassword(event)">Forgot password?</a>
+          </div>
+          <button class="btn btn-primary" id="studentLoginBtn" type="submit">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </form>
+        <div id="studentLoginMsg" class="form-msg"></div>
       </div>
       <!-- Student Register -->
       <div class="form-box register-box">
-        <h2>Signup</h2>
-        <input id="studentName" type="text" placeholder="Full Name" required>
-        <input id="studentEmailSignup" type="email" placeholder="Email" required>
-        <select id="studentClassSignup" required>
-          <option value="">Select Class</option>
-          <option value="jr_kg">Jr. KG</option>
-          <option value="sr_kg">Sr. KG</option>
-          <option value="1">Class 1</option>
-          <option value="2">Class 2</option>
-          <option value="3">Class 3</option>
-          <option value="4">Class 4</option>
-          <option value="5">Class 5</option>
-          <option value="6">Class 6</option>
-          <option value="7">Class 7</option>
-          <option value="8">Class 8</option>
-          <option value="9">Class 9</option>
-          <option value="10">Class 10</option>
-        </select>
-        <input id="studentPasswordSignup" type="password" placeholder="Password" required>
-        <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" required>
-        <button onclick="studentSignup()">Signup</button>
-        <p id="studentSignupMsg" class="success"></p>
-        <button class="switch-btn" onclick="showStudentLogin()">Back to Login</button>
+        <h2><i class="fas fa-user-plus" style="color:var(--accent)"></i> Student Signup</h2>
+        <form onsubmit="studentSignup();return false;" autocomplete="on">
+          <div class="input-group">
+            <input id="studentName" type="text" placeholder="Full Name" autocomplete="name">
+          </div>
+          <div class="input-group">
+            <input id="studentEmailSignup" type="email" placeholder="Email address" autocomplete="email">
+          </div>
+          <div class="input-group">
+            <select id="studentClassSignup">
+              <option value="">-- Select Your Class --</option>
+              <option value="jr_kg">Jr. KG</option>
+              <option value="sr_kg">Sr. KG</option>
+              <option value="1">Class 1</option><option value="2">Class 2</option>
+              <option value="3">Class 3</option><option value="4">Class 4</option>
+              <option value="5">Class 5</option><option value="6">Class 6</option>
+              <option value="7">Class 7</option><option value="8">Class 8</option>
+              <option value="9">Class 9</option><option value="10">Class 10</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <input id="studentPasswordSignup" type="password" placeholder="Password (min 6 chars)" autocomplete="new-password">
+          </div>
+          <div class="input-group">
+            <input id="studentConfirmPassword" type="password" placeholder="Confirm Password" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary" id="studentSignupBtn" type="submit">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
+        </form>
+        <button class="btn btn-outline" onclick="showStudentLogin()" style="margin-top:8px;">
+          <i class="fas fa-arrow-left"></i> Back to Login
+        </button>
+        <div id="studentSignupMsg" class="form-msg"></div>
       </div>
     </div>
   </div>
 
-  <!-- TEACHER PANEL -->
+  <!-- ══════════════════════════════
+       TEACHER DASHBOARD
+  ═══════════════════════════════ -->
   <div id="teacherPanel">
-    <div class="header">Hera MCQ System</div>
+    <div class="panel-header">
+      <span><i class="fas fa-graduation-cap"></i> Hera MCQ System</span>
+      <div class="panel-header-right">
+        <select id="themeSelector" onchange="changeTheme(this.value)" title="Change theme">
+          <option value="light">☀️ Light</option>
+          <option value="dark">🌙 Dark</option>
+          <option value="blue">💙 Blue</option>
+          <option value="green">💚 Green</option>
+        </select>
+      </div>
+    </div>
     <div class="dashboard-container">
+      <!-- Sidebar -->
       <div class="sidebar">
         <ul>
-          <li id="tab-dashboard" onclick="showTab('dashboard')" class="active">Dashboard</li>
-          <li id="tab-createTest" onclick="showTab('createTest')">Create Test</li>
-          <li id="tab-manageTests" onclick="showTab('manageTests')">Manage Tests</li>
-          <li id="tab-results" onclick="showTab('results')">Results</li>
-          <li id="tab-approvals" onclick="showTab('approvals')">Approvals</li>
-          <li id="tab-manageUsers" onclick="showTab('manageUsers')">Manage Users</li>
-          <li onclick="logout()">Logout</li>
+          <li id="tab-dashboard"    onclick="showTab('dashboard')"    class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+          <li id="tab-createTest"   onclick="showTab('createTest')"><i class="fas fa-plus-circle"></i> Create Test</li>
+          <li id="tab-manageTests"  onclick="showTab('manageTests')"><i class="fas fa-tasks"></i> Manage Tests</li>
+          <li id="tab-results"      onclick="showTab('results')"><i class="fas fa-chart-bar"></i> Results</li>
+          <li id="tab-approvals"    onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Approvals</li>
+          <li id="tab-manageUsers"  onclick="showTab('manageUsers')"><i class="fas fa-users"></i> Manage Users</li>
+          <li class="logout-btn"    onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
         </ul>
       </div>
-      <div class="main-content">
-        <select id="themeSelector" onchange="changeTheme(this.value)" style="width: auto; margin-bottom: 15px;">
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="blue">Blue</option>
-          <option value="green">Green</option>
-        </select>
 
-        <!-- Dashboard Tab -->
+      <!-- Main Content -->
+      <div class="main-content">
+
+        <!-- ── Dashboard ── -->
         <div id="dashboard" class="tab-content active">
-          <h3><i class="fas fa-tachometer-alt"></i> Welcome to Hera MCQ System</h3>
+          <h3><i class="fas fa-tachometer-alt"></i> Dashboard</h3>
           <div class="stats-grid">
-            <div class="stat-item"><div class="number" id="totalTests">0</div><div>Total Tests</div></div>
-            <div class="stat-item"><div class="number" id="totalStudents">0</div><div>Total Students</div></div>
-            <div class="stat-item"><div class="number" id="totalResults">0</div><div>Total Submissions</div></div>
-            <div class="stat-item"><div class="number" id="avgScore">0%</div><div>Average Score</div></div>
+            <div class="stat-item">
+              <div class="number" id="totalTests">–</div>
+              <div class="label">Total Tests</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="totalStudents">–</div>
+              <div class="label">Students</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="totalResults">–</div>
+              <div class="label">Submissions</div>
+            </div>
+            <div class="stat-item">
+              <div class="number" id="avgScore">–</div>
+              <div class="label">Avg Score</div>
+            </div>
           </div>
-          <div class="quick-actions" style="margin-top: 20px;">
-            <button onclick="showTab('createTest')"><i class="fas fa-plus"></i> Create Test</button>
-            <button onclick="showTab('results')"><i class="fas fa-list"></i> View Results</button>
-            <button onclick="exportAllResults()"><i class="fas fa-download"></i> Export All</button>
-            <button onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Manage Approvals</button>
+          <div class="quick-actions">
+            <button class="btn" onclick="showTab('createTest')"><i class="fas fa-plus"></i> New Test</button>
+            <button class="btn" onclick="showTab('results')"><i class="fas fa-list"></i> View Results</button>
+            <button class="btn" onclick="exportAllResults()"><i class="fas fa-download"></i> Export All</button>
+            <button class="btn" onclick="showTab('approvals')"><i class="fas fa-user-check"></i> Approvals</button>
           </div>
-          <div class="notifications" style="margin-top: 20px;">
-            <h4>Recent Notifications</h4>
+          <div class="notifications-box">
+            <h4><i class="fas fa-bell"></i> Recent Activity</h4>
             <div id="notificationsList"><div class="notification-item">Loading...</div></div>
           </div>
-          <div class="chart-container" style="margin-top: 20px;">
+          <div class="chart-container">
             <canvas id="scoreChart"></canvas>
           </div>
         </div>
 
-        <!-- Create Test Tab -->
+        <!-- ── Create Test ── -->
         <div id="createTest" class="tab-content">
-          <h3>Create Test</h3>
-          <select id="testClass">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <input id="testName" placeholder="Test Name">
-          <input id="testDuration" type="number" placeholder="Duration (minutes)">
-          <input id="questionLimit" type="number" placeholder="Questions to show">
-          <textarea id="bulkQuestions" rows="6" placeholder="Question | A | B | C | D | CorrectIndex"></textarea>
-          <input type="file" id="questionFile" accept=".csv">
-          <button onclick="saveTest()"><i class="fas fa-save"></i> Save Test</button>
+          <h3><i class="fas fa-plus-circle"></i> Create / Edit Test</h3>
+          <div class="teacher-form">
+            <div class="form-row">
+              <select id="testClass">
+                <option value="">-- Select Class --</option>
+                <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+                <option value="1">Class 1</option><option value="2">Class 2</option>
+                <option value="3">Class 3</option><option value="4">Class 4</option>
+                <option value="5">Class 5</option><option value="6">Class 6</option>
+                <option value="7">Class 7</option><option value="8">Class 8</option>
+                <option value="9">Class 9</option><option value="10">Class 10</option>
+              </select>
+              <input id="testName" placeholder="Test Name (e.g. Math Unit 1)">
+            </div>
+            <div class="form-row">
+              <input id="testDuration" type="number" min="1" placeholder="Duration (minutes)">
+              <input id="questionLimit" type="number" min="1" placeholder="Questions to show (from pool)">
+            </div>
+            <p style="font-size:13px;color:#888;margin:0 0 8px;">
+              <strong>Bulk Entry:</strong> One question per line — <code>Question | A | B | C | D | CorrectNumber</code>
+              <br>Example: <code>What is 2+2? | 3 | 4 | 5 | 6 | 2</code>
+            </p>
+            <textarea id="bulkQuestions" placeholder="Question | OptionA | OptionB | OptionC | OptionD | CorrectOptionNumber(1-4)"></textarea>
+            <p style="font-size:13px;color:#888;margin:0 0 8px;">
+              <strong>Or upload a CSV file</strong> (same format, comma-separated):
+            </p>
+            <input type="file" id="questionFile" accept=".csv" style="margin-bottom:16px;">
+            <br>
+            <button class="btn btn-primary" onclick="saveTest()" style="width:auto;">
+              <i class="fas fa-save"></i> Save Test
+            </button>
+            <button class="btn btn-outline" onclick="clearTestForm()" style="width:auto;margin-left:10px;">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
         </div>
 
-        <!-- Manage Tests Tab -->
+        <!-- ── Manage Tests ── -->
         <div id="manageTests" class="tab-content">
-          <h3>Manage Tests</h3>
-          <select id="manageClass" onchange="TestsForTeacher()">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
+          <h3><i class="fas fa-tasks"></i> Manage Tests</h3>
+          <div class="teacher-form">
+            <select id="manageClass" onchange="loadTestsForTeacher()">
+              <option value="">-- Select Class --</option>
+              <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+              <option value="1">Class 1</option><option value="2">Class 2</option>
+              <option value="3">Class 3</option><option value="4">Class 4</option>
+              <option value="5">Class 5</option><option value="6">Class 6</option>
+              <option value="7">Class 7</option><option value="8">Class 8</option>
+              <option value="9">Class 9</option><option value="10">Class 10</option>
+            </select>
+          </div>
           <div id="testList"></div>
         </div>
 
-        <!-- Results Tab -->
+        <!-- ── Results ── -->
         <div id="results" class="tab-content">
-          <h3>Student Results</h3>
-          <select id="resultClassSelect" onchange="TestsForClass(this.value)">
-            <option value="">Select Class</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <select id="resultTestSelect"></select>
-          <button onclick="Results()">Results</button>
-          <button onclick="exportResults()">Export CSV</button>
-          <div id="resultBox"></div>
-        </div>
-
-        <!-- Approvals Tab -->
-        <div id="approvals" class="tab-content">
-          <h3>Pending Teacher Signups</h3>
-          <div id="pendingSignupsList"></div>
-        </div>
-
-        <!-- Manage Users Tab -->
-        <div id="manageUsers" class="tab-content">
-          <h3>Manage Users</h3>
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h4><i class="fas fa-user-plus"></i> Add New Student</h4>
-            <input id="newUserName" placeholder="Student Name" style="width: 45%;">
-            <input id="newUserEmail" type="email" placeholder="Email" style="width: 45%;">
-            <select id="newUserClass" style="width: 45%;">
-              <option value="">Select Class</option>
-              <option value="jr_kg">Jr. KG</option>
-              <option value="sr_kg">Sr. KG</option>
-              <option value="1">Class 1</option>
-              <option value="2">Class 2</option>
-              <option value="3">Class 3</option>
-              <option value="4">Class 4</option>
-              <option value="5">Class 5</option>
-              <option value="6">Class 6</option>
-              <option value="7">Class 7</option>
-              <option value="8">Class 8</option>
-              <option value="9">Class 9</option>
-              <option value="10">Class 10</option>
-            </select>
-            <input id="newUserPassword" type="password" placeholder="Password" style="width: 45%;">
-            <button onclick="addNewUser()" style="width: auto; margin-top: 10px;"><i class="fas fa-plus"></i> Add User</button>
-            <p id="addUserMsg"></p>
+          <h3><i class="fas fa-chart-bar"></i> Student Results</h3>
+          <div class="teacher-form">
+            <div class="form-row">
+              <select id="resultClassSelect" onchange="loadTestsForClass(this.value, 'resultTestSelect')">
+                <option value="">-- Select Class --</option>
+                <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+                <option value="1">Class 1</option><option value="2">Class 2</option>
+                <option value="3">Class 3</option><option value="4">Class 4</option>
+                <option value="5">Class 5</option><option value="6">Class 6</option>
+                <option value="7">Class 7</option><option value="8">Class 8</option>
+                <option value="9">Class 9</option><option value="10">Class 10</option>
+              </select>
+              <select id="resultTestSelect"><option value="">-- Select Test --</option></select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="loadResults()" style="width:auto;margin-top:0;">
+                <i class="fas fa-search"></i> Load Results
+              </button>
+              <button class="btn btn-outline" onclick="exportResults()" style="width:auto;margin-top:0;">
+                <i class="fas fa-download"></i> Export CSV
+              </button>
+            </div>
           </div>
-          <input id="userSearch" placeholder="Search by name or email" onkeyup="filterUsers()" style="width: 100%;">
-          <select id="userFilter" onchange="filterUsers()" style="width: 100%;">
-            <option value="all">All Users</option>
-            <option value="teacher">Teachers</option>
-            <option value="student">Students</option>
-          </select>
-                   <select id="classFilter" onchange="filterUsers()" style="width: 100%;">
-            <option value="">All Classes</option>
-            <option value="jr_kg">Jr. KG</option>
-            <option value="sr_kg">Sr. KG</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
-            <option value="4">Class 4</option>
-            <option value="5">Class 5</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-          <div id="userList" style="margin-top: 20px;"></div>
+          <div id="resultBox" style="margin-top:16px;"></div>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- STUDENT PANEL -->
-  <div class="box" id="studentPanel" style="display: none;">
-    <h3>Student Test Portal</h3>
-    <p id="studentInfo" style="font-size: 12px; color: #666; margin-bottom: 10px;"></p>
-    <select id="sClass" onchange="TestsForClass(this.value)" disabled>
-      <option value="">Select Class</option>
-      <option value="jr_kg">Jr. KG</option>
-      <option value="sr_kg">Sr. KG</option>
-      <option value="1">Class 1</option>
-      <option value="2">Class 2</option>
-      <option value="3">Class 3</option>
-      <option value="4">Class 4</option>
-      <option value="5">Class 5</option>
-      <option value="6">Class 6</option>
-      <option value="7">Class 7</option>
-      <option value="8">Class 8</option>
-      <option value="9">Class 9</option>
-      <option value="10">Class 10</option>
+
+        <!-- ── Approvals ── -->
+        <div id="approvals" class="tab-content">
+          <h3><i class="fas fa-user-check"></i> Pending Teacher Signups</h3>
+          <div id="pendingSignupsList"><p>Loading...</p></div>
+        </div>
+
+        <!-- ── Manage Users ── -->
+        <div id="manageUsers" class="tab-content">
+          <h3><i class="fas fa-users"></i> Manage Users</h3>
+          <!-- Add Student -->
+          <div style="background:var(--input-bg);padding:18px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border-color);">
+            <h4 style="margin:0 0 14px;"><i class="fas fa-user-plus"></i> Add New Student</h4>
+            <div class="teacher-form">
+              <div class="form-row">
+                <input id="newUserName"  placeholder="Student Full Name">
+                <input id="newUserEmail" type="email" placeholder="Email Address">
+              </div>
+              <div class="form-row">
+                <select id="newUserClass">
+                  <option value="">-- Select Class --</option>
+                  <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+                  <option value="1">Class 1</option><option value="2">Class 2</option>
+                  <option value="3">Class 3</option><option value="4">Class 4</option>
+                  <option value="5">Class 5</option><option value="6">Class 6</option>
+                  <option value="7">Class 7</option><option value="8">Class 8</option>
+                  <option value="9">Class 9</option><option value="10">Class 10</option>
+                </select>
+                <input id="newUserPassword" type="password" placeholder="Password (min 6 chars)">
+              </div>
+              <button class="btn btn-primary" onclick="addNewUser()" style="width:auto;margin-top:0;">
+                <i class="fas fa-plus"></i> Add Student
+              </button>
+              <div id="addUserMsg" class="form-msg" style="margin-top:10px;"></div>
+            </div>
+          </div>
+          <!-- Search & Filter -->
+          <div class="teacher-form">
+            <div class="form-row">
+              <input id="userSearch" placeholder="Search by name or email…" oninput="filterUsers()">
+              <select id="userFilter" onchange="filterUsers()">
+                <option value="all">All Users</option>
+                <option value="teacher">Teachers Only</option>
+                <option value="student">Students Only</option>
+              </select>
+            </div>
+            <select id="classFilter" onchange="filterUsers()">
+              <option value="">All Classes</option>
+              <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+              <option value="1">Class 1</option><option value="2">Class 2</option>
+              <option value="3">Class 3</option><option value="4">Class 4</option>
+              <option value="5">Class 5</option><option value="6">Class 6</option>
+              <option value="7">Class 7</option><option value="8">Class 8</option>
+              <option value="9">Class 9</option><option value="10">Class 10</option>
+            </select>
+          </div>
+          <div id="userList"></div>
+        </div>
+
+      </div><!-- /main-content -->
+    </div><!-- /dashboard-container -->
+  </div><!-- /teacherPanel -->
+
+  <!-- ══════════════════════════════
+       STUDENT DASHBOARD
+  ═══════════════════════════════ -->
+  <div class="student-dashboard" id="studentPanel" style="display:none;">
+    <h3><i class="fas fa-user-graduate"></i> Test Portal</h3>
+    <p class="student-info" id="studentInfo">Loading your profile…</p>
+    <select id="sClass" onchange="loadTestsForClass(this.value, 'studentTestSelect')">
+      <option value="">-- Select Class --</option>
+      <option value="jr_kg">Jr. KG</option><option value="sr_kg">Sr. KG</option>
+      <option value="1">Class 1</option><option value="2">Class 2</option>
+      <option value="3">Class 3</option><option value="4">Class 4</option>
+      <option value="5">Class 5</option><option value="6">Class 6</option>
+      <option value="7">Class 7</option><option value="8">Class 8</option>
+      <option value="9">Class 9</option><option value="10">Class 10</option>
     </select>
-    <select id="studentTestSelect">
-      <option value="">Select Test</option>
-    </select>
-    <button onclick="startStudentTest()">Start Test</button>
-    <button onclick="logout()" style="margin-top: 10px;">Logout</button>
+    <select id="studentTestSelect"><option value="">-- Select Test --</option></select>
+    <button class="btn btn-primary" onclick="startStudentTest()">
+      <i class="fas fa-play"></i> Start Test
+    </button>
+    <button class="btn btn-outline" onclick="logout()" style="margin-top:8px;">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
   </div>
 
-  <!-- TEST AREA -->
+  <!-- ══════════════════════════════
+       TEST AREA
+  ═══════════════════════════════ -->
   <div id="testArea">
     <div class="test-header">
-      <span id="testTitle"></span>
+      <span class="test-header-title" id="testTitle"></span>
       <progress value="0" max="100" id="progressBar"></progress>
-      <span id="timerBox"></span>
+      <div class="timer-box" id="timerBox">Time: --:--</div>
     </div>
     <div class="test-body">
       <div class="question-area">
-        <div id="questionDisplay" class="question-display"></div>
+        <div id="questionDisplay"></div>
       </div>
       <div class="question-map">
-        <div class="map-title">Question Map</div>
+        <div class="map-title"><i class="fas fa-map-marker-alt"></i> Question Map</div>
         <div id="questionGrid" class="question-grid"></div>
-        <div class="legend">
-          <div><span style="background: #e0e0e0;"></span> Not Attempted</div>
-          <div><span style="background: #4caf50;"></span> Attempted</div>
-          <div><span style="background: #ff9800;"></span> Marked for Review</div>
+        <div class="legend" id="mapLegend">
+          <div class="legend-title">Legend</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#28a745"></div> Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fd7e14"></div> Marked for Review</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--input-bg);border:2px solid var(--border-color)"></div> Not Attempted</div>
         </div>
       </div>
     </div>
     <div class="test-footer">
       <div class="footer-buttons">
-        <button id="markReviewBtn" onclick="markForReview()">Mark for Review</button>
-        <button id="prevBtn" onclick="navigateQuestion(-1)" disabled>Prev</button>
-        <button id="nextBtn" onclick="navigateQuestion(1)">Next</button>
+        <button class="btn btn-mark" id="markReviewBtn" onclick="markForReview()">
+          <i class="fas fa-flag"></i> Mark for Review
+        </button>
+        <button class="btn btn-nav" id="prevBtn" onclick="navigateQuestion(-1)" disabled>
+          <i class="fas fa-chevron-left"></i> Prev
+        </button>
+        <button class="btn btn-nav" id="nextBtn" onclick="navigateQuestion(1)">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
-      <button id="submitBtn" onclick="submitTest()">Submit</button>
+      <button class="btn btn-submit" id="submitBtn" onclick="confirmSubmit()">
+        <i class="fas fa-paper-plane"></i> Submit Test
+      </button>
     </div>
   </div>
 
-<script>
-  // Firebase initialization
+  <!-- Detail Modal -->
+  <div id="detailModal" class="modal-overlay" style="display:none;" onclick="closeModal(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Result Details</h3>
+        <button class="modal-close" onclick="document.getElementById('detailModal').style.display='none'">&times;</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       JAVASCRIPT
+  ═══════════════════════════════ -->
+  <script>
+  // ── Firebase Init ────────────────────────────────────────────────────────
   try {
     firebase.initializeApp({
-      apiKey: "AIzaSyBU8C7r1hQVSK0NWjL5dW779iBLf8Of5LI",
-      authDomain: "hera-mcqs-55022.firebaseapp.com",
-      databaseURL: "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
-      projectId: "hera-mcqs-55022",
-      storageBucket: "hera-mcqs-55022.firebasestorage.app",
+      apiKey:            "AIzaSyBU8C7r1hQVSK0NWjL5dW779iBLf8Of5LI",
+      authDomain:        "hera-mcqs-55022.firebaseapp.com",
+      databaseURL:       "https://hera-mcqs-55022-default-rtdb.firebaseio.com",
+      projectId:         "hera-mcqs-55022",
+      storageBucket:     "hera-mcqs-55022.firebasestorage.app",
       messagingSenderId: "878791404574",
-      appId: "1:878791404574:web:042b1cee28c74ef409120f"
+      appId:             "1:878791404574:web:042b1cee28c74ef409120f"
     });
-    console.log("Firebase initialized successfully.");
-  } catch (error) {
-    console.error("Firebase initialization failed:", error);
-    alert("Firebase failed to load. Check your connection and try again.");
+  } catch (e) {
+    console.error("Firebase init failed:", e);
+    showToast("Firebase failed to load. Check your connection.", "error");
   }
 
   const auth = firebase.auth();
-  let currentStudent = {}, currentTest = "", currentQuestions = [], studentAnswers = {}, markedForReview = {};
-  let timerInterval = null;
-  let remainingTime = 0;
-  let autoSaveInterval = null;
-  let currentTheme = 'light';
+  const db   = firebase.database();
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let currentStudent      = {};
+  let currentTest         = "";
+  let currentQuestions    = [];
+  let studentAnswers      = {};
+  let markedForReview     = {};
+  let timerInterval       = null;
+  let remainingTime       = 0;
+  let autoSaveInterval    = null;
   let currentQuestionIndex = 0;
+  let scoreChartInstance  = null;
 
-  // Theme Functions
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function showToast(msg, type = "info") {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerHTML = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3800);
+  }
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
   function changeTheme(theme) {
-    document.body.className = theme + '-theme';
-    localStorage.setItem('theme', theme);
+    const map = { light: "", dark: "dark-theme", blue: "blue-theme", green: "green-theme" };
+    document.body.className = map[theme] || "";
+    localStorage.setItem("theme", theme);
   }
 
-  // Show Register/Login
-  function showRegister() {
-    document.getElementById("container").classList.add("active");
-  }
-
-  function showLogin() {
-    document.getElementById("container").classList.remove("active");
-  }
-
-  function showStudentRegister() {
-    document.querySelector("#studentContainer .container").classList.add("active");
-  }
-
-  function showStudentLogin() {
-    document.querySelector("#studentContainer .container").classList.remove("active");
-  }
-
-  // Add New User (Admin)
-  function addNewUser() {
-    const name = document.getElementById("newUserName").value.trim();
-    const email = document.getElementById("newUserEmail").value.trim();
-    const studentClass = document.getElementById("newUserClass").value;
-    const password = document.getElementById("newUserPassword").value.trim();
-    const msg = document.getElementById("addUserMsg");
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      msg.innerHTML = "<span style='color: red;'>Please enter a valid email address.</span>";
-      return;
-    }
-    if (!name || !email || !studentClass || !password) {
-      msg.innerHTML = "<span style='color: red;'>Please fill all fields.</span>";
-      return;
-    }
-    if (password.length < 6) {
-      msg.innerHTML = "<span style='color: red;'>Password must be at least 6 characters.</span>";
-      return;
-    }
-    
-    msg.innerHTML = "<span>Creating user...</span>";
-    
-    auth.createUserWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        return user.updateProfile({ displayName: name }).then(() => {
-          return firebase.database().ref("users/" + user.uid).set({
-            name: name,
-            email: email,
-            class: studentClass,
-            role: "student",
-            createdAt: new Date().toISOString(),
-            createdBy: auth.currentUser.uid
-          });
-        });
-      })
-      .then(() => {
-        msg.innerHTML = "<span style='color: green;'>User created successfully!</span>";
-        document.getElementById("newUserName").value = "";
-        document.getElementById("newUserEmail").value = "";
-        document.getElementById("newUserClass").value = "";
-        document.getElementById("newUserPassword").value = "";
-        loadUsers();
-      })
-      .catch((e) => {
-        console.error("Add user error:", e);
-        if (e.code === "auth/email-already-in-use") {
-          msg.innerHTML = "<span style='color: red;'>Email already exists.</span>";
-        } else {
-          msg.innerHTML = "<span style='color: red;'>Error: " + e.message + "</span>";
-        }
-      });
-  }
-
-  // Edit User Class
-  function editUserClass(uid, currentClass) {
-    const newClass = prompt("Enter new class for this student:\n(jr_kg, sr_kg, 1-10)", currentClass || "1");
-    if (newClass === null) return;
-    
-    const validClasses = ['jr_kg', 'sr_kg', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    if (!validClasses.includes(newClass)) {
-      alert("Invalid class. Please enter: jr_kg, sr_kg, or 1-10");
-      return;
-    }
-    
-    firebase.database().ref("users/" + uid).update({ class: newClass })
-      .then(() => {
-        alert("Class updated successfully!");
-        loadUsers();
-      })
-      .catch(e => alert("Error updating class: " + e.message));
-  }
-
-  // Load Users
-  function loadUsers() {
-    const adminUID = '8L7gh4mvQgZhiKxCgqfh5OtYn3w2';
-    if (!auth.currentUser || auth.currentUser.uid !== adminUID) {
-      document.getElementById("userList").innerHTML = "<p style='color: red;'>Access denied. Only admin can manage users.</p>";
-      return;
-    }
-    
-    document.getElementById("userList").innerHTML = "<p>Loading users...</p>";
-    
-    firebase.database().ref("users").once("value", snap => {
-      const list = document.getElementById("userList");
-      list.innerHTML = "";
-      if (!snap.exists()) {
-        list.innerHTML = "<p>No users found.</p>";
-        return;
-      }
-      
-      let usersHTML = "";
-      snap.forEach(user => {
-        const data = user.val();
-        const name = data.name || data.email || "Unknown";
-        const email = data.email || "No email";
-        const role = data.role || "Unknown";
-        const studentClass = data.class || "Not assigned";
-        
-        usersHTML += `
-          <div class="user-item" data-role="${role}" data-name="${name.toLowerCase()}" data-email="${email.toLowerCase()}" data-class="${studentClass}">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <b>${name}</b> <span style="background: ${role === 'teacher' ? '#e3f2fd' : '#e8f5e9'}; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${role}</span>
-                <br><small>${email}</small>
-                ${role === 'student' ? `<br><small>Class: <b>${studentClass}</b></small>` : ''}
-              </div>
-              <div>
-                ${role === 'student' ? `<button onclick="editUserClass('${user.key}', '${data.class || ''}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #ffc107;">Edit Class</button>` : ''}
-                <button onclick="deleteUser('${user.key}')" style="width: auto; padding: 5px 10px; margin: 2px; background: #dc3545;">Delete</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      list.innerHTML = usersHTML;
-    }).catch(e => {
-      console.error("Load users error:", e);
-      document.getElementById("userList").innerHTML = "<p>Error loading users: " + e.message + "</p>";
-    });
-  }
-
-  // Filter Users
-  function filterUsers() {
-    const search = document.getElementById("userSearch").value.toLowerCase();
-    const filter = document.getElementById("userFilter").value;
-    const classFilter = document.getElementById("classFilter").value;
-    const items = document.querySelectorAll(".user-item");
-    
-    items.forEach(item => {
-      const name = item.dataset.name;
-      const email = item.dataset.email;
-      const role = item.dataset.role;
-      const userClass = item.dataset.class;
-      
-      const matchesSearch = name.includes(search) || email.includes(search);
-      const matchesFilter = filter === "all" || role === filter;
-      const matchesClass = classFilter === "" || userClass === classFilter;
-      
-      item.style.display = matchesSearch && matchesFilter && matchesClass ? "block" : "none";
-    });
-  }
-
-  // Delete User
-  function deleteUser(uid) {
-    if (confirm("Delete this user? This will also remove their results.")) {
-      // Delete from Firebase Auth
-      firebase.database().ref("users/" + uid).remove()
-        .then(() => {
-          alert("User deleted successfully!");
-          loadUsers();
-        })
-        .catch(e => alert("Error deleting user: " + e.message));
-    }
-  }
-
+  // ── Section Visibility ────────────────────────────────────────────────────
   function hideAllSections() {
-    document.getElementById("teacherAuth").style.display = "none";
-    document.getElementById("studentContainer").style.display = "none";
-    document.getElementById("teacherPanel").style.display = "none";
-    document.getElementById("studentPanel").style.display = "none";
-    document.getElementById("testArea").style.display = "none";
-    document.querySelector(".section-toggle").style.display = "none";
+    ["teacherAuth","studentAuthSection","teacherPanel","studentPanel","testArea"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    const st = document.getElementById("sectionToggle");
+    if (st) st.style.display = "none";
   }
 
   function showTeacherSection() {
     document.getElementById("teacherAuth").style.display = "flex";
-    document.getElementById("studentContainer").style.display = "none";
+    document.getElementById("studentAuthSection").style.display = "none";
     document.getElementById("toggleTeacher").classList.add("active");
     document.getElementById("toggleStudent").classList.remove("active");
   }
 
   function showStudentSection() {
     document.getElementById("teacherAuth").style.display = "none";
-    document.getElementById("studentContainer").style.display = "flex";
+    document.getElementById("studentAuthSection").style.display = "flex";
     document.getElementById("toggleTeacher").classList.remove("active");
     document.getElementById("toggleStudent").classList.add("active");
   }
 
-  window.onload = () => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
+  // ── Auth Toggle (login/register slide) ────────────────────────────────────
+  function showTeacherRegister() { document.getElementById("teacherContainer").classList.add("active"); }
+  function showTeacherLogin()    { document.getElementById("teacherContainer").classList.remove("active"); }
+  function showStudentRegister() { document.getElementById("studentContainer").classList.add("active"); }
+  function showStudentLogin()    { document.getElementById("studentContainer").classList.remove("active"); }
+
+  // ── Window Load ───────────────────────────────────────────────────────────
+  window.addEventListener("load", () => {
+    const savedTheme = localStorage.getItem("theme") || "light";
     changeTheme(savedTheme);
-    document.getElementById('themeSelector').value = savedTheme;
-    if (!auth.currentUser) {
-      hideAllSections();
-      document.querySelector('.section-toggle').style.display = "flex";
-      showStudentSection();
+    const sel = document.getElementById("themeSelector");
+    if (sel) sel.value = savedTheme;
+
+    // Register service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
     }
-  };
+  });
 
-  // Tab Switching
-  function showTab(tabName) {
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    const sidebarItems = document.querySelectorAll('.sidebar li');
-    sidebarItems.forEach(item => item.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-    document.getElementById('tab-' + tabName).classList.add('active');
-    if (tabName === "dashboard") loadDashboardStats();
-    if (tabName === "manageUsers") loadUsers();
-  }
-
-  // Auth Functions
+  // ── Teacher Login ─────────────────────────────────────────────────────────
   function teacherLogin() {
-    const email = tEmail.value.trim();
-    const pass = tPassword.value.trim();
-    if (!email || !pass) {
-      loginMsg.innerText = "Enter email and password.";
-      return;
-    }
+    const email = document.getElementById("tEmail").value.trim();
+    const pass  = document.getElementById("tPassword").value.trim();
+    const msg   = document.getElementById("loginMsg");
+
+    if (!email || !pass) { setMsg(msg, "Please enter email and password.", "error"); return; }
+
+    const btn = document.getElementById("teacherLoginBtn");
+    setLoading(btn, true, "Login");
+
     auth.signInWithEmailAndPassword(email, pass)
       .catch(e => {
-        console.error("Login error:", e);
-        loginMsg.innerText = e.message || "Login failed. Check credentials.";
+        setMsg(msg, friendlyAuthError(e), "error");
+        setLoading(btn, false, "Login");
       });
   }
+
+  // ── Teacher Signup ────────────────────────────────────────────────────────
   function teacherSignup() {
-    const email = tEmailSignup.value.trim();
-    const pass = tPasswordSignup.value.trim();
-    const confirmPass = tConfirmPassword.value.trim();
-    
-    if (!email || !pass || !confirmPass) {
-      signupMsg.innerText = "Fill all fields.";
-      return;
-    }
-    if (pass !== confirmPass) {
-      signupMsg.innerText = "Passwords do not match.";
-      return;
-    }
-    
-    const btn = document.querySelector('.register-box button');
-    btn.innerHTML = '<div class="loading"></div> Signing up...';
-    btn.disabled = true;
+    const email       = document.getElementById("tEmailSignup").value.trim();
+    const pass        = document.getElementById("tPasswordSignup").value.trim();
+    const confirmPass = document.getElementById("tConfirmPassword").value.trim();
+    const msg         = document.getElementById("signupMsg");
 
-    // Configure email action settings
-    const actionCodeSettings = {
-      url: 'https://hera-mcqs-55022.firebaseapp.com/?verified=true',
-      handleCodeInApp: true
-    };
+    if (!email || !pass || !confirmPass) { setMsg(msg, "Please fill all fields.", "error"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setMsg(msg, "Invalid email address.", "error"); return; }
+    if (pass !== confirmPass) { setMsg(msg, "Passwords do not match.", "error"); return; }
+    if (pass.length < 6)      { setMsg(msg, "Password must be at least 6 characters.", "error"); return; }
+
+    const btn = document.getElementById("teacherSignupBtn");
+    setLoading(btn, true, "Create Account");
 
     auth.createUserWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        
-        // Send verification email with settings
-        return user.sendEmailVerification(actionCodeSettings);
-      })
-      .then(() => {
-        // Save pending request
-        return firebase.database().ref("pendingSignups").push({
-          email: email,
-          uid: auth.currentUser.uid,
-          role: "teacher",
-          status: "pending",
-          createdAt: new Date().toISOString()
-        });
-      })
-      .then(() => {
-        signupMsg.innerText = "Signup successful! Check your email to verify, then login.";
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        tEmailSignup.value = "";
-        tPasswordSignup.value = "";
-        tConfirmPassword.value = "";
-        auth.signOut();
-      })
-      .catch(e => {
-        console.error("Signup error:", e);
-        signupMsg.innerText = "Error: " + e.message;
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-      });
-  }
-
-    auth.createUserWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        
-        // Force send verification email
+      .then(cred => {
+        const user = cred.user;
         return user.sendEmailVerification({
-          url: 'https://hera-mcqs-55022.firebaseapp.com'
-        }).then(() => {
-          // Also save pending request
-          return firebase.database().ref("pendingSignups").push({
-            email: email,
-            uid: user.uid,
-            role: "teacher",
-            status: "pending",
+          url: "https://hera-mcqs-55022.firebaseapp.com/?verified=true"
+        }).then(() =>
+          db.ref("pendingSignups").push({
+            email:     email,
+            uid:       user.uid,
+            role:      "teacher",
+            status:    "pending",
             createdAt: new Date().toISOString()
-          });
-        });
+          })
+        ).then(() => auth.signOut());
       })
       .then(() => {
-        signupMsg.innerText = "Signup successful! Check your email to verify, then login.";
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        tEmailSignup.value = "";
-        tPasswordSignup.value = "";
-        tConfirmPassword.value = "";
-        auth.signOut();
+        setMsg(msg, "Signup successful! Check your email to verify, then wait for admin approval.", "success");
+        document.getElementById("tEmailSignup").value     = "";
+        document.getElementById("tPasswordSignup").value  = "";
+        document.getElementById("tConfirmPassword").value = "";
       })
-      .catch(e => {
-        console.error("Signup error:", e);
-        signupMsg.innerText = "Error: " + e.message;
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-      });
+      .catch(e => setMsg(msg, friendlyAuthError(e), "error"))
+      .finally(() => setLoading(btn, false, "Create Account"));
   }
+
+  // ── Student Login ─────────────────────────────────────────────────────────
   function studentLogin() {
-    const email = studentEmail.value.trim();
-    const pass = studentPassword.value.trim();
-    if (!email || !pass) {
-      studentLoginMsg.innerText = "Enter email and password.";
-      return;
-    }
+    const email = document.getElementById("studentEmail").value.trim();
+    const pass  = document.getElementById("studentPassword").value.trim();
+    const msg   = document.getElementById("studentLoginMsg");
+
+    if (!email || !pass) { setMsg(msg, "Please enter email and password.", "error"); return; }
+
+    const btn = document.getElementById("studentLoginBtn");
+    setLoading(btn, true, "Login");
+
     auth.signInWithEmailAndPassword(email, pass)
       .catch(e => {
-        console.error("Login error:", e);
-        studentLoginMsg.innerText = e.message || "Login failed. Check credentials.";
+        setMsg(msg, friendlyAuthError(e), "error");
+        setLoading(btn, false, "Login");
       });
   }
-   function studentSignup() {
-    const name = studentName.value.trim();
-    const email = studentEmailSignup.value.trim();
-    const studentClass = document.getElementById('studentClassSignup').value;
-    const pass = studentPasswordSignup.value.trim();
-    const confirmPass = studentConfirmPassword.value.trim();
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      document.getElementById("studentSignupMsg").innerText = "Please enter a valid email address.";
-      return;
-    }
-    
-    if (!name || !email || !studentClass || !pass || !confirmPass) {
-      document.getElementById("studentSignupMsg").innerText = "Fill all fields.";
-      return;
-    }
-    if (pass !== confirmPass) {
-      document.getElementById("studentSignupMsg").innerText = "Passwords do not match.";
-      return;
-    }
-    if (pass.length < 6) {
-      document.getElementById("studentSignupMsg").innerText = "Password must be at least 6 characters.";
-      return;
-    }
-    
-    const btn = document.querySelector("#studentContainer .register-box button");
-    btn.innerHTML = '<div class="loading"></div> Creating...';
-    btn.disabled = true;
 
-    // Configure email action settings
-    const actionCodeSettings = {
-      url: 'https://hera-mcqs-55022.firebaseapp.com/?verified=true',
-      handleCodeInApp: true
-    };
-    
+  // ── Student Signup ────────────────────────────────────────────────────────
+  function studentSignup() {
+    const name        = document.getElementById("studentName").value.trim();
+    const email       = document.getElementById("studentEmailSignup").value.trim();
+    const cls         = document.getElementById("studentClassSignup").value;
+    const pass        = document.getElementById("studentPasswordSignup").value.trim();
+    const confirmPass = document.getElementById("studentConfirmPassword").value.trim();
+    const msg         = document.getElementById("studentSignupMsg");
+
+    if (!name || !email || !cls || !pass || !confirmPass) { setMsg(msg, "Please fill all fields.", "error"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setMsg(msg, "Invalid email address.", "error"); return; }
+    if (pass !== confirmPass) { setMsg(msg, "Passwords do not match.", "error"); return; }
+    if (pass.length < 6)      { setMsg(msg, "Password must be at least 6 characters.", "error"); return; }
+
+    const btn = document.getElementById("studentSignupBtn");
+    setLoading(btn, true, "Create Account");
+
     auth.createUserWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        
-        // Update display name
-        return user.updateProfile({ displayName: name }).then(() => {
-          // Send verification email with settings
-          return user.sendEmailVerification(actionCodeSettings);
-        });
-      })
-      .then(() => {
-        // Save to database
-        return firebase.database().ref("users/" + auth.currentUser.uid).set({
-          name: name,
-          email: email,
-          class: studentClass,
-          role: "student",
-          createdAt: new Date().toISOString()
-        });
-      })
-      .then(() => {
-        document.getElementById("studentSignupMsg").innerText = "Account created! Check your email to verify before logging in.";
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        document.getElementById("studentName").value = "";
-        document.getElementById("studentEmailSignup").value = "";
-        document.getElementById("studentClassSignup").value = "";
-        document.getElementById("studentPasswordSignup").value = "";
-        document.getElementById("studentConfirmPassword").value = "";
-        auth.signOut();
-        setTimeout(() => showStudentLogin(), 3000);
-      })
-      .catch((e) => {
-        console.error("Signup error:", e);
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        if (e.code === "auth/email-already-in-use") {
-          document.getElementById("studentSignupMsg").innerText = "Email already exists.";
-        } else {
-          document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
-        }
-      });
-  }
-    
-    auth.createUserWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        return user.updateProfile({ displayName: name }).then(() => {
-          return firebase.database().ref("users/" + user.uid).set({
-            name: name,
-            email: email,
-            class: studentClass,
+      .then(cred => {
+        const user = cred.user;
+        return user.updateProfile({ displayName: name })
+          .then(() => user.sendEmailVerification({
+            url: "https://hera-mcqs-55022.firebaseapp.com/?verified=true"
+          }))
+          .then(() => db.ref("users/" + user.uid).set({
+            name, email, class: cls,
             role: "student",
             createdAt: new Date().toISOString()
-          });
-        });
+          }))
+          .then(() => auth.signOut());
       })
       .then(() => {
-        document.getElementById("studentSignupMsg").innerText = "Account created! You can now login.";
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        document.getElementById("studentName").value = "";
-        document.getElementById("studentEmailSignup").value = "";
+        setMsg(msg, "Account created! Verify your email, then log in.", "success");
+        ["studentName","studentEmailSignup","studentPasswordSignup","studentConfirmPassword"].forEach(id => {
+          document.getElementById(id).value = "";
+        });
         document.getElementById("studentClassSignup").value = "";
-        document.getElementById("studentPasswordSignup").value = "";
-        document.getElementById("studentConfirmPassword").value = "";
-        setTimeout(() => showStudentLogin(), 2000);
+        setTimeout(() => showStudentLogin(), 2500);
       })
-      .catch((e) => {
-        console.error("Signup error:", e);
-        btn.innerHTML = 'Signup';
-        btn.disabled = false;
-        if (e.code === "auth/email-already-in-use") {
-          document.getElementById("studentSignupMsg").innerText = "Email already exists.";
-        } else {
-          document.getElementById("studentSignupMsg").innerText = "Error: " + e.message;
-        }
-      });
+      .catch(e => setMsg(msg, friendlyAuthError(e), "error"))
+      .finally(() => setLoading(btn, false, "Create Account"));
   }
-  // Auth State Changed
+
+  // ── Auth State ────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(user => {
     if (!user) {
       hideAllSections();
-      document.querySelector(".section-toggle").style.display = "flex";
+      document.getElementById("sectionToggle").style.display = "flex";
       showStudentSection();
       return;
     }
+
     if (!user.emailVerified) {
-      alert("Please verify your email before proceeding.");
+      showToast("Please verify your email before logging in.", "warning");
       auth.signOut();
       return;
     }
-    
-    const uid = user.uid;
-    firebase.database().ref("users/" + uid).once("value")
-      .then(snapshot => {
-        const userData = snapshot.val();
-        const role = userData ? userData.role : null;
-        
+
+    db.ref("users/" + user.uid).once("value")
+      .then(snap => {
+        const data = snap.val() || {};
+        const role = data.role;
         hideAllSections();
-        
+
         if (role === "teacher") {
-          localStorage.setItem(`isTeacher_${user.email}`, "true");
           document.getElementById("teacherPanel").style.display = "flex";
+          document.getElementById("teacherPanel").classList.add("active");
+          loadDashboardStats();
           loadPendingSignups();
         } else {
-          // Student or no role
+          // Student
           document.getElementById("studentPanel").style.display = "block";
-          
-          // Auto-load student's class
-          if (userData && userData.class) {
-            document.getElementById("sClass").value = userData.class;
+          if (data.class) {
+            document.getElementById("sClass").value = data.class;
             document.getElementById("sClass").disabled = true;
-            document.getElementById("studentInfo").innerText = `Class: ${userData.class} | Name: ${userData.name || user.email}`;
-            TestsForClass(userData.class);
+            document.getElementById("studentInfo").innerText =
+              `Welcome, ${data.name || user.email} | Class: ${formatClass(data.class)}`;
+            loadTestsForClass(data.class, "studentTestSelect");
           } else {
             document.getElementById("sClass").disabled = false;
-            document.getElementById("studentInfo").innerText = "Please select your class";
+            document.getElementById("studentInfo").innerText = "Please select your class to see tests.";
           }
         }
       })
@@ -1519,108 +1702,661 @@
       });
   });
 
-  // Tests for Class
-  function TestsForClass(cls) {
-    resultTestSelect.innerHTML = "<option value=''>Select Test</option>";
-    studentTestSelect.innerHTML = "<option value=''>Select Test</option>";
-    if (!cls) return;
-    firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
-      snap.forEach(t => {
-        let o = document.createElement("option");
-        o.value = o.text = t.key;
-        resultTestSelect.appendChild(o.cloneNode(true));
-        studentTestSelect.appendChild(o);
-      });
-    });
+  // ── Tab Switching ─────────────────────────────────────────────────────────
+  function showTab(tabName) {
+    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".sidebar li").forEach(l => l.classList.remove("active"));
+
+    const tab  = document.getElementById(tabName);
+    const item = document.getElementById("tab-" + tabName);
+    if (tab)  tab.classList.add("active");
+    if (item) item.classList.add("active");
+
+    if (tabName === "dashboard")   loadDashboardStats();
+    if (tabName === "manageUsers") loadUsers();
+    if (tabName === "approvals")   loadPendingSignups();
   }
 
-  // Save Test
-  function saveTest() {
-    const cls = testClass.value;
-    let name = testName.value.trim();
-    name = name.replace(/[.#$[\$]/g, "_");
-    const raw = bulkQuestions.value.trim();
-    const duration = Number(testDuration.value);
-    const limit = Number(questionLimit.value);
+  // ── Load Tests for a Class into a <select> ────────────────────────────────
+  function loadTestsForClass(cls, selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = "<option value=''>-- Select Test --</option>";
+    if (!cls) return;
 
-    if (!cls || !name || !duration || !limit || duration <= 0 || limit <= 0) {
-      alert("Fill all fields with valid values.");
-      return;
-    }
+    db.ref(`tests/class_${cls}`).once("value")
+      .then(snap => {
+        if (!snap.exists()) return;
+        snap.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = opt.text = t.key;
+          sel.appendChild(opt);
+        });
+      });
+  }
+
+  // ── Save Test ─────────────────────────────────────────────────────────────
+  function saveTest() {
+    const cls      = document.getElementById("testClass").value;
+    let   name     = document.getElementById("testName").value.trim();
+    const raw      = document.getElementById("bulkQuestions").value.trim();
+    const duration = Number(document.getElementById("testDuration").value);
+    const limit    = Number(document.getElementById("questionLimit").value);
+
+    if (!cls || !name) { showToast("Please select a class and enter a test name.", "error"); return; }
+    if (!duration || duration <= 0) { showToast("Please enter a valid duration.", "error"); return; }
+    if (!limit    || limit    <= 0) { showToast("Please enter a valid question limit.", "error"); return; }
+
+    // Sanitise test name for Firebase key
+    name = name.replace(/[.#$[\]]/g, "_");
 
     let questions = [];
     if (raw) {
-      questions = raw.split("\n").map(l => {
-        const p = l.split("|");
-        if (p.length !== 6) return null;
-        return {
-          q: p[0].trim(),
-          options: p.slice(1, 5).map(x => x.trim()),
-          answer: Number(p[5]) - 1
-        };
-      }).filter(q => q);
+      raw.split("\n").forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        const p = line.split("|").map(x => x.trim());
+        if (p.length !== 6) return;
+        const ansIdx = Number(p[5]) - 1;
+        if (ansIdx < 0 || ansIdx > 3) return;
+        questions.push({ q: p[0], options: p.slice(1, 5), answer: ansIdx });
+      });
     }
 
-    const fileInput = document.getElementById('questionFile');
+    const fileInput = document.getElementById("questionFile");
     if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
       const reader = new FileReader();
-      reader.onload = function(e) {
-        const csvText = e.target.result;
-        csvText.split("\n").forEach(line => {
-          const p = line.split(",");
-          if (p.length === 6) {
-            questions.push({
-              q: p[0].trim(),
-              options: p.slice(1, 5).map(x => x.trim()),
-              answer: Number(p[5]) - 1
-            });
-          }
+      reader.onload = e => {
+        e.target.result.split("\n").forEach(line => {
+          line = line.trim();
+          if (!line) return;
+          const p = line.split(",").map(x => x.trim());
+          if (p.length !== 6) return;
+          const ansIdx = Number(p[5]) - 1;
+          if (ansIdx < 0 || ansIdx > 3) return;
+          questions.push({ q: p[0], options: p.slice(1, 5), answer: ansIdx });
         });
         finalizeSaveTest(cls, name, duration, limit, questions);
       };
-      reader.readAsText(file);
-      return;
+      reader.readAsText(fileInput.files[0]);
+    } else {
+      finalizeSaveTest(cls, name, duration, limit, questions);
     }
-
-    finalizeSaveTest(cls, name, duration, limit, questions);
   }
 
   function finalizeSaveTest(cls, name, duration, limit, questions) {
-    if (questions.length === 0) {
-      alert("No valid questions found.");
+    if (questions.length === 0) { showToast("No valid questions found. Check your format.", "error"); return; }
+
+    db.ref(`tests/class_${cls}/${name}`).set({
+      duration,
+      limit:     Math.min(limit, questions.length),
+      questions
+    })
+    .then(() => {
+      showToast(`Test "${name}" saved successfully! (${questions.length} questions)`, "success");
+      clearTestForm();
+    })
+    .catch(e => showToast("Failed to save test: " + e.message, "error"));
+  }
+
+  function clearTestForm() {
+    document.getElementById("testClass").value    = "";
+    document.getElementById("testName").value     = "";
+    document.getElementById("testDuration").value = "";
+    document.getElementById("questionLimit").value = "";
+    document.getElementById("bulkQuestions").value = "";
+    document.getElementById("questionFile").value  = "";
+  }
+
+  // ── Load Tests for Teacher (Manage Tests tab) ─────────────────────────────
+  function loadTestsForTeacher() {
+    const cls      = document.getElementById("manageClass").value;
+    const testList = document.getElementById("testList");
+    testList.innerHTML = "";
+    if (!cls) return;
+
+    testList.innerHTML = "<p>Loading…</p>";
+    db.ref(`tests/class_${cls}`).once("value")
+      .then(snap => {
+        testList.innerHTML = "";
+        if (!snap.exists()) { testList.innerHTML = "<p>No tests found for this class.</p>"; return; }
+        snap.forEach(t => {
+          const data = t.val();
+          const card = document.createElement("div");
+          card.className = "test-card";
+          card.innerHTML = `
+            <div>
+              <div class="test-card-title"><i class="fas fa-file-alt" style="color:var(--accent)"></i> ${t.key}</div>
+              <div class="test-card-meta">Duration: ${data.duration} min &nbsp;|&nbsp; Questions: ${Object.keys(data.questions || {}).length} (showing ${data.limit})</div>
+            </div>
+            <div class="test-card-actions">
+              <button class="btn-sm btn-edit"   onclick="editTest('${cls}','${t.key}')"><i class="fas fa-edit"></i> Edit</button>
+              <button class="btn-sm btn-delete" onclick="deleteTest('${cls}','${t.key}')"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+          `;
+          testList.appendChild(card);
+        });
+      })
+      .catch(e => { testList.innerHTML = `<p>Error: ${e.message}</p>`; });
+  }
+
+  // ── Edit Test ─────────────────────────────────────────────────────────────
+  function editTest(cls, testKey) {
+    db.ref(`tests/class_${cls}/${testKey}`).once("value")
+      .then(snap => {
+        if (!snap.exists()) { showToast("Test not found.", "error"); return; }
+        const data = snap.val();
+        document.getElementById("testClass").value    = cls;
+        document.getElementById("testName").value     = testKey;
+        document.getElementById("testDuration").value = data.duration || "";
+        document.getElementById("questionLimit").value = data.limit   || "";
+        document.getElementById("bulkQuestions").value =
+          Object.values(data.questions || {})
+            .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
+            .join("\n");
+        showTab("createTest");
+        showToast("Test loaded for editing. Make changes and save.", "info");
+      })
+      .catch(e => showToast("Failed to load test: " + e.message, "error"));
+  }
+
+  // ── Delete Test ───────────────────────────────────────────────────────────
+  function deleteTest(cls, testKey) {
+    if (!confirm(`Delete test "${testKey}"? This cannot be undone.`)) return;
+    db.ref(`tests/class_${cls}/${testKey}`).remove()
+      .then(() => { showToast("Test deleted.", "success"); loadTestsForTeacher(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  // ── Load Results ──────────────────────────────────────────────────────────
+  function loadResults() {
+    const cls  = document.getElementById("resultClassSelect").value;
+    const test = document.getElementById("resultTestSelect").value;
+    if (!cls || !test) { showToast("Please select a class and a test.", "warning"); return; }
+
+    const box = document.getElementById("resultBox");
+    box.innerHTML = "<p>Loading results…</p>";
+
+    db.ref(`results/class_${cls}/${test}`).once("value")
+      .then(snap => {
+        box.innerHTML = "";
+        if (!snap.exists()) { box.innerHTML = "<p>No results found for this test.</p>"; return; }
+
+        snap.forEach(r => {
+          const d    = r.val();
+          const pct  = Math.round((d.score / d.total) * 100);
+          const cls2 = pct >= 70 ? "score-high" : pct >= 40 ? "score-medium" : "score-low";
+          const card = document.createElement("div");
+          card.className = "result-card";
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <div>
+                <strong>${d.name || "Unknown"}</strong>
+                <span class="score-badge ${cls2}" style="margin-left:10px;">${d.score}/${d.total} (${pct}%)</span>
+                <br><small style="color:#888">${d.submittedAt ? new Date(d.submittedAt).toLocaleString() : ""}</small>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn-sm btn-info"   onclick="viewDetails('${cls}','${test}','${r.key}')"><i class="fas fa-eye"></i> Details</button>
+                <button class="btn-sm btn-warn"   onclick="allowReattempt('${cls}','${test}','${r.key}')"><i class="fas fa-redo"></i> Reattempt</button>
+                <button class="btn-sm btn-delete" onclick="deleteResult('${cls}','${test}','${r.key}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+          `;
+          box.appendChild(card);
+        });
+      })
+      .catch(e => { box.innerHTML = `<p>Error: ${e.message}</p>`; });
+  }
+
+  // ── Export Results ────────────────────────────────────────────────────────
+  function exportResults() {
+    const cls  = document.getElementById("resultClassSelect").value;
+    const test = document.getElementById("resultTestSelect").value;
+    if (!cls || !test) { showToast("Please select a class and a test.", "warning"); return; }
+
+    db.ref(`results/class_${cls}/${test}`).once("value")
+      .then(snap => {
+        let csv = "Name,Roll,Score,Total,Percentage,Date\n";
+        snap.forEach(r => {
+          const d   = r.val();
+          const pct = d.total > 0 ? Math.round((d.score / d.total) * 100) : 0;
+          csv += `"${d.name}",${r.key},${d.score},${d.total},${pct}%,"${d.submittedAt || ""}"\n`;
+        });
+        downloadCSV(csv, `results_${cls}_${test}.csv`);
+      });
+  }
+
+  function exportAllResults() {
+    db.ref("results").once("value")
+      .then(snap => {
+        let csv = "Class,Test,Student,Roll,Score,Total,Percentage\n";
+        snap.forEach(cls => {
+          const className = cls.key.replace("class_","");
+          cls.forEach(test => {
+            test.forEach(result => {
+              const d = result.val();
+              const pct = d.total > 0 ? Math.round((d.score/d.total)*100) : 0;
+              csv += `${className},${test.key},"${d.name}",${result.key},${d.score},${d.total},${pct}%\n`;
+            });
+          });
+        });
+        downloadCSV(csv, "all_results.csv");
+      });
+  }
+
+  function downloadCSV(csv, filename) {
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+
+  // ── View Details Modal ────────────────────────────────────────────────────
+  function viewDetails(cls, test, roll) {
+    db.ref(`results/class_${cls}/${test}/${roll}`).once("value")
+      .then(snap => {
+        const d = snap.val();
+        if (!d) { showToast("No data found.", "error"); return; }
+        const pct = Math.round((d.score / d.total) * 100);
+
+        document.getElementById("modalTitle").textContent =
+          `${d.name} — ${d.score}/${d.total} (${pct}%)`;
+
+        const body = document.getElementById("modalBody");
+        const sorted = Object.keys(d.answers || {}).sort((a,b) => +a - +b);
+
+        body.innerHTML = sorted.map(i => {
+          const a    = d.answers[i];
+          const cls2 = a.studentAnswer === "Not Attempted" ? "skipped" : a.isCorrect ? "correct" : "incorrect";
+          const icon = cls2 === "correct" ? "✅" : cls2 === "incorrect" ? "❌" : "⏭️";
+          return `
+            <div class="answer-item ${cls2}">
+              <strong>Q${+i + 1}:</strong> ${a.question}<br>
+              <span>Your answer: <b>${a.studentAnswer}</b></span> &nbsp;
+              <span>Correct: <b>${a.correctAnswer}</b></span> &nbsp; ${icon}
+            </div>`;
+        }).join("");
+
+        document.getElementById("detailModal").style.display = "flex";
+      })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  function closeModal(e) {
+    if (e.target.id === "detailModal") document.getElementById("detailModal").style.display = "none";
+  }
+
+  // ── Allow Reattempt / Delete Result ──────────────────────────────────────
+  function allowReattempt(cls, test, roll) {
+    if (!confirm("Allow this student to reattempt?")) return;
+    db.ref(`results/class_${cls}/${test}/${roll}`).remove()
+      .then(() => { showToast("Reattempt allowed.", "success"); loadResults(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  function deleteResult(cls, test, roll) {
+    if (!confirm("Delete this result permanently?")) return;
+    db.ref(`results/class_${cls}/${test}/${roll}`).remove()
+      .then(() => { showToast("Result deleted.", "success"); loadResults(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  // ── Pending Signups ───────────────────────────────────────────────────────
+  function loadPendingSignups() {
+    const list = document.getElementById("pendingSignupsList");
+    list.innerHTML = "<p>Loading…</p>";
+
+    db.ref("pendingSignups").once("value")
+      .then(snap => {
+        list.innerHTML = "";
+        if (!snap.exists()) { list.innerHTML = "<p>No pending signups.</p>"; return; }
+        snap.forEach(child => {
+          const d   = child.val();
+          const key = child.key;
+          const card = document.createElement("div");
+          card.className = "approve-card";
+          card.innerHTML = `
+            <div>
+              <strong>${d.email}</strong><br>
+              <small>Status: ${d.status} &nbsp;|&nbsp; ${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : ""}</small>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-sm btn-approve" onclick="approveTeacher('${key}','${d.uid}')"><i class="fas fa-check"></i> Approve</button>
+              <button class="btn-sm btn-delete"  onclick="rejectTeacher('${key}')"><i class="fas fa-times"></i> Reject</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      });
+  }
+
+  function approveTeacher(key, uid) {
+    db.ref("users/" + uid).update({ role: "teacher", approvedAt: Date.now() })
+      .then(() => db.ref("pendingSignups/" + key).remove())
+      .then(() => { showToast("Teacher approved!", "success"); loadPendingSignups(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  function rejectTeacher(key) {
+    if (!confirm("Reject this signup request?")) return;
+    db.ref("pendingSignups/" + key).remove()
+      .then(() => { showToast("Signup rejected.", "info"); loadPendingSignups(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  // ── Manage Users ──────────────────────────────────────────────────────────
+  const ADMIN_UID = "8L7gh4mvQgZhiKxCgqfh5OtYn3w2";
+
+  function addNewUser() {
+    const name     = document.getElementById("newUserName").value.trim();
+    const email    = document.getElementById("newUserEmail").value.trim();
+    const cls      = document.getElementById("newUserClass").value;
+    const password = document.getElementById("newUserPassword").value.trim();
+    const msg      = document.getElementById("addUserMsg");
+
+    if (!name || !email || !cls || !password) { setMsg(msg, "Please fill all fields.", "error"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setMsg(msg, "Invalid email.", "error"); return; }
+    if (password.length < 6) { setMsg(msg, "Password must be ≥ 6 characters.", "error"); return; }
+
+    setMsg(msg, "Creating user…", "");
+
+    // Save current teacher token to restore session after creating user
+    const currentTeacher = auth.currentUser;
+
+    // Use a secondary app instance approach via REST API to avoid signing out
+    const apiKey = "AIzaSyBU8C7r1hQVSK0NWjL5dW779iBLf8Of5LI";
+    fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, password, returnSecureToken: true })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error.message);
+      const uid = data.localId;
+      return db.ref("users/" + uid).set({
+        name, email, class: cls,
+        role:      "student",
+        createdAt: new Date().toISOString(),
+        createdBy: currentTeacher ? currentTeacher.uid : "admin"
+      });
+    })
+    .then(() => {
+      setMsg(msg, "✅ Student added successfully!", "success");
+      document.getElementById("newUserName").value     = "";
+      document.getElementById("newUserEmail").value    = "";
+      document.getElementById("newUserClass").value    = "";
+      document.getElementById("newUserPassword").value = "";
+      loadUsers();
+    })
+    .catch(e => {
+      const m = e.message.includes("EMAIL_EXISTS") ? "Email already in use." : e.message;
+      setMsg(msg, m, "error");
+    });
+  }
+
+  function loadUsers() {
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+      document.getElementById("userList").innerHTML =
+        "<p style='color:var(--accent)'>ℹ️ User management is available to admin only.</p>";
       return;
     }
-    firebase.database().ref(`tests/class_${cls}/${name}`).set({
-      duration: duration,
-      limit: Math.min(limit, questions.length),
-      questions: questions
-    }).then(() => {
-      alert("Test Saved successfully!");
-      testName.value = "";
-      bulkQuestions.value = "";
-      testDuration.value = "";
-      questionLimit.value = "";
-      document.getElementById('questionFile').value = "";
-    }).catch(e => {
-      console.error("Save test error:", e);
-      alert("Failed to save test: " + e.message);
+
+    document.getElementById("userList").innerHTML = "<p>Loading users…</p>";
+
+    db.ref("users").once("value")
+      .then(snap => {
+        const list = document.getElementById("userList");
+        list.innerHTML = "";
+        if (!snap.exists()) { list.innerHTML = "<p>No users found.</p>"; return; }
+
+        snap.forEach(u => {
+          const d    = u.val();
+          const name = d.name || d.email || "Unknown";
+          const role = d.role || "unknown";
+          const card = document.createElement("div");
+          card.className = "user-card";
+          card.dataset.role  = role;
+          card.dataset.name  = name.toLowerCase();
+          card.dataset.email = (d.email || "").toLowerCase();
+          card.dataset.class = d.class || "";
+          card.innerHTML = `
+            <div>
+              <strong>${name}</strong>
+              <span class="badge badge-${role}">${role}</span>
+              <br><small>${d.email || ""}</small>
+              ${role === "student" ? `<br><small>Class: <b>${formatClass(d.class)}</b></small>` : ""}
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${role === "student" ? `<button class="btn-sm btn-edit" onclick="editUserClass('${u.key}','${d.class||''}')"><i class="fas fa-edit"></i> Class</button>` : ""}
+              <button class="btn-sm btn-delete" onclick="deleteUser('${u.key}')"><i class="fas fa-trash"></i></button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      })
+      .catch(e => {
+        document.getElementById("userList").innerHTML = `<p>Error: ${e.message}</p>`;
+      });
+  }
+
+  function filterUsers() {
+    const search      = document.getElementById("userSearch").value.toLowerCase();
+    const roleFilter  = document.getElementById("userFilter").value;
+    const classFilter = document.getElementById("classFilter").value;
+
+    document.querySelectorAll(".user-card").forEach(card => {
+      const matchSearch = card.dataset.name.includes(search) || card.dataset.email.includes(search);
+      const matchRole   = roleFilter   === "all" || card.dataset.role  === roleFilter;
+      const matchClass  = classFilter  === ""    || card.dataset.class === classFilter;
+      card.style.display = matchSearch && matchRole && matchClass ? "" : "none";
     });
   }
 
-  // Auto Save Answers
+  function editUserClass(uid, currentClass) {
+    const valid  = ["jr_kg","sr_kg","1","2","3","4","5","6","7","8","9","10"];
+    const newCls = prompt(`Enter new class for this student:\n(jr_kg, sr_kg, 1–10)`, currentClass || "1");
+    if (newCls === null) return;
+    if (!valid.includes(newCls.trim())) { showToast("Invalid class entered.", "error"); return; }
+    db.ref("users/" + uid).update({ class: newCls.trim() })
+      .then(() => { showToast("Class updated!", "success"); loadUsers(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  function deleteUser(uid) {
+    if (!confirm("Delete this user and their results?")) return;
+    db.ref("users/" + uid).remove()
+      .then(() => { showToast("User deleted.", "success"); loadUsers(); })
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  // ── Dashboard Stats ───────────────────────────────────────────────────────
+  function loadDashboardStats() {
+    ["totalTests","totalStudents","totalResults","avgScore"].forEach(id => {
+      document.getElementById(id).textContent = "…";
+    });
+
+    db.ref("tests").once("value").then(snap => {
+      let n = 0;
+      snap.forEach(cls => n += Object.keys(cls.val() || {}).length);
+      document.getElementById("totalTests").textContent = n;
+    });
+
+    db.ref("users").orderByChild("role").equalTo("student").once("value").then(snap => {
+      document.getElementById("totalStudents").textContent = snap.numChildren();
+    });
+
+    db.ref("results").once("value").then(snap => {
+      let totalR = 0, totalS = 0, totalP = 0;
+      const classScores = {};
+
+      snap.forEach(cls => {
+        const label = cls.key.replace("class_","");
+        let cs = 0, cp = 0, cc = 0;
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            totalR++; totalS += d.score; totalP += d.total;
+            cs += d.score; cp += d.total; cc++;
+          });
+        });
+        if (cc > 0) classScores[label] = Math.round((cs/cp)*100);
+      });
+
+      document.getElementById("totalResults").textContent = totalR;
+      document.getElementById("avgScore").textContent =
+        totalP > 0 ? Math.round((totalS/totalP)*100) + "%" : "0%";
+
+      // Chart
+      const ctx = document.getElementById("scoreChart");
+      if (ctx) {
+        if (scoreChartInstance) scoreChartInstance.destroy();
+        scoreChartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels:   Object.keys(classScores),
+            datasets: [{
+              label:           "Avg Score (%)",
+              data:            Object.values(classScores),
+              backgroundColor: "rgba(0,123,255,.55)",
+              borderColor:     "rgba(0,123,255,1)",
+              borderWidth:     1,
+              borderRadius:    4
+            }]
+          },
+          options: {
+            responsive:         true,
+            maintainAspectRatio: true,
+            scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+"%" } } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    });
+
+    // Recent activity
+    db.ref("results").limitToLast(5).once("value").then(snap => {
+      const listEl = document.getElementById("notificationsList");
+      listEl.innerHTML = "";
+      let count = 0;
+      snap.forEach(cls => {
+        cls.forEach(test => {
+          test.forEach(result => {
+            const d = result.val();
+            listEl.innerHTML += `
+              <div class="notification-item">
+                <i class="fas fa-user-circle"></i>
+                <strong>${d.name}</strong> submitted <em>${test.key}</em> —
+                Score: <strong>${d.score}/${d.total}</strong>
+                (${Math.round((d.score/d.total)*100)}%)
+              </div>`;
+            count++;
+          });
+        });
+      });
+      if (count === 0) listEl.innerHTML = "<div class='notification-item'>No recent activity.</div>";
+    });
+  }
+
+  // ── Password Reset ────────────────────────────────────────────────────────
+  function resetPassword(e) {
+    if (e) e.preventDefault();
+    const email = prompt("Enter your email address to reset password:");
+    if (!email) return;
+    auth.sendPasswordResetEmail(email)
+      .then(() => showToast("Password reset email sent!", "success"))
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  function resendVerification() {
+    if (!auth.currentUser) { showToast("Please log in first.", "warning"); return; }
+    auth.currentUser.sendEmailVerification()
+      .then(() => showToast("Verification email sent!", "success"))
+      .catch(e => showToast("Error: " + e.message, "error"));
+  }
+
+  // ── Start Student Test ────────────────────────────────────────────────────
+  function startStudentTest() {
+    if (!auth.currentUser) { showToast("Please log in first.", "warning"); return; }
+    const cls  = document.getElementById("sClass").value;
+    const test = document.getElementById("studentTestSelect").value;
+    if (!cls || !test) { showToast("Please select a class and test.", "warning"); return; }
+
+    const roll = auth.currentUser.uid;
+    const name = auth.currentUser.displayName || auth.currentUser.email;
+
+    // Check if already submitted
+    db.ref(`results/class_${cls}/${test}/${roll}`).once("value")
+      .then(rSnap => {
+        if (rSnap.exists()) {
+          showToast("You have already submitted this test. Ask your teacher for a reattempt.", "warning");
+          return;
+        }
+
+        db.ref(`tests/class_${cls}/${test}`).once("value")
+          .then(snap => {
+            if (!snap.exists()) { showToast("Test not found.", "error"); return; }
+
+            const data     = snap.val();
+            let   allQ     = Object.values(data.questions || {});
+            shuffleArray(allQ);
+            const lim      = Math.min(data.limit || allQ.length, allQ.length);
+
+            currentStudent       = { name, roll, class: cls };
+            currentTest          = test;
+            currentQuestions     = allQ.slice(0, lim);
+            studentAnswers       = {};
+            markedForReview      = {};
+            currentQuestionIndex = 0;
+
+            // Check for saved progress
+            db.ref(`savedTests/${roll}/${test}`).once("value")
+              .then(saveSnap => {
+                if (saveSnap.exists()) {
+                  const s = saveSnap.val();
+                  studentAnswers       = s.answers || {};
+                  markedForReview      = s.marked  || {};
+                  remainingTime        = s.timeLeft || (data.duration * 60);
+                  currentQuestionIndex = s.currentIndex || 0;
+                } else {
+                  remainingTime = data.duration * 60;
+                }
+
+                hideAllSections();
+                document.getElementById("testArea").style.display = "flex";
+                document.getElementById("testTitle").textContent  = test;
+
+                startTimer();
+                displayQuestion(currentQuestionIndex);
+                updateNavigationButtons();
+                updateQuestionMap();
+
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = setInterval(autoSaveAnswers, 5000);
+
+                // Fullscreen
+                try { document.documentElement.requestFullscreen(); } catch (_) {}
+                document.addEventListener("contextmenu", e => e.preventDefault());
+              });
+          });
+      })
+      .catch(e => showToast("Error starting test: " + e.message, "error"));
+  }
+
+  // ── Auto Save ─────────────────────────────────────────────────────────────
   function autoSaveAnswers() {
     if (!currentStudent.roll || !currentTest) return;
-    firebase.database().ref(`autosave/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`).set({
-      answers: studentAnswers,
-      marked: markedForReview,
-      timeLeft: remainingTime,
+    db.ref(`savedTests/${currentStudent.roll}/${currentTest}`).set({
+      answers:      studentAnswers,
+      marked:       markedForReview,
+      timeLeft:     remainingTime,
       currentIndex: currentQuestionIndex,
-      updated: Date.now()
-    });
+      updated:      Date.now()
+    }).catch(() => {});
   }
 
-  // Shuffle Array
+  // ── Shuffle ───────────────────────────────────────────────────────────────
   function shuffleArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1629,149 +2365,85 @@
     return arr;
   }
 
-  // Start Student Test
-  function startStudentTest() {
-    if (!auth.currentUser) { alert("Login required"); return; }
-    const cls = sClass.value;
-    const test = studentTestSelect.value;
-    const roll = auth.currentUser.uid;
-    const name = auth.currentUser.displayName || auth.currentUser.email;
-
-    if (!cls || !test) {
-      alert("Please select class and test");
-      return;
-    }
-
-    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value")
-      .then(rSnap => {
-        if (rSnap.exists()) {
-          alert("Test already submitted. Teacher must allow reattempt.");
-          return;
-        }
-
-        currentStudent = { name, roll, class: cls };
-        currentTest = test;
-
-        firebase.database().ref(`tests/class_${cls}/${test}`).once("value")
-          .then(snap => {
-            if (!snap.exists()) {
-              alert("Test not found");
-              return;
-            }
-
-            const data = snap.val();
-            let allQuestions = Object.values(data.questions || {});
-            shuffleArray(allQuestions);
-            const limit = data.limit || allQuestions.length;
-            currentQuestions = allQuestions.slice(0, limit);
-
-            studentAnswers = {};
-            markedForReview = {};
-            currentQuestionIndex = 0;
-
-            firebase.database().ref(`savedTests/${roll}/${test}`).once("value")
-              .then(saveSnap => {
-                if (saveSnap.exists()) {
-                  const saved = saveSnap.val();
-                  studentAnswers = saved.answers || {};
-                  markedForReview = saved.marked || {};
-                  remainingTime = saved.timeLeft || (data.duration * 60);
-                  currentQuestionIndex = saved.currentIndex || 0;
-                } else {
-                  remainingTime = data.duration * 60;
-                }
-                hideAllSections();
-                document.getElementById("testArea").style.display = "flex";
-                startTimer(Math.ceil(remainingTime / 60));
-                renderTest();
-                document.documentElement.requestFullscreen();
-                document.addEventListener('contextmenu', e => e.preventDefault());
-                updateQuestionMap();
-                clearInterval(autoSaveInterval);
-                autoSaveInterval = setInterval(autoSaveAnswers, 5000);
-              });
-          });
-      })
-      .catch(e => {
-        console.error("Start test error:", e);
-        alert("Failed to start test: " + e.message);
-      });
-  }
-
-  // Render Test
-  function renderTest() {
-    testTitle.innerText = currentTest;
-    studentPanel.style.display = "none";
-    testArea.style.display = "flex";
-    displayQuestion(currentQuestionIndex);
-    updateNavigationButtons();
-  }
-
-  // Display Question
+  // ── Display Question ──────────────────────────────────────────────────────
   function displayQuestion(index) {
     const q = currentQuestions[index];
     if (!q) return;
-    const sanitizedQ = q.q.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
-    const questionDisplay = document.getElementById('questionDisplay');
-    questionDisplay.innerHTML = `
+
+    // Sanitise question text
+    const safeQ = q.q.replace(/<script[^>]*>[\s\S]*?<\/script>/gi,"").replace(/<[^>]+>/g,"");
+
+    document.getElementById("questionDisplay").innerHTML = `
       <div class="question-header">
         <i class="fas fa-question-circle"></i>
         <h4>Question ${index + 1} of ${currentQuestions.length}</h4>
       </div>
-      <p class="question-text">${sanitizedQ}</p>
+      <p class="question-text">${safeQ}</p>
       <div class="options-container">
-        ${q.options.map((opt, i) => `
-          <div class="option ${studentAnswers[index] === i ? 'selected' : ''}">
-            <label onclick="selectOption(${index}, ${i})">
-              <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? 'checked' : ''}>
-              <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
-              <span class="option-text">${opt}</span>
+        ${q.options.map((opt, i) => {
+          const safeOpt = opt.replace(/<[^>]+>/g,"");
+          return `
+          <div class="option ${studentAnswers[index] === i ? "selected" : ""}" onclick="selectOption(${index},${i})">
+            <label>
+              <input type="radio" name="q${index}" value="${i}" ${studentAnswers[index] === i ? "checked" : ""}>
+              <span class="option-letter">${String.fromCharCode(65+i)}.</span>
+              <span class="option-text">${safeOpt}</span>
             </label>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    progressBar.value = ((index + 1) / currentQuestions.length) * 100;
+          </div>`;
+        }).join("")}
+      </div>`;
+
+    document.getElementById("progressBar").value = ((index + 1) / currentQuestions.length) * 100;
     updateQuestionMap();
   }
 
-  // Select Option
+  // ── Select Option ─────────────────────────────────────────────────────────
   function selectOption(qIndex, optIndex) {
     studentAnswers[qIndex] = optIndex;
     displayQuestion(qIndex);
   }
 
-  // Mark for Review
+  // ── Mark for Review ───────────────────────────────────────────────────────
   function markForReview() {
     markedForReview[currentQuestionIndex] = !markedForReview[currentQuestionIndex];
     updateQuestionMap();
+    const marked = markedForReview[currentQuestionIndex];
+    document.getElementById("markReviewBtn").style.background = marked ? "#fd7e14" : "";
   }
 
-  // Navigate Question
-  function navigateQuestion(direction) {
-    currentQuestionIndex += direction;
+  // ── Navigate Question ─────────────────────────────────────────────────────
+  function navigateQuestion(dir) {
+    currentQuestionIndex = Math.max(0, Math.min(currentQuestions.length - 1, currentQuestionIndex + dir));
     displayQuestion(currentQuestionIndex);
     updateNavigationButtons();
   }
 
-  // Update Navigation Buttons
   function updateNavigationButtons() {
-    document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
-    document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuestions.length - 1;
+    document.getElementById("prevBtn").disabled = currentQuestionIndex === 0;
+    document.getElementById("nextBtn").disabled = currentQuestionIndex === currentQuestions.length - 1;
   }
 
-    // Update Question Map
+  // ── Question Map ──────────────────────────────────────────────────────────
   function updateQuestionMap() {
-    const grid = document.getElementById('questionGrid');
-    grid.innerHTML = '';
+    const grid = document.getElementById("questionGrid");
+    grid.innerHTML = "";
     currentQuestions.forEach((_, i) => {
-      const div = document.createElement('div');
-      div.className = 'q-num';
+      const div = document.createElement("div");
+      div.className = "q-num";
       div.textContent = i + 1;
-      if (i === currentQuestionIndex) div.classList.add('current');
-      if (studentAnswers[i] !== undefined) div.classList.add('attempted');  // ✅ Fixed
-      else if (markedForReview[i]) div.classList.add('marked');
-      else div.classList.add('not-attempted');
+
+      if (i === currentQuestionIndex) {
+        div.classList.add("current");
+      } else if (studentAnswers[i] !== undefined && markedForReview[i]) {
+        div.classList.add("marked-attempted"); // answered AND marked
+      } else if (studentAnswers[i] !== undefined) {
+        div.classList.add("attempted");
+      } else if (markedForReview[i]) {
+        div.classList.add("marked");
+      } else {
+        div.classList.add("not-attempted");
+      }
+
       div.onclick = () => {
         currentQuestionIndex = i;
         displayQuestion(i);
@@ -1779,379 +2451,156 @@
       };
       grid.appendChild(div);
     });
+
+    // Sync mark button state
+    const markBtn = document.getElementById("markReviewBtn");
+    if (markBtn) {
+      markBtn.style.background = markedForReview[currentQuestionIndex] ? "#fd7e14" : "";
+    }
   }
-  // Start Timer
-  function startTimer(minutes) {
-    remainingTime = minutes * 60;
+
+  // ── Timer ─────────────────────────────────────────────────────────────────
+  function startTimer() {
     clearInterval(timerInterval);
+    const timerBox = document.getElementById("timerBox");
+
     timerInterval = setInterval(() => {
       if (remainingTime <= 0) {
         clearInterval(timerInterval);
+        showToast("Time's up! Submitting…", "warning");
         submitTest();
         return;
       }
       remainingTime--;
       const mins = Math.floor(remainingTime / 60);
       const secs = remainingTime % 60;
-      document.getElementById("timerBox").innerText = `Time Left: ${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      timerBox.textContent = `⏱ ${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      timerBox.className   = remainingTime <= 60 ? "timer-box warning" : "timer-box";
     }, 1000);
   }
 
-  // Submit Test
+  // ── Confirm Submit ────────────────────────────────────────────────────────
+  function confirmSubmit() {
+    const attempted = Object.keys(studentAnswers).length;
+    const total     = currentQuestions.length;
+    if (attempted < total && !confirm(
+      `You have answered ${attempted} out of ${total} questions.\nAre you sure you want to submit?`
+    )) return;
+    submitTest();
+  }
+
+  // ── Submit Test ───────────────────────────────────────────────────────────
   function submitTest() {
     clearInterval(timerInterval);
     clearInterval(autoSaveInterval);
+
+    // Exit fullscreen
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
+
     let score = 0;
-    let detailedAnswers = {};
+    const detailedAnswers = {};
+
     currentQuestions.forEach((q, i) => {
       const studentChoice = studentAnswers[i] !== undefined ? q.options[studentAnswers[i]] : "Not Attempted";
       const correctChoice = q.options[q.answer];
-      const isCorrect = studentAnswers[i] === q.answer;
+      const isCorrect     = studentAnswers[i] === q.answer;
       if (isCorrect) score++;
       detailedAnswers[i] = {
-        question: q.q,
+        question:      q.q,
         studentAnswer: studentChoice,
         correctAnswer: correctChoice,
-        isCorrect: isCorrect
+        isCorrect
       };
     });
 
-    firebase.database().ref("users/" + auth.currentUser.uid + "/name").once("value")
+    db.ref("users/" + auth.currentUser.uid + "/name").once("value")
       .then(nameSnap => {
-        const studentName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
-        firebase.database().ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`).set({
-          name: studentName,
-          score: score,
-          total: currentQuestions.length,
-          answers: detailedAnswers,
+        const sName = nameSnap.val() || auth.currentUser.displayName || auth.currentUser.email;
+        return db.ref(`results/class_${currentStudent.class}/${currentTest}/${currentStudent.roll}`).set({
+          name:        sName,
+          score,
+          total:       currentQuestions.length,
+          answers:     detailedAnswers,
           submittedAt: new Date().toISOString()
-        }).then(() => {
-          alert(`Test Submitted!\nScore: ${score}/${currentQuestions.length}`);
-          location.reload();
-        }).catch(e => alert("Error submitting test: " + e.message));
+        });
+      })
+      .then(() =>
+        // Delete auto-save
+        db.ref(`savedTests/${currentStudent.roll}/${currentTest}`).remove()
+      )
+      .then(() => {
+        const pct = Math.round((score / currentQuestions.length) * 100);
+        showResultScreen(score, currentQuestions.length, pct);
       })
       .catch(e => {
-        console.error("Error fetching name:", e);
-        alert("Error submitting test: " + e.message);
+        console.error("Submit error:", e);
+        showToast("Error submitting: " + e.message, "error");
       });
   }
 
-  // Results
-  function Results() {
-    const cls = resultClassSelect.value;
-    const test = resultTestSelect.value;
-    if (!cls || !test) return alert("Select class and test");
-    firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
-      resultBox.innerHTML = "";
-      if (!snap.exists()) {
-        resultBox.innerHTML = "<p>No results</p>";
-        return;
-      }
-      snap.forEach(r => {
-        const d = r.val();
-        resultBox.innerHTML += `
-          <div style="border:1px solid #ccc;padding:6px;margin:6px">
-            <b>${d.name}</b> (Roll: ${r.key})<br>
-            Score: ${d.score}/${d.total}<br>
-            <button onclick="viewDetails('${cls}','${test}','${r.key}')">View Details</button>
-            <button onclick="allowReattempt('${cls}','${test}','${r.key}')">Allow Reattempt</button>
-          </div>
-        `;
-      });
-    }).catch(e => {
-      console.error("Results error:", e);
-      resultBox.innerHTML = "<p>Failed to load results: " + e.message + "</p>";
-    });
+  // ── Result Screen after submit ────────────────────────────────────────────
+  // NOTE: Score & answers are intentionally NOT shown to students.
+  //       Only the teacher can view results from the dashboard.
+  function showResultScreen(score, total, pct) {
+    const testArea = document.getElementById("testArea");
+    testArea.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;text-align:center;background:var(--bg-color);">
+        <div style="font-size:80px;margin-bottom:8px;">✅</div>
+        <h2 style="font-size:30px;margin:0 0 12px;color:var(--text-color);">Test Submitted Successfully!</h2>
+        <p style="font-size:16px;color:#888;max-width:400px;line-height:1.6;">
+          Your responses have been recorded. Your teacher will review and share your results with you.
+        </p>
+        <button class="btn btn-primary" style="margin-top:28px;width:auto;padding:12px 36px;font-size:16px;" onclick="location.reload()">
+          <i class="fas fa-home"></i> Back to Home
+        </button>
+      </div>`;
   }
 
-  // Export Results
-  function exportResults() {
-    const cls = resultClassSelect.value;
-    const test = resultTestSelect.value;
-    if (!cls || !test) return alert("Select class and test");
-    firebase.database().ref(`results/class_${cls}/${test}`).once("value", snap => {
-      let csv = "Name,Roll,Score,Total\n";
-      snap.forEach(r => {
-        const d = r.val();
-        csv += `${d.name},${r.key},${d.score},${d.total}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'results.csv';
-      a.click();
-    });
-  }
-
-  // View Details
-  function viewDetails(cls, test, roll) {
-    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).once("value", snap => {
-      const d = snap.val();
-      let details = `Student Name: ${d.name}\nScore: ${d.score}/${d.total}\n\nDetailed Answers:\n`;
-      const sortedKeys = Object.keys(d.answers || {}).sort((a, b) => parseInt(a) - parseInt(b));
-      sortedKeys.forEach(i => {
-        const ans = d.answers[i];
-        details += `Q${parseInt(i) + 1}: ${ans.question}\nYour Answer: ${ans.studentAnswer}\nCorrect Answer: ${ans.correctAnswer}\nResult: ${ans.isCorrect ? "Correct" : "Incorrect"}\n\n`;
-      });
-      alert(details);
-    });
-  }
-
-  // Allow Reattempt
-  function allowReattempt(cls, test, roll) {
-    if (!confirm("Allow this student to reattempt the test?")) return;
-    firebase.database().ref(`results/class_${cls}/${test}/${roll}`).remove()
-      .then(() => {
-        alert("Reattempt allowed. Student can start test again.");
-        Results();
-      });
-  }
-
-  // Tests for Teacher
-  function TestsForTeacher() {
-    const cls = manageClass.value;
-    const testList = document.getElementById("testList");
-    testList.innerHTML = "";
-    if (!cls) return;
-    firebase.database().ref(`tests/class_${cls}`).once("value", snap => {
-      if (!snap.exists()) {
-        testList.innerHTML = "<p>No tests found.</p>";
-        return;
-      }
-      snap.forEach(t => {
-        testList.innerHTML += `
-          <div style="border:1px solid #ccc;padding:6px;margin:5px">
-            <b>${t.key}</b><br>
-            <button onclick="editTest('${cls}','${t.key}')">Edit</button>
-            <button onclick="deleteTest('${cls}','${t.key}')">Delete</button>
-          </div>
-        `;
-      });
-    });
-  }
-
-  // Reset Password
-  function resetPassword() {
-    const email = prompt("Enter your email:");
-    if (email) {
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("Password reset email sent!"))
-        .catch(e => alert("Error: " + e.message));
-    }
-  }
-
-  // Edit Test
-  function editTest(cls, testName) {
-    firebase.database().ref(`tests/class_${cls}/${testName}`).once("value", snap => {
-      if (!snap.exists()) {
-        alert("Test not found.");
-        return;
-      }
-      const data = snap.val();
-      testClass.value = cls;
-      document.getElementById('testName').value = testName;
-      testDuration.value = data.duration || "";
-      questionLimit.value = data.limit || "";
-      bulkQuestions.value = Object.values(data.questions || {})
-        .map(q => `${q.q} | ${q.options.join(" | ")} | ${q.answer + 1}`)
-        .join("\n");
-      showTab('createTest');
-    }).catch(e => {
-      console.error("Edit test error:", e);
-      alert("Failed to load test: " + e.message);
-    });
-  }
-
-  // Delete Test
-  function deleteTest(cls, testName) {
-    if (confirm("Delete this test?")) {
-      firebase.database().ref(`tests/class_${cls}/${testName}`).remove()
-        .then(() => {
-          alert("Test deleted successfully!");
-          TestsForTeacher();
-        });
-    }
-  }
-
-  // Logout
+  // ── Logout ────────────────────────────────────────────────────────────────
   function logout() {
-    if (auth.currentUser) {
-      localStorage.removeItem(`isTeacher_${auth.currentUser.email}`);
-    }
+    clearInterval(timerInterval);
+    clearInterval(autoSaveInterval);
     auth.signOut()
       .then(() => {
-        currentStudent = {};
-        currentTest = "";
-        currentQuestions = [];
-        studentAnswers = {};
-        markedForReview = {};
-        clearInterval(timerInterval);
-        clearInterval(autoSaveInterval);
-        remainingTime = 0;
-        currentQuestionIndex = 0;
-        hideAllSections();
-        document.querySelector('.section-toggle').style.display = "flex";
+        currentStudent = {}; currentTest = ""; currentQuestions = [];
+        studentAnswers = {}; markedForReview = {};
+        remainingTime = 0; currentQuestionIndex = 0;
       })
-      .catch((error) => {
-        console.error("Logout failed:", error);
-        alert("Logout failed: " + error.message);
-      });
+      .catch(e => showToast("Logout failed: " + e.message, "error"));
   }
 
-  // Load Pending Signups
-  function loadPendingSignups() {
-    const list = document.getElementById("pendingSignupsList");
-    list.innerHTML = "<p>Loading...</p>";
-    firebase.database().ref("pendingSignups").once("value", snap => {
-      list.innerHTML = "";
-      if (!snap.exists()) {
-        list.innerHTML = "<p>No pending signups.</p>";
-        return;
-      }
-      snap.forEach(child => {
-        const data = child.val();
-        const key = child.key;
-        list.innerHTML += `
-          <div style="border:1px solid #ccc;padding:10px;margin:8px;border-radius:6px">
-            <b>${data.email}</b><br>
-            Status: ${data.status}<br><br>
-            <button onclick="approveTeacher('${key}','${data.uid}')">Approve</button>
-            <button onclick="rejectTeacher('${key}')">Reject</button>
-          </div>
-        `;
-      });
-    });
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setMsg(el, msg, type) {
+    el.textContent = msg;
+    el.className   = `form-msg ${type}`;
   }
 
-  // Approve Teacher
-  function approveTeacher(key, uid) {
-    firebase.database().ref("users/" + uid).update({
-      role: "teacher",
-      approvedAt: Date.now()
-    }).then(() => {
-      firebase.database().ref("pendingSignups/" + key).remove();
-      alert("Teacher approved successfully!");
-      loadPendingSignups();
-    }).catch(err => alert(err.message));
+  function setLoading(btn, loading, label) {
+    btn.disabled  = loading;
+    btn.innerHTML = loading
+      ? `<span class="loading"></span> ${label}…`
+      : label;
   }
 
-  // Reject Teacher
-  function rejectTeacher(key) {
-    if (!confirm("Reject this signup?")) return;
-    firebase.database().ref("pendingSignups/" + key).remove();
-    loadPendingSignups();
+  function friendlyAuthError(e) {
+    const map = {
+      "auth/user-not-found":       "No account found with this email.",
+      "auth/wrong-password":       "Incorrect password.",
+      "auth/invalid-email":        "Invalid email address.",
+      "auth/email-already-in-use": "Email is already registered.",
+      "auth/too-many-requests":    "Too many attempts. Please try again later.",
+      "auth/network-request-failed": "Network error. Check your connection.",
+      "auth/invalid-credential":   "Invalid email or password."
+    };
+    return map[e.code] || e.message;
   }
 
-  // Resend Verification
-  function resendVerification() {
-    if (auth.currentUser) {
-      auth.currentUser.sendEmailVerification()
-        .then(() => alert("Verification email sent!"))
-        .catch(e => alert("Error: " + e.message));
-    } else {
-      alert("Log in first.");
-    }
+  function formatClass(c) {
+    if (!c) return "–";
+    if (c === "jr_kg") return "Jr. KG";
+    if (c === "sr_kg") return "Sr. KG";
+    return "Class " + c;
   }
-
-  // Load Dashboard Stats
-  function loadDashboardStats() {
-    document.getElementById("totalTests").textContent = "...";
-    document.getElementById("totalStudents").textContent = "...";
-    document.getElementById("totalResults").textContent = "...";
-    document.getElementById("avgScore").textContent = "...";
-
-    firebase.database().ref("tests").once("value", snap => {
-      let totalTests = 0;
-      snap.forEach(cls => totalTests += Object.keys(cls.val() || {}).length);
-      document.getElementById("totalTests").textContent = totalTests;
-    });
-
-    firebase.database().ref("users").orderByChild("role").equalTo("student").once("value", snap => {
-      document.getElementById("totalStudents").textContent = snap.numChildren();
-    });
-
-    firebase.database().ref("results").once("value", snap => {
-      let totalResults = 0, totalScore = 0, totalPossible = 0;
-      const classScores = {};
-      snap.forEach(cls => {
-        const className = cls.key.replace("class_", "");
-        let classTotalScore = 0, classTotalPossible = 0, classCount = 0;
-        cls.forEach(test => {
-          test.forEach(result => {
-            const d = result.val();
-            totalResults++;
-            totalScore += d.score;
-            totalPossible += d.total;
-            classTotalScore += d.score;
-            classTotalPossible += d.total;
-            classCount++;
-          });
-        });
-        if (classCount > 0) classScores[className] = Math.round((classTotalScore / classTotalPossible) * 100);
-      });
-      document.getElementById("totalResults").textContent = totalResults;
-      document.getElementById("avgScore").textContent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) + "%" : "0%";
-
-      const ctx = document.getElementById('scoreChart');
-      if (ctx) {
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(classScores),
-            datasets: [{
-              label: 'Average Score (%)',
-              data: Object.values(classScores),
-              backgroundColor: 'rgba(0, 123, 255, 0.6)',
-              borderColor: 'rgba(0, 123, 255, 1)',
-              borderWidth: 1
-            }]
-          },
-          options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
-        });
-      }
-    });
-
-    firebase.database().ref("results").limitToLast(5).once("value", snap => {
-      const list = document.getElementById("notificationsList");
-      list.innerHTML = "";
-      snap.forEach(cls => {
-        cls.forEach(test => {
-          test.forEach(result => {
-            const d = result.val();
-            list.innerHTML += `<div class="notification-item">${d.name} submitted ${test.key} - Score: ${d.score}/${d.total}</div>`;
-          });
-        });
-      });
-      if (!snap.exists() || list.innerHTML === "") list.innerHTML = "<div class='notification-item'>No recent activity.</div>";
-    });
-  }
-
-  // Export All Results
-  function exportAllResults() {
-    firebase.database().ref("results").once("value", snap => {
-      let csv = "Class,Test,Student,Roll,Score,Total\n";
-      snap.forEach(cls => {
-        const className = cls.key.replace("class_", "");
-        cls.forEach(test => {
-          const testName = test.key;
-          test.forEach(result => {
-            const d = result.val();
-            csv += `${className},${testName},${d.name},${result.key},${d.score},${d.total}\n`;
-          });
-        });
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'all_results.csv';
-      a.click();
-    });
-  }
-</script>
+  </script>
 </body>
 </html>
-
-
-
